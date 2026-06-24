@@ -1,0 +1,44 @@
+name: Signal
+options:
+  bundleIdPrefix: com.thiagobrez
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+packages:
+  DynamicNotchKit:
+    url: https://github.com/MrKai77/DynamicNotchKit
+    exactVersion: 1.1.0
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    exactVersion: 1.10.0
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: G3GDV6SP6M
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  Signal:
+    type: application
+    platform: macOS
+    sources:
+      - path: Signal
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.thiagobrez.Signal
+        PRODUCT_NAME: Signal
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Signal
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_ENTITLEMENTS: Signal/Signal.entitlements
+        COMBINE_HIDPI_IMAGES: YES
+    dependencies:
+      - package: DynamicNotchKit
+      - package: KeyboardShortcuts
