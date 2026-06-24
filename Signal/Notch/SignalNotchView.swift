@@ -90,15 +90,24 @@ private struct TodoRow: View {
             }
             .buttonStyle(.plain)
 
-            TextField("Something that matters…", text: $item.text)
-                .textFieldStyle(.plain)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.white)
-                .strikethrough(item.isCompleted, color: .white.opacity(0.5))
-                .opacity(item.isCompleted ? 0.5 : 1)
-                .focused($focused, equals: index)
-                .submitLabel(index < 2 ? .next : .done)
-                .onSubmit(onSubmit)
+            // A live TextField doesn't render `.strikethrough` on macOS, so once an
+            // item is completed (and no longer editable) we show a Text instead.
+            Group {
+                if item.isCompleted {
+                    Text(item.text.isEmpty ? " " : item.text)
+                        .strikethrough(true, color: .white.opacity(0.6))
+                        .foregroundStyle(.white.opacity(0.5))
+                } else {
+                    TextField("Something that matters…", text: $item.text)
+                        .textFieldStyle(.plain)
+                        .foregroundStyle(.white)
+                        .focused($focused, equals: index)
+                        .submitLabel(index < 2 ? .next : .done)
+                        .onSubmit(onSubmit)
+                }
+            }
+            .font(.system(size: 15, weight: .medium))
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .animation(.snappy(duration: 0.2), value: item.isCompleted)
     }
