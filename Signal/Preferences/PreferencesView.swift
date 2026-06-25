@@ -13,6 +13,7 @@ struct PreferencesView: View {
     @AppStorage(SettingsStore.Key.glanceWindowStartHour) private var glanceStart = 10
     @AppStorage(SettingsStore.Key.glanceWindowEndHour) private var glanceEnd = 18
     @AppStorage(SettingsStore.Key.completionSound) private var completionSound = "pop"
+    @AppStorage(SettingsStore.Key.openSound) private var openSound = "sys:Blow"
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
@@ -36,29 +37,8 @@ struct PreferencesView: View {
             }
 
             Section("Sound") {
-                HStack {
-                    Picker("On completion", selection: $completionSound) {
-                        Text("None").tag(SoundPlayer.noneID)
-                        Section("Custom") {
-                            ForEach(SoundPlayer.bundledSoundNames, id: \.self) { name in
-                                Text(name.capitalized).tag(name)
-                            }
-                        }
-                        Section("System") {
-                            ForEach(SoundPlayer.systemSoundNames, id: \.self) { name in
-                                Text(name).tag("sys:\(name)")
-                            }
-                        }
-                    }
-                    Button {
-                        SoundPlayer.play(completionSound)
-                    } label: {
-                        Image(systemName: "play.circle")
-                    }
-                    .buttonStyle(.borderless)
-                    .help("Preview")
-                    .disabled(completionSound == SoundPlayer.noneID)
-                }
+                soundPicker("On open", selection: $openSound)
+                soundPicker("On completion", selection: $completionSound)
             }
 
             Section("Quick reminders") {
@@ -74,6 +54,32 @@ struct PreferencesView: View {
         .formStyle(.grouped)
         .frame(width: 440)
         .safeAreaInset(edge: .bottom) { quote }
+    }
+
+    private func soundPicker(_ label: String, selection: Binding<String>) -> some View {
+        HStack {
+            Picker(label, selection: selection) {
+                Text("None").tag(SoundPlayer.noneID)
+                Section("Custom") {
+                    ForEach(SoundPlayer.bundledSoundNames, id: \.self) { name in
+                        Text(name.capitalized).tag(name)
+                    }
+                }
+                Section("System") {
+                    ForEach(SoundPlayer.systemSoundNames, id: \.self) { name in
+                        Text(name).tag("sys:\(name)")
+                    }
+                }
+            }
+            Button {
+                SoundPlayer.play(selection.wrappedValue)
+            } label: {
+                Image(systemName: "play.circle")
+            }
+            .buttonStyle(.borderless)
+            .help("Preview")
+            .disabled(selection.wrappedValue == SoundPlayer.noneID)
+        }
     }
 
     private var hourOptions: some View {
