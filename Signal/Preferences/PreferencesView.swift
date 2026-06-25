@@ -12,6 +12,7 @@ struct PreferencesView: View {
     @AppStorage(SettingsStore.Key.glanceCount) private var glanceCount = 3
     @AppStorage(SettingsStore.Key.glanceWindowStartHour) private var glanceStart = 10
     @AppStorage(SettingsStore.Key.glanceWindowEndHour) private var glanceEnd = 18
+    @AppStorage(SettingsStore.Key.completionSound) private var completionSound = "pop"
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
@@ -32,6 +33,32 @@ struct PreferencesView: View {
                 Toggle("Open Signal every day at a set time", isOn: $dailyPromptEnabled)
                 DatePicker("Time", selection: dailyPromptTime, displayedComponents: .hourAndMinute)
                     .disabled(!dailyPromptEnabled)
+            }
+
+            Section("Sound") {
+                HStack {
+                    Picker("On completion", selection: $completionSound) {
+                        Text("None").tag(SoundPlayer.noneID)
+                        Section("Custom") {
+                            ForEach(SoundPlayer.bundledSoundNames, id: \.self) { name in
+                                Text(name.capitalized).tag(name)
+                            }
+                        }
+                        Section("System") {
+                            ForEach(SoundPlayer.systemSoundNames, id: \.self) { name in
+                                Text(name).tag("sys:\(name)")
+                            }
+                        }
+                    }
+                    Button {
+                        SoundPlayer.play(completionSound)
+                    } label: {
+                        Image(systemName: "play.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Preview")
+                    .disabled(completionSound == SoundPlayer.noneID)
+                }
             }
 
             Section("Quick reminders") {

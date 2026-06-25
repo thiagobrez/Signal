@@ -36,8 +36,15 @@ final class SignalStore {
     }
 
     func toggleComplete(_ item: TodoItem) {
+        // An empty to-do can't be completed.
+        if !item.isCompleted, item.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return
+        }
         item.isCompleted.toggle()
         item.completedAt = item.isCompleted ? Date() : nil
+        if item.isCompleted {
+            SoundPlayer.play(SettingsStore.completionSound)
+        }
         save()
     }
 

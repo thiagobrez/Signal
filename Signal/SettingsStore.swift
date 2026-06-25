@@ -14,6 +14,7 @@ enum SettingsStore {
         static let glanceWindowStartHour = "glanceWindowStartHour"
         static let glanceWindowEndHour = "glanceWindowEndHour"
         static let glanceDurationSeconds = "glanceDurationSeconds"
+        static let completionSound = "completionSound"
     }
 
     static func registerDefaults() {
@@ -28,6 +29,7 @@ enum SettingsStore {
             Key.glanceWindowStartHour: 10,
             Key.glanceWindowEndHour: 18,
             Key.glanceDurationSeconds: 5.0,
+            Key.completionSound: "pop",
         ])
     }
 
@@ -43,4 +45,5 @@ enum SettingsStore {
     static var glanceWindowStartHour: Int { d.integer(forKey: Key.glanceWindowStartHour) }
     static var glanceWindowEndHour: Int { d.integer(forKey: Key.glanceWindowEndHour) }
     static var glanceDurationSeconds: Double { d.double(forKey: Key.glanceDurationSeconds) }
+    static var completionSound: String { d.string(forKey: Key.completionSound) ?? "pop" }
 }

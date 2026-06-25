@@ -78,6 +78,10 @@ private struct TodoRow: View {
     @FocusState.Binding var focused: Int?
     let onSubmit: () -> Void
 
+    private var isEmpty: Bool {
+        item.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Button {
@@ -85,10 +89,11 @@ private struct TodoRow: View {
             } label: {
                 Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 18))
-                    .foregroundStyle(item.isCompleted ? Color.green : Color.white.opacity(0.45))
+                    .foregroundStyle(item.isCompleted ? Color.green : Color.white.opacity(isEmpty ? 0.2 : 0.45))
                     .contentTransition(.symbolEffect(.replace))
             }
             .buttonStyle(.plain)
+            .disabled(!item.isCompleted && isEmpty)
 
             // A live TextField doesn't render `.strikethrough` on macOS, so once an
             // item is completed (and no longer editable) we show a Text instead.
