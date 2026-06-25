@@ -50,10 +50,11 @@ struct PreferencesView: View {
                 Picker("Until", selection: $glanceEnd) { hourOptions }
                     .disabled(!glancesEnabled)
             }
+
+            Section { quote }
         }
         .formStyle(.grouped)
         .frame(width: 440)
-        .safeAreaInset(edge: .bottom) { quote }
     }
 
     private func soundPicker(_ label: String, selection: Binding<String>) -> some View {
@@ -89,13 +90,17 @@ struct PreferencesView: View {
     }
 
     private var quote: some View {
-        Text("“There are three things you have to get done today, and that’s the signal. Everything that stops you from doing that is the noise.”")
-            .font(.custom("Snell Roundhand", size: 16))
-            .multilineTextAlignment(.center)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 28)
-            .padding(.vertical, 16)
-            .frame(maxWidth: .infinity)
+        VStack(spacing: 6) {
+            Text("“There are three things you have to get done today, and that’s the signal. Everything that stops you from doing that is the noise.”")
+                .font(.custom("Apple Chancery", size: 13))
+                .multilineTextAlignment(.center)
+
+            Text("— Kevin O’Leary")
+                .font(.custom("Apple Chancery", size: 12))
+        }
+        .foregroundStyle(.secondary)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
     }
 
     private var dailyPromptTime: Binding<Date> {
