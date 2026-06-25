@@ -13,6 +13,9 @@ final class NotchController {
     private(set) var isVisible = false
     /// Bumped after the panel becomes key so the view can grab text focus.
     private(set) var focusRequest = 0
+    /// Bumped synchronously before the open animation so the view can refresh
+    /// transient content (e.g. placeholders) in the same frame it expands.
+    private(set) var presentationRequest = 0
 
     private let store: SignalStore
     private var notch: DynamicNotch<SignalNotchView, EmptyView, EmptyView>?
@@ -37,6 +40,7 @@ final class NotchController {
         glanceHideTask?.cancel()
         store.refreshForToday()
         mode = .interactive
+        presentationRequest &+= 1
 
         let notch = ensureNotch()
         isVisible = true
@@ -50,6 +54,7 @@ final class NotchController {
     func presentGlance(duration: TimeInterval) {
         store.refreshForToday()
         mode = .glance
+        presentationRequest &+= 1
 
         let notch = ensureNotch()
         isVisible = true

@@ -7,6 +7,42 @@ struct SignalNotchView: View {
     let controller: NotchController
 
     @State private var focused: Int?
+    @State private var placeholders: [String] = SignalNotchView.randomPlaceholders()
+
+    /// A pool of suggestions spanning software development, project management,
+    /// design, and everyday chores. One is shown per empty slot, refreshed each
+    /// time the notch opens.
+    private static let placeholderPool: [String] = [
+        // Software development
+        "Fix that flaky test…",
+        "Review the open pull request…",
+        "Refactor the messy module…",
+        "Write tests for the new feature…",
+        "Squash a lingering bug…",
+        "Update the dependencies…",
+        // Project management
+        "Unblock a teammate…",
+        "Tidy up the backlog…",
+        "Prep for standup…",
+        "Follow up on that thread…",
+        "Scope the next milestone…",
+        // Design
+        "Polish a rough UI…",
+        "Sketch a new flow…",
+        "Pick a better color…",
+        "Refine the icon set…",
+        // Day to day
+        "Reply to that email…",
+        "Drink some water…",
+        "Take a short walk…",
+        "Tidy your desk…",
+        "Plan tomorrow…",
+        "Something that matters…",
+    ]
+
+    private static func randomPlaceholders() -> [String] {
+        Array(placeholderPool.shuffled().prefix(3))
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -17,6 +53,7 @@ struct SignalNotchView: View {
                     item: pair.element,
                     index: pair.offset,
                     store: store,
+                    placeholder: placeholders[pair.offset % placeholders.count],
                     focused: $focused,
                     onSubmit: { advanceOrDismiss(from: pair.offset) },
                     onEscape: { controller.hide() }
@@ -32,21 +69,31 @@ struct SignalNotchView: View {
             controller.hide()
             return .handled
         }
+        .onChange(of: controller.presentationRequest) { _, _ in
+            placeholders = SignalNotchView.randomPlaceholders()
+        }
         .onChange(of: controller.focusRequest) { _, _ in focusInitial() }
         .onAppear { focusInitial() }
     }
 
     private var header: some View {
         HStack {
-            Text("TODAY")
+            Text(todayLabel)
                 .font(.system(size: 10, weight: .bold))
                 .tracking(2.5)
             Spacer()
             Text("\(store.completedCount)/3")
                 .font(.system(size: 10, weight: .semibold))
+                .tracking(2.5)
                 .monospacedDigit()
         }
         .foregroundStyle(.white.opacity(0.4))
+    }
+
+    private var todayLabel: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE, MMM d"
+        return formatter.string(from: Date())
     }
 
     private func focusInitial() {
@@ -77,6 +124,7 @@ private struct TodoRow: View {
     @Bindable var item: TodoItem
     let index: Int
     let store: SignalStore
+    let placeholder: String
     @Binding var focused: Int?
     let onSubmit: () -> Void
     let onEscape: () -> Void
@@ -114,7 +162,7 @@ private struct TodoRow: View {
                 } else {
                     PlainTextField(
                         text: $item.text,
-                        placeholder: "Something that matters…",
+                        placeholder: placeholder,
                         index: index,
                         focusedIndex: $focused,
                         onSubmit: onSubmit,
