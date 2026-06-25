@@ -1,6 +1,6 @@
-import SwiftUI
-import ServiceManagement
 import KeyboardShortcuts
+import ServiceManagement
+import SwiftUI
 
 struct PreferencesView: View {
     @AppStorage(SettingsStore.Key.carryOverIncomplete) private var carryOver = true
@@ -43,7 +43,7 @@ struct PreferencesView: View {
 
             Section("Quick reminders") {
                 Toggle("Show quick glances during the day", isOn: $glancesEnabled)
-                Stepper("Times per day: \(glanceCount)", value: $glanceCount, in: 0 ... 12)
+                Stepper("Times per day: \(glanceCount)", value: $glanceCount, in: 0...12)
                     .disabled(!glancesEnabled)
                 Picker("From", selection: $glanceStart) { hourOptions }
                     .disabled(!glancesEnabled)
@@ -84,18 +84,32 @@ struct PreferencesView: View {
     }
 
     private var hourOptions: some View {
-        ForEach(0 ..< 24) { hour in
+        ForEach(0..<24) { hour in
             Text(String(format: "%02d:00", hour)).tag(hour)
         }
     }
 
     private var quote: some View {
         VStack(spacing: 6) {
-            Text("“There are three things you have to get done today, and that’s the signal. Everything that stops you from doing that is the noise.”")
-                .font(.custom("Apple Chancery", size: 13))
-                .multilineTextAlignment(.center)
+            Text(
+                "“Every day, there's three things you gotta get done."
+            )
+            .font(.system(size: 11))
+            .multilineTextAlignment(.center)
 
-            Text("— Kevin O’Leary")
+            Text(
+                "That’s called the signal."
+            )
+            .font(.system(size: 11))
+            .multilineTextAlignment(.center)
+
+            Text(
+                "Everything that stops you from getting it done is the noise.”"
+            )
+            .font(.system(size: 11))
+            .multilineTextAlignment(.center)
+
+            Text("— Steve Jobs")
                 .font(.custom("Apple Chancery", size: 12))
         }
         .foregroundStyle(.secondary)
