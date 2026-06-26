@@ -12,7 +12,7 @@ final class SignalStore {
     private(set) var items: [TodoItem] = []
 
     /// Bumped the moment all three to-dos become complete, so the view can fire
-    /// the celebration (rainbow border + sound). Only fires on the transition
+    /// the celebration (grass + sound). Only fires on the transition
     /// *into* a fully-done day, not on every toggle.
     private(set) var celebrationTrigger = 0
 

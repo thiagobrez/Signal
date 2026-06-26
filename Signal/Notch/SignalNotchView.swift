@@ -63,14 +63,20 @@ struct SignalNotchView: View {
         }
         .padding(16)
         .frame(width: 340)
+        // Depth-of-field: when the day is done, the tasks recede out of focus so
+        // the sharp grass in front becomes the subject.
+        .blur(radius: celebrating ? 7 : 0)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.black)
         )
         .overlay {
             if celebrating {
-                ConfettiBurst()
+                CelebrationGrass()
+                    .transition(.opacity)
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .animation(.easeInOut(duration: 0.6), value: celebrating)
         .onChange(of: store.celebrationTrigger) { _, _ in celebrate() }
         .onKeyPress(.escape) {
             controller.hide()
@@ -117,11 +123,11 @@ struct SignalNotchView: View {
         }
     }
 
-    /// Light up the rainbow border for a few seconds, then let it fade out.
+    /// Grow the grass (and blur the tasks) for a few seconds, then let it fade out.
     private func celebrate() {
         celebrating = true
         Task {
-            try? await Task.sleep(for: .seconds(3.5))
+            try? await Task.sleep(for: .seconds(4.5))
             celebrating = false
         }
     }
@@ -136,105 +142,147 @@ struct SignalNotchView: View {
     }
 }
 
-/// The "all three done" celebration: confetti that bursts from the two bottom
-/// corners up toward the center, then arcs back down under gravity. Each piece's
-/// motion is computed analytically from the elapsed time, so a single
-/// `TimelineView` drives the whole field with no per-frame mutable state.
-private struct ConfettiBurst: View {
-    @State private var pieces: [ConfettiPiece] = []
+/// The "all three done" celebration. Sharp blades of grass sprout from the
+/// bottom edge in a staggered wave and then sway gently, while the tasks behind
+/// sit out of focus (see the `.blur` on the content). A centered message invites
+/// the user to go outside. Every blade's growth and sway are computed
+/// analytically from elapsed time, so one `TimelineView` drives the whole field
+/// with no per-frame mutable state.
+private struct CelebrationGrass: View {
     @State private var start = Date()
+    @State private var blades: [GrassBlade] = []
+    @State private var messageIn = false
 
     var body: some View {
         GeometryReader { geo in
-            TimelineView(.animation) { timeline in
-                Canvas { context, size in
-                    let t = timeline.date.timeIntervalSince(start)
-                    for piece in pieces {
-                        piece.draw(in: context, at: t, canvas: size)
+            ZStack {
+                // A soft darkening at the base grounds the grass and keeps the
+                // message legible against whatever's blurred behind it.
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.35)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
+
+                TimelineView(.animation) { timeline in
+                    Canvas { context, size in
+                        let t = timeline.date.timeIntervalSince(start)
+                        for blade in blades {
+                            blade.draw(in: context, at: t, canvas: size)
+                        }
                     }
                 }
+
+                Text("You completed everything for today!\nGo touch some grass.")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.7), radius: 5, y: 1)
+                    .padding(.horizontal, 22)
+                    .offset(y: -14)
+                    .opacity(messageIn ? 1 : 0)
+                    .scaleEffect(messageIn ? 1 : 0.94)
             }
             .onAppear {
                 start = Date()
-                pieces = ConfettiPiece.burst(in: geo.size)
+                blades = GrassBlade.field(in: geo.size)
+                withAnimation(.easeOut(duration: 0.5).delay(0.15)) {
+                    messageIn = true
+                }
             }
         }
         .allowsHitTesting(false)
     }
 }
 
-/// One confetti rectangle/disc. Position is `origin + v·t + ½g·t²`; rotation
-/// spins linearly. Fades out over the tail of its lifetime.
-private struct ConfettiPiece {
-    let origin: CGPoint
-    let velocity: CGVector
-    let color: Color
-    let size: CGSize
-    let spin: Double
-    let spinSpeed: Double
-    let isCircle: Bool
+/// One blade of grass, drawn as a tapered curve rooted at the bottom edge.
+/// `growth` eases the blade up from nothing over its lifetime (offset by a small
+/// per-blade `delay` so the field sprouts as a wave); once grown it sways with a
+/// gentle sine. `depth` fakes a shallow field — nearer blades are taller,
+/// wider, and brighter, and are drawn last so they sit in front.
+private struct GrassBlade {
+    let baseX: CGFloat        // fraction of width, 0...1
+    let height: CGFloat       // full height in points
+    let width: CGFloat        // base width in points
+    let bend: CGFloat         // resting horizontal tip offset
+    let tint: Color
+    let delay: Double
+    let swayAmplitude: CGFloat
+    let swaySpeed: Double
+    let swayPhase: Double
 
-    private static let gravity = 560.0
-    private static let lifetime = 3.0
-    private static let perCorner = 36
+    private static let growDuration = 1.2
+    private static let bladeCount = 110
 
     private static let palette: [Color] = [
-        Color(red: 0.98, green: 0.30, blue: 0.40),
-        Color(red: 1.00, green: 0.74, blue: 0.30),
-        Color(red: 0.99, green: 0.88, blue: 0.34),
-        Color(red: 0.36, green: 0.82, blue: 0.55),
-        Color(red: 0.36, green: 0.62, blue: 0.98),
-        Color(red: 0.72, green: 0.48, blue: 0.98),
-        Color(red: 0.96, green: 0.55, blue: 0.80),
+        Color(red: 0.16, green: 0.46, blue: 0.18),
+        Color(red: 0.22, green: 0.55, blue: 0.22),
+        Color(red: 0.30, green: 0.64, blue: 0.26),
+        Color(red: 0.40, green: 0.72, blue: 0.30),
+        Color(red: 0.50, green: 0.80, blue: 0.36),
     ]
 
-    static func burst(in canvas: CGSize) -> [ConfettiPiece] {
+    static func field(in canvas: CGSize) -> [GrassBlade] {
         guard canvas.width > 0, canvas.height > 0 else { return [] }
 
-        // Bottom-left fires up-and-right; bottom-right fires up-and-left.
-        let sources: [(origin: CGPoint, horizontal: Double)] = [
-            (CGPoint(x: 0, y: canvas.height), 1),
-            (CGPoint(x: canvas.width, y: canvas.height), -1),
-        ]
-
-        var pieces: [ConfettiPiece] = []
-        for source in sources {
-            for _ in 0 ..< perCorner {
-                // 50°–82° above horizontal, aimed toward the center.
-                let angle = Double.random(in: 50 ... 82) * .pi / 180
-                let speed = Double.random(in: 280 ... 480)
-                pieces.append(ConfettiPiece(
-                    origin: source.origin,
-                    velocity: CGVector(
-                        dx: source.horizontal * cos(angle) * speed,
-                        dy: -sin(angle) * speed
-                    ),
-                    color: palette.randomElement()!,
-                    size: CGSize(width: .random(in: 5 ... 9), height: .random(in: 8 ... 14)),
-                    spin: .random(in: 0 ... 2 * .pi),
-                    spinSpeed: .random(in: -7 ... 7),
-                    isCircle: Bool.random()
-                ))
-            }
+        var blades: [GrassBlade] = (0 ..< bladeCount).map { _ in
+            // Nearer blades (depth → 1) are taller, fuller, and lit brighter.
+            let depth = Double.random(in: 0 ... 1)
+            let height = canvas.height * (0.20 + 0.42 * depth) * .random(in: 0.85 ... 1.15)
+            let shade = palette[min(palette.count - 1, Int(depth * Double(palette.count)))]
+            return GrassBlade(
+                baseX: .random(in: -0.02 ... 1.02),
+                height: height,
+                width: 5 + 7 * depth,
+                bend: .random(in: -26 ... 26) * (0.5 + 0.5 * depth),
+                tint: shade,
+                delay: .random(in: 0 ... 0.6),
+                swayAmplitude: .random(in: 4 ... 11),
+                swaySpeed: .random(in: 0.7 ... 1.4),
+                swayPhase: .random(in: 0 ... 2 * .pi)
+            )
         }
-        return pieces
+        // Draw far blades first so the brighter, taller foreground overlaps them.
+        blades.sort { $0.height < $1.height }
+        return blades
     }
 
     func draw(in context: GraphicsContext, at t: TimeInterval, canvas: CGSize) {
-        guard t >= 0, t < Self.lifetime else { return }
+        let local = max(0, t - delay)
+        let raw = min(local / Self.growDuration, 1)
+        // Ease-out cubic: shoots up, then settles.
+        let growth = 1 - pow(1 - raw, 3)
+        guard growth > 0 else { return }
 
-        let x = origin.x + velocity.dx * t
-        let y = origin.y + velocity.dy * t + 0.5 * Self.gravity * t * t
-        guard y < canvas.height + size.height else { return }
+        let baseY = canvas.height
+        let bx = baseX * canvas.width
+        let h = height * growth
+        let half = width / 2
 
-        var c = context
-        c.opacity = max(0, min(1, (Self.lifetime - t) / 0.9))
-        c.translateBy(x: x, y: y)
-        c.rotate(by: .radians(spin + spinSpeed * t))
+        // Sway scales with how grown (and therefore how tall) the blade is.
+        let sway = CGFloat(sin(t * swaySpeed + swayPhase)) * swayAmplitude * growth
+        let tipX = bx + bend * growth + sway
+        let tipY = baseY - h
 
-        let rect = CGRect(x: -size.width / 2, y: -size.height / 2, width: size.width, height: size.height)
-        let path = isCircle ? Path(ellipseIn: rect) : Path(roundedRect: rect, cornerRadius: 1.5)
-        c.fill(path, with: .color(color))
+        var path = Path()
+        path.move(to: CGPoint(x: bx - half, y: baseY))
+        path.addQuadCurve(
+            to: CGPoint(x: tipX, y: tipY),
+            control: CGPoint(x: bx - half + (tipX - bx) * 0.5, y: baseY - h * 0.6)
+        )
+        path.addQuadCurve(
+            to: CGPoint(x: bx + half, y: baseY),
+            control: CGPoint(x: bx + half + (tipX - bx) * 0.5, y: baseY - h * 0.5)
+        )
+        path.closeSubpath()
+
+        // Darker at the root, blade tint toward the tip, for a touch of volume.
+        let shading = GraphicsContext.Shading.linearGradient(
+            Gradient(colors: [tint.opacity(0.65), tint]),
+            startPoint: CGPoint(x: bx, y: baseY),
+            endPoint: CGPoint(x: tipX, y: tipY)
+        )
+        context.fill(path, with: shading)
     }
 }
 
