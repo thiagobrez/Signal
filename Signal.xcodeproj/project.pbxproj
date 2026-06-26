@@ -50,6 +50,7 @@
 		DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoItem.swift; sourceTree = "<group>"; };
 		E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalStore.swift; sourceTree = "<group>"; };
 		F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyboardShortcuts+Names.swift"; sourceTree = "<group>"; };
+		F97E8E46E48B621084C6EF16 /* DynamicNotchKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DynamicNotchKit; path = LocalPackages/DynamicNotchKit; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,9 +167,18 @@
 		F1834509B7DA2D7381659AD2 = {
 			isa = PBXGroup;
 			children = (
+				FE02D1BD585FFC3B5EEF05CA /* Packages */,
 				13DFB72E369D4207F5632672 /* Signal */,
 				D2A9230E27E9F4AC1910E6A2 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		FE02D1BD585FFC3B5EEF05CA /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				F97E8E46E48B621084C6EF16 /* DynamicNotchKit */,
+			);
+			name = Packages;
 			sourceTree = "<group>";
 		};
 		FE804179A515C6BB6A7BAA33 /* Sound */ = {
@@ -228,8 +238,8 @@
 			mainGroup = F1834509B7DA2D7381659AD2;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				A6B0A744B5D5F16EC81B3F5B /* XCRemoteSwiftPackageReference "DynamicNotchKit" */,
 				6E02714E8FCBF0EF1283A71D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				892239A6A90385B8CB507CC9 /* XCLocalSwiftPackageReference "LocalPackages/DynamicNotchKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D2A9230E27E9F4AC1910E6A2 /* Products */;
@@ -472,6 +482,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		892239A6A90385B8CB507CC9 /* XCLocalSwiftPackageReference "LocalPackages/DynamicNotchKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = LocalPackages/DynamicNotchKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		6E02714E8FCBF0EF1283A71D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -479,14 +496,6 @@
 			requirement = {
 				kind = exactVersion;
 				version = 1.10.0;
-			};
-		};
-		A6B0A744B5D5F16EC81B3F5B /* XCRemoteSwiftPackageReference "DynamicNotchKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/MrKai77/DynamicNotchKit";
-			requirement = {
-				kind = exactVersion;
-				version = 1.1.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -499,7 +508,6 @@
 		};
 		525E24A23AC8A26E90F43271 /* DynamicNotchKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A6B0A744B5D5F16EC81B3F5B /* XCRemoteSwiftPackageReference "DynamicNotchKit" */;
 			productName = DynamicNotchKit;
 		};
 /* End XCSwiftPackageProductDependency section */

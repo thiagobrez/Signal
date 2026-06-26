@@ -43,9 +43,10 @@ final class NotchController {
         presentationRequest &+= 1
 
         let notch = ensureNotch()
+        let screen = presentationScreen
         isVisible = true
         Task {
-            await notch.expand()
+            await notch.expand(on: screen)
             activateForInput()
             installClickMonitor()
         }
@@ -57,8 +58,9 @@ final class NotchController {
         presentationRequest &+= 1
 
         let notch = ensureNotch()
+        let screen = presentationScreen
         isVisible = true
-        Task { await notch.expand() }
+        Task { await notch.expand(on: screen) }
 
         glanceHideTask?.cancel()
         glanceHideTask = Task {
@@ -74,8 +76,23 @@ final class NotchController {
 
     // MARK: - Internals
 
+    /// The screen to present on: the one containing the pointer, so the panel
+    /// follows the user to whichever display they're working on (and the
+    /// notch/floating style is then resolved for *that* screen). Falls back to the
+    /// main screen, then the primary — matching DynamicNotchKit's own default.
+    private var presentationScreen: NSScreen {
+        let mouseLocation = NSEvent.mouseLocation
+        return NSScreen.screens.first { NSMouseInRect(mouseLocation, $0.frame, false) }
+            ?? NSScreen.main
+            ?? NSScreen.screens[0]
+    }
+
     private func ensureNotch() -> DynamicNotch<SignalNotchView, EmptyView, EmptyView> {
         if let notch { return notch }
+        // `.auto` renders the notch shape on notched screens and the floating pill
+        // on notchless ones. The floating pill's hardcoded margins are patched to 0
+        // in our vendored DynamicNotchKit (LocalPackages/DynamicNotchKit) so the
+        // panel reaches the window edges instead of floating with a gap.
         let created = DynamicNotch(hoverBehavior: [.keepVisible], style: .auto) { [unowned self] in
             SignalNotchView(store: self.store, controller: self)
         }

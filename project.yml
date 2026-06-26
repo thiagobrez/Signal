@@ -8,8 +8,7 @@ options:
 
 packages:
   DynamicNotchKit:
-    url: https://github.com/MrKai77/DynamicNotchKit
-    exactVersion: 1.1.0
+    path: LocalPackages/DynamicNotchKit
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     exactVersion: 1.10.0
