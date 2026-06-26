@@ -8,6 +8,7 @@ struct SignalNotchView: View {
 
     @State private var focused: Int?
     @State private var placeholders: [String] = SignalNotchView.randomPlaceholders()
+    @State private var celebrating = false
 
     /// A pool of suggestions spanning software development, project management,
     /// design, and everyday chores. One is shown per empty slot, refreshed each
@@ -65,6 +66,12 @@ struct SignalNotchView: View {
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.black)
         )
+        .overlay {
+            if celebrating {
+                ConfettiBurst()
+            }
+        }
+        .onChange(of: store.celebrationTrigger) { _, _ in celebrate() }
         .onKeyPress(.escape) {
             controller.hide()
             return .handled
@@ -110,6 +117,15 @@ struct SignalNotchView: View {
         }
     }
 
+    /// Light up the rainbow border for a few seconds, then let it fade out.
+    private func celebrate() {
+        celebrating = true
+        Task {
+            try? await Task.sleep(for: .seconds(3.5))
+            celebrating = false
+        }
+    }
+
     private func advanceOrDismiss(from index: Int) {
         if index < store.items.count - 1 {
             focused = index + 1
@@ -117,6 +133,108 @@ struct SignalNotchView: View {
             store.save()
             controller.hide()
         }
+    }
+}
+
+/// The "all three done" celebration: confetti that bursts from the two bottom
+/// corners up toward the center, then arcs back down under gravity. Each piece's
+/// motion is computed analytically from the elapsed time, so a single
+/// `TimelineView` drives the whole field with no per-frame mutable state.
+private struct ConfettiBurst: View {
+    @State private var pieces: [ConfettiPiece] = []
+    @State private var start = Date()
+
+    var body: some View {
+        GeometryReader { geo in
+            TimelineView(.animation) { timeline in
+                Canvas { context, size in
+                    let t = timeline.date.timeIntervalSince(start)
+                    for piece in pieces {
+                        piece.draw(in: context, at: t, canvas: size)
+                    }
+                }
+            }
+            .onAppear {
+                start = Date()
+                pieces = ConfettiPiece.burst(in: geo.size)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+/// One confetti rectangle/disc. Position is `origin + v·t + ½g·t²`; rotation
+/// spins linearly. Fades out over the tail of its lifetime.
+private struct ConfettiPiece {
+    let origin: CGPoint
+    let velocity: CGVector
+    let color: Color
+    let size: CGSize
+    let spin: Double
+    let spinSpeed: Double
+    let isCircle: Bool
+
+    private static let gravity = 560.0
+    private static let lifetime = 3.0
+    private static let perCorner = 36
+
+    private static let palette: [Color] = [
+        Color(red: 0.98, green: 0.30, blue: 0.40),
+        Color(red: 1.00, green: 0.74, blue: 0.30),
+        Color(red: 0.99, green: 0.88, blue: 0.34),
+        Color(red: 0.36, green: 0.82, blue: 0.55),
+        Color(red: 0.36, green: 0.62, blue: 0.98),
+        Color(red: 0.72, green: 0.48, blue: 0.98),
+        Color(red: 0.96, green: 0.55, blue: 0.80),
+    ]
+
+    static func burst(in canvas: CGSize) -> [ConfettiPiece] {
+        guard canvas.width > 0, canvas.height > 0 else { return [] }
+
+        // Bottom-left fires up-and-right; bottom-right fires up-and-left.
+        let sources: [(origin: CGPoint, horizontal: Double)] = [
+            (CGPoint(x: 0, y: canvas.height), 1),
+            (CGPoint(x: canvas.width, y: canvas.height), -1),
+        ]
+
+        var pieces: [ConfettiPiece] = []
+        for source in sources {
+            for _ in 0 ..< perCorner {
+                // 50°–82° above horizontal, aimed toward the center.
+                let angle = Double.random(in: 50 ... 82) * .pi / 180
+                let speed = Double.random(in: 280 ... 480)
+                pieces.append(ConfettiPiece(
+                    origin: source.origin,
+                    velocity: CGVector(
+                        dx: source.horizontal * cos(angle) * speed,
+                        dy: -sin(angle) * speed
+                    ),
+                    color: palette.randomElement()!,
+                    size: CGSize(width: .random(in: 5 ... 9), height: .random(in: 8 ... 14)),
+                    spin: .random(in: 0 ... 2 * .pi),
+                    spinSpeed: .random(in: -7 ... 7),
+                    isCircle: Bool.random()
+                ))
+            }
+        }
+        return pieces
+    }
+
+    func draw(in context: GraphicsContext, at t: TimeInterval, canvas: CGSize) {
+        guard t >= 0, t < Self.lifetime else { return }
+
+        let x = origin.x + velocity.dx * t
+        let y = origin.y + velocity.dy * t + 0.5 * Self.gravity * t * t
+        guard y < canvas.height + size.height else { return }
+
+        var c = context
+        c.opacity = max(0, min(1, (Self.lifetime - t) / 0.9))
+        c.translateBy(x: x, y: y)
+        c.rotate(by: .radians(spin + spinSpeed * t))
+
+        let rect = CGRect(x: -size.width / 2, y: -size.height / 2, width: size.width, height: size.height)
+        let path = isCircle ? Path(ellipseIn: rect) : Path(roundedRect: rect, cornerRadius: 1.5)
+        c.fill(path, with: .color(color))
     }
 }
 

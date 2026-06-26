@@ -13,6 +13,7 @@ struct PreferencesView: View {
     @AppStorage(SettingsStore.Key.glanceWindowStartHour) private var glanceStart = 10
     @AppStorage(SettingsStore.Key.glanceWindowEndHour) private var glanceEnd = 18
     @AppStorage(SettingsStore.Key.completionSound) private var completionSound = "pop"
+    @AppStorage(SettingsStore.Key.celebrationSound) private var celebrationSound = "sys:Hero"
     @AppStorage(SettingsStore.Key.openSound) private var openSound = "sys:Blow"
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -39,6 +40,7 @@ struct PreferencesView: View {
             Section("Sound") {
                 soundPicker("On open", selection: $openSound)
                 soundPicker("On completion", selection: $completionSound)
+                soundPicker("On all done", selection: $celebrationSound)
             }
 
             Section("Quick reminders") {

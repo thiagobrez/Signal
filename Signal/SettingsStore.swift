@@ -15,6 +15,7 @@ enum SettingsStore {
         static let glanceWindowEndHour = "glanceWindowEndHour"
         static let glanceDurationSeconds = "glanceDurationSeconds"
         static let completionSound = "completionSound"
+        static let celebrationSound = "celebrationSound"
         static let openSound = "openSound"
     }
 
@@ -31,6 +32,7 @@ enum SettingsStore {
             Key.glanceWindowEndHour: 18,
             Key.glanceDurationSeconds: 5.0,
             Key.completionSound: "pop",
+            Key.celebrationSound: "sys:Hero",
             Key.openSound: "sys:Blow",
         ])
     }
@@ -48,5 +50,6 @@ enum SettingsStore {
     static var glanceWindowEndHour: Int { d.integer(forKey: Key.glanceWindowEndHour) }
     static var glanceDurationSeconds: Double { d.double(forKey: Key.glanceDurationSeconds) }
     static var completionSound: String { d.string(forKey: Key.completionSound) ?? "pop" }
+    static var celebrationSound: String { d.string(forKey: Key.celebrationSound) ?? "sys:Hero" }
     static var openSound: String { d.string(forKey: Key.openSound) ?? "sys:Blow" }
 }

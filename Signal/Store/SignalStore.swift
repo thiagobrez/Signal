@@ -11,6 +11,11 @@ final class SignalStore {
     private(set) var today: DayLog?
     private(set) var items: [TodoItem] = []
 
+    /// Bumped the moment all three to-dos become complete, so the view can fire
+    /// the celebration (rainbow border + sound). Only fires on the transition
+    /// *into* a fully-done day, not on every toggle.
+    private(set) var celebrationTrigger = 0
+
     init(context: ModelContext) {
         self.context = context
         refreshForToday()
@@ -43,7 +48,14 @@ final class SignalStore {
         item.isCompleted.toggle()
         item.completedAt = item.isCompleted ? Date() : nil
         if item.isCompleted {
-            SoundPlayer.play(SettingsStore.completionSound)
+            // Reaching all three is the big moment: celebrate instead of the
+            // ordinary per-task chime so the two sounds don't pile up.
+            if completedCount == 3 {
+                celebrationTrigger &+= 1
+                SoundPlayer.play(SettingsStore.celebrationSound)
+            } else {
+                SoundPlayer.play(SettingsStore.completionSound)
+            }
         }
         save()
     }
