@@ -15,7 +15,10 @@ packages:
 
 settings:
   base:
-    DEVELOPMENT_TEAM: G3GDV6SP6M
+    # DEVELOPMENT_TEAM is intentionally NOT set here so it stays out of the
+    # public repo. The target pulls it in via configFiles -> Config/Signing.xcconfig,
+    # which optionally includes the gitignored Config/Signing.local.xcconfig.
+    # See Config/Signing.local.xcconfig.example.
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "1.0"
@@ -25,11 +28,14 @@ targets:
   Signal:
     type: application
     platform: macOS
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
     sources:
       - path: Signal
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.thiagobrez.Signal
+        PRODUCT_BUNDLE_IDENTIFIER: ski.brezin.signal
         PRODUCT_NAME: Signal
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_LSUIElement: YES

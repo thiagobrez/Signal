@@ -46,6 +46,7 @@
 		B1389E0ACDE4C1E41AE3799A /* pencil.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pencil.wav; sourceTree = "<group>"; };
 		B56A8D7FF5758A4206738001 /* bubble.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bubble.wav; sourceTree = "<group>"; };
 		B6350E3A747785646888F518 /* Signal.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Signal.entitlements; sourceTree = "<group>"; };
+		B90D0814597E2043361DD7A4 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		C453E4D521FCA575CE77C9A3 /* SignalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalApp.swift; sourceTree = "<group>"; };
 		CB7E2BD16B84F461552B37B3 /* scribble.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = scribble.wav; sourceTree = "<group>"; };
 		D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
@@ -94,6 +95,14 @@
 				703A620C14130D54DCE2B2A9 /* SignalServices.swift */,
 			);
 			path = Signal;
+			sourceTree = "<group>";
+		};
+		3AE451D3B747E973F7498CCC /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				B90D0814597E2043361DD7A4 /* Signing.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		3C64479F2F2944ABEE1C8338 /* Sounds */ = {
@@ -170,6 +179,7 @@
 		F1834509B7DA2D7381659AD2 = {
 			isa = PBXGroup;
 			children = (
+				3AE451D3B747E973F7498CCC /* Config */,
 				FE02D1BD585FFC3B5EEF05CA /* Packages */,
 				13DFB72E369D4207F5632672 /* Signal */,
 				D2A9230E27E9F4AC1910E6A2 /* Products */,
@@ -226,7 +236,6 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					AC6A4C5D9DE6F0E0B4A0E04E = {
-						DevelopmentTeam = G3GDV6SP6M;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -296,6 +305,7 @@
 /* Begin XCBuildConfiguration section */
 		2B3EDD5DC6EAA9B93F8C8376 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B90D0814597E2043361DD7A4 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
@@ -309,7 +319,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.thiagobrez.Signal;
+				PRODUCT_BUNDLE_IDENTIFIER = ski.brezin.signal;
 				PRODUCT_NAME = Signal;
 				SDKROOT = macosx;
 			};
@@ -352,7 +362,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = G3GDV6SP6M;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -412,7 +421,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = G3GDV6SP6M;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -444,6 +452,7 @@
 		};
 		DD8F13248922B46C35AF417B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B90D0814597E2043361DD7A4 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
@@ -457,7 +466,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.thiagobrez.Signal;
+				PRODUCT_BUNDLE_IDENTIFIER = ski.brezin.signal;
 				PRODUCT_NAME = Signal;
 				SDKROOT = macosx;
 			};

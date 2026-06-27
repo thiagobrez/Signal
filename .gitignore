@@ -1,3 +1,6 @@
+# Local signing config
+Config/Signing.local.xcconfig
+
 # Xcode / Swift build output
 build/
 DerivedData/

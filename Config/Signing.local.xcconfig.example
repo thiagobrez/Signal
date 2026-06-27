@@ -1,0 +1,12 @@
+// Template for local code-signing config.
+//
+// Setup:
+//   cp Config/Signing.local.xcconfig.example Config/Signing.local.xcconfig
+//   # set DEVELOPMENT_TEAM below to your own Apple Developer Team ID
+//   xcodegen generate
+//
+// Find your Team ID at https://developer.apple.com/account -> Membership details.
+//
+// Config/Signing.local.xcconfig is gitignored so your Team ID stays out of the
+// public repo. This .example file is committed as a reference.
+DEVELOPMENT_TEAM = YOUR_TEAM_ID
