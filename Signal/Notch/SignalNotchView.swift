@@ -58,6 +58,7 @@ struct SignalNotchView: View {
                     placeholder: placeholders[pair.offset % placeholders.count],
                     focused: $focused,
                     onSubmit: { advanceOrDismiss(from: pair.offset) },
+                    onComplete: { focusNextEditable(after: pair.offset) },
                     onEscape: { controller.hide() }
                 )
             }
@@ -146,6 +147,27 @@ struct SignalNotchView: View {
         } else {
             store.save()
             controller.hide()
+        }
+    }
+
+    /// After a task is checked off, move focus to the next still-editable slot —
+    /// searching forward and wrapping — so the user can keep capturing the next
+    /// thing without reaching for the mouse. If every slot is done (the day is
+    /// complete) focus is dropped so nothing fights the celebration.
+    private func focusNextEditable(after index: Int) {
+        // Defer so focus lands after the checked row collapses to a `Text` and
+        // resigns first responder.
+        DispatchQueue.main.async {
+            let count = store.items.count
+            guard count > 0 else { return }
+            for offset in 1 ... count {
+                let i = (index + offset) % count
+                if !store.items[i].isCompleted {
+                    focused = i
+                    return
+                }
+            }
+            focused = nil
         }
     }
 }
@@ -328,6 +350,7 @@ private struct TodoRow: View {
     let placeholder: String
     @Binding var focused: Int?
     let onSubmit: () -> Void
+    let onComplete: () -> Void
     let onEscape: () -> Void
 
     /// Fixed height for the text area so the row never shifts vertically when the
@@ -342,7 +365,11 @@ private struct TodoRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Button {
+                let wasCompleted = item.isCompleted
                 store.toggleComplete(item)
+                // Only advance on the actual completion transition — not when
+                // un-checking, and not when an empty slot refuses to complete.
+                if !wasCompleted, item.isCompleted { onComplete() }
             } label: {
                 Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 18))
@@ -427,6 +454,13 @@ private struct PlainTextField: NSViewRepresentable {
         // Drive AppKit's first responder from SwiftUI's focus state.
         if focusedIndex == index, field.window != nil, field.currentEditor() == nil {
             field.window?.makeFirstResponder(field)
+            // Taking first responder selects the whole string by default; collapse
+            // the selection to the end so focusing just drops the caret after the
+            // existing text instead of teeing it up to be overwritten.
+            if let editor = field.currentEditor() {
+                let end = (field.stringValue as NSString).length
+                editor.selectedRange = NSRange(location: end, length: 0)
+            }
         }
     }
 
