@@ -9,6 +9,7 @@ struct SignalNotchView: View {
     @State private var focused: Int?
     @State private var placeholders: [String] = SignalNotchView.randomPlaceholders()
     @State private var celebrating = false
+    @State private var blurred = false
 
     /// A pool of suggestions spanning software development, project management,
     /// design, and everyday chores. One is shown per empty slot, refreshed each
@@ -63,9 +64,11 @@ struct SignalNotchView: View {
         }
         .padding(16)
         .frame(width: 340)
-        // Depth-of-field: when the day is done, the tasks recede out of focus so
-        // the sharp grass in front becomes the subject.
-        .blur(radius: celebrating ? 7 : 0)
+        // Depth-of-field: while the day is done the tasks recede out of focus so
+        // the sharp grass in front is the subject; the blur lifts as the grass
+        // parts, bringing the tasks back into focus.
+        .blur(radius: blurred ? 7 : 0)
+        .animation(.easeInOut(duration: 0.6), value: blurred)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.black)
         )
@@ -76,7 +79,7 @@ struct SignalNotchView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .animation(.easeInOut(duration: 0.6), value: celebrating)
+        .animation(.easeInOut(duration: 0.4), value: celebrating)
         .onChange(of: store.celebrationTrigger) { _, _ in celebrate() }
         .onKeyPress(.escape) {
             controller.hide()
@@ -123,11 +126,16 @@ struct SignalNotchView: View {
         }
     }
 
-    /// Grow the grass (and blur the tasks) for a few seconds, then let it fade out.
+    /// Grow the grass (and blur the tasks), hold, then part the grass to the
+    /// sides — lifting the blur in sync so the tasks slide back into focus —
+    /// before tearing the overlay down once the blades have cleared.
     private func celebrate() {
         celebrating = true
+        blurred = true
         Task {
-            try? await Task.sleep(for: .seconds(4.5))
+            try? await Task.sleep(for: .seconds(GrassBlade.exitStart))
+            blurred = false
+            try? await Task.sleep(for: .seconds(GrassBlade.exitStagger + GrassBlade.exitSlide + 0.1))
             celebrating = false
         }
     }
@@ -189,6 +197,11 @@ private struct CelebrationGrass: View {
                 withAnimation(.easeOut(duration: 0.5).delay(0.15)) {
                     messageIn = true
                 }
+                // Fade the message just as the grass begins to part.
+                Task {
+                    try? await Task.sleep(for: .seconds(GrassBlade.exitStart))
+                    withAnimation(.easeIn(duration: 0.35)) { messageIn = false }
+                }
             }
         }
         .allowsHitTesting(false)
@@ -213,6 +226,12 @@ private struct GrassBlade {
 
     private static let growDuration = 1.2
     private static let bladeCount = 110
+    static let maxEntryDelay = 0.6
+    /// Seconds into the celebration when the blades begin parting to the sides.
+    static let exitStart = 3.7
+    /// Spread of the parting wave across the field, and each blade's slide time.
+    static let exitStagger = 0.3
+    static let exitSlide = 0.55
 
     private static let palette: [Color] = [
         Color(red: 0.16, green: 0.46, blue: 0.18),
@@ -236,7 +255,7 @@ private struct GrassBlade {
                 width: 5 + 7 * depth,
                 bend: .random(in: -26 ... 26) * (0.5 + 0.5 * depth),
                 tint: shade,
-                delay: .random(in: 0 ... 0.6),
+                delay: .random(in: 0 ... maxEntryDelay),
                 swayAmplitude: .random(in: 4 ... 11),
                 swaySpeed: .random(in: 0.7 ... 1.4),
                 swayPhase: .random(in: 0 ... 2 * .pi)
@@ -282,7 +301,23 @@ private struct GrassBlade {
             startPoint: CGPoint(x: bx, y: baseY),
             endPoint: CGPoint(x: tipX, y: tipY)
         )
-        context.fill(path, with: shading)
+
+        // Exit: each blade parts toward its nearest side and accelerates clean
+        // off-screen. The wave runs in reverse of the entry — blades that
+        // sprouted last (longest entry delay) are the first to leave.
+        let exitDelay = (1 - delay / Self.maxEntryDelay) * Self.exitStagger
+        let exitT = t - Self.exitStart - exitDelay
+        guard exitT > 0 else {
+            context.fill(path, with: shading)
+            return
+        }
+        let p = min(exitT / Self.exitSlide, 1)
+        let eased = p * p
+        let direction: CGFloat = bx < canvas.width / 2 ? -1 : 1
+        let clearance = (direction < 0 ? bx : canvas.width - bx) + width
+        var c = context
+        c.translateBy(x: direction * clearance * 1.1 * eased, y: 0)
+        c.fill(path, with: shading)
     }
 }
 
