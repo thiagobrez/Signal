@@ -28,6 +28,7 @@
 		CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
 		D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 85754D73DEB6E570698C3CD6 /* meadow.wav */; };
 		F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
+		FE6969C474390CFCC52DEFDF /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 		B6350E3A747785646888F518 /* Signal.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Signal.entitlements; sourceTree = "<group>"; };
 		B90D0814597E2043361DD7A4 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		C453E4D521FCA575CE77C9A3 /* SignalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalApp.swift; sourceTree = "<group>"; };
+		CABDE5D429850284CDE2585B /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		CB7E2BD16B84F461552B37B3 /* scribble.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = scribble.wav; sourceTree = "<group>"; };
 		D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoItem.swift; sourceTree = "<group>"; };
@@ -89,6 +91,7 @@
 				FE804179A515C6BB6A7BAA33 /* Sound */,
 				76C32D63C38B77706495484D /* Store */,
 				2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */,
+				CABDE5D429850284CDE2585B /* AppIcon.icon */,
 				8C8D74719DA574C846852019 /* SettingsStore.swift */,
 				B6350E3A747785646888F518 /* Signal.entitlements */,
 				C453E4D521FCA575CE77C9A3 /* SignalApp.swift */,
@@ -268,6 +271,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE6969C474390CFCC52DEFDF /* AppIcon.icon in Resources */,
 				30D307A0EDEFB9362A2137C3 /* bubble.wav in Resources */,
 				D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */,
 				0546BC32AA8E72C7F0895F3C /* pencil.wav in Resources */,
