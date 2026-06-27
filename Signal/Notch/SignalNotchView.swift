@@ -213,6 +213,10 @@ private struct CelebrationGrass: View {
                     .opacity(messageIn ? 1 : 0)
                     .scaleEffect(messageIn ? 1 : 0.94)
             }
+            // While the celebration is on screen it sits in front of the tasks
+            // and swallows every click, so nothing underneath can be focused or
+            // edited until the grass has cleared.
+            .contentShape(Rectangle())
             .onAppear {
                 start = Date()
                 blades = GrassBlade.field(in: geo.size)
@@ -226,7 +230,6 @@ private struct CelebrationGrass: View {
                 }
             }
         }
-        .allowsHitTesting(false)
     }
 }
 
