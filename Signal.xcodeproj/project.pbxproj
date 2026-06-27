@@ -26,6 +26,7 @@
 		A6188962D97B6430646F8BA6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */; };
 		AA8F91BCB15AC076FD9DB118 /* tube.wav in Resources */ = {isa = PBXBuildFile; fileRef = AD40B91BE6D69CE63BBF11CC /* tube.wav */; };
 		CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
+		D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 85754D73DEB6E570698C3CD6 /* meadow.wav */; };
 		F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
 /* End PBXBuildFile section */
 
@@ -37,6 +38,7 @@
 		4E7748712533E7651295201A /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
 		703A620C14130D54DCE2B2A9 /* SignalServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalServices.swift; sourceTree = "<group>"; };
 		73845020201BE00A671F84BC /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
+		85754D73DEB6E570698C3CD6 /* meadow.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meadow.wav; sourceTree = "<group>"; };
 		88B94E448EA5FDD667DF3D0F /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		8C8D74719DA574C846852019 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		9D5999FF8532367E6DBD5F60 /* Signal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Signal.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -98,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				B56A8D7FF5758A4206738001 /* bubble.wav */,
+				85754D73DEB6E570698C3CD6 /* meadow.wav */,
 				B1389E0ACDE4C1E41AE3799A /* pencil.wav */,
 				4C4F741DBD56F9C4C17A0174 /* pop.wav */,
 				CB7E2BD16B84F461552B37B3 /* scribble.wav */,
@@ -257,6 +260,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				30D307A0EDEFB9362A2137C3 /* bubble.wav in Resources */,
+				D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */,
 				0546BC32AA8E72C7F0895F3C /* pencil.wav in Resources */,
 				1AF44987ABA75D46DCB18913 /* pop.wav in Resources */,
 				00CEEAF1D4209EDCA5D4DB07 /* scribble.wav in Resources */,

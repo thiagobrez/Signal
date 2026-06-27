@@ -6,6 +6,10 @@ import AppKit
 enum SoundPlayer {
     static let noneID = "none"
 
+    /// A bundled sound reserved for the "all done" celebration. Hidden from the
+    /// other pickers so it's only offered where it makes sense.
+    static let celebrationOnlyID = "meadow"
+
     /// The 14 named macOS system sounds (from /System/Library/Sounds).
     static let systemSoundNames = [
         "Basso", "Blow", "Bottle", "Frog", "Funk", "Glass", "Hero",
@@ -13,9 +17,12 @@ enum SoundPlayer {
     ]
 
     /// Custom sounds bundled in the app (file names without extension), sorted.
+    /// Excludes celebration-only sounds — see `celebrationOnlyID`.
     static var bundledSoundNames: [String] {
         let urls = Bundle.main.urls(forResourcesWithExtension: "wav", subdirectory: nil) ?? []
-        return urls.map { $0.deletingPathExtension().lastPathComponent }.sorted()
+        return urls.map { $0.deletingPathExtension().lastPathComponent }
+            .filter { $0 != celebrationOnlyID }
+            .sorted()
     }
 
     /// Plays the sound identified by `id`. No-op for `none`/empty.

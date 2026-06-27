@@ -13,7 +13,7 @@ struct PreferencesView: View {
     @AppStorage(SettingsStore.Key.glanceWindowStartHour) private var glanceStart = 10
     @AppStorage(SettingsStore.Key.glanceWindowEndHour) private var glanceEnd = 18
     @AppStorage(SettingsStore.Key.completionSound) private var completionSound = "pop"
-    @AppStorage(SettingsStore.Key.celebrationSound) private var celebrationSound = "sys:Hero"
+    @AppStorage(SettingsStore.Key.celebrationSound) private var celebrationSound = "meadow"
     @AppStorage(SettingsStore.Key.openSound) private var openSound = "sys:Blow"
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -40,7 +40,7 @@ struct PreferencesView: View {
             Section("Sound") {
                 soundPicker("On open", selection: $openSound)
                 soundPicker("On completion", selection: $completionSound)
-                soundPicker("On all done", selection: $celebrationSound)
+                soundPicker("On all done", selection: $celebrationSound, includesCelebration: true)
             }
 
             Section("Quick reminders") {
@@ -59,12 +59,20 @@ struct PreferencesView: View {
         .frame(width: 440)
     }
 
-    private func soundPicker(_ label: String, selection: Binding<String>) -> some View {
-        HStack {
+    private func soundPicker(
+        _ label: String,
+        selection: Binding<String>,
+        includesCelebration: Bool = false
+    ) -> some View {
+        var customNames = SoundPlayer.bundledSoundNames
+        if includesCelebration { customNames.append(SoundPlayer.celebrationOnlyID) }
+        customNames.sort()
+
+        return HStack {
             Picker(label, selection: selection) {
                 Text("None").tag(SoundPlayer.noneID)
                 Section("Custom") {
-                    ForEach(SoundPlayer.bundledSoundNames, id: \.self) { name in
+                    ForEach(customNames, id: \.self) { name in
                         Text(name.capitalized).tag(name)
                     }
                 }
