@@ -20,8 +20,8 @@ struct SignalApp: App {
 extension NSImage {
     /// Minimal display-with-notch glyph used for the menu bar item. A stroked
     /// rounded rectangle (the screen) with a shallow notch hanging from the
-    /// top-center edge. Rendered as a template image so it adapts to
-    /// light/dark menu bars.
+    /// top-center edge and a checkmark-in-a-circle centered below it. Rendered
+    /// as a template image so it adapts to light/dark menu bars.
     static let signalMenuBar: NSImage = {
         let size = NSSize(width: 20, height: 13)
         let strokeWidth: CGFloat = 1.4
@@ -31,6 +31,9 @@ extension NSImage {
         let notchWidth: CGFloat = 7
         let notchDepth: CGFloat = 2.4
         let notchCornerRadius: CGFloat = 1
+
+        let circleRadius: CGFloat = 3
+        let innerLineWidth: CGFloat = 1.1
 
         let image = NSImage(size: size, flipped: true) { rect in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
@@ -72,6 +75,26 @@ extension NSImage {
 
             ctx.addPath(notch)
             ctx.fillPath()
+
+            // Checkmark in a circle, centered in the screen below the notch.
+            let center = CGPoint(x: frame.midX, y: (bottom + frame.maxY) / 2)
+            ctx.setLineWidth(innerLineWidth)
+            ctx.addEllipse(in: CGRect(
+                x: center.x - circleRadius,
+                y: center.y - circleRadius,
+                width: circleRadius * 2,
+                height: circleRadius * 2
+            ))
+            ctx.strokePath()
+
+            let check = CGMutablePath()
+            check.move(to: CGPoint(x: center.x - 1.6, y: center.y))
+            check.addLine(to: CGPoint(x: center.x - 0.55, y: center.y + 1.05))
+            check.addLine(to: CGPoint(x: center.x + 1.7, y: center.y - 1.3))
+            ctx.setLineCap(.round)
+            ctx.setLineJoin(.round)
+            ctx.addPath(check)
+            ctx.strokePath()
             return true
         }
         image.isTemplate = true
