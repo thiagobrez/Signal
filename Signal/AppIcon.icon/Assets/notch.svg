@@ -1,0 +1,11 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="notch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#171a1b"/>
+      <stop offset="1" stop-color="#0b0c0b"/>
+    </linearGradient>
+  </defs>
+  <path d="M 110 0 L 914 0 L 914 270 Q 914 420 764 420 L 260 420 Q 110 420 110 270 Z"
+        fill="url(#notch)"/>
+  <path d="M 116 4 L 908 4" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="3"/>
+</svg>

@@ -6,28 +6,71 @@
     {
       "layers" : [
         {
-          "image-name" : "grass.svg",
-          "name" : "grass"
-        },
-        {
-          "blend-mode" : "normal",
-          "fill" : "none",
           "glass" : true,
           "hidden" : false,
-          "image-name" : "letter-s.svg",
-          "name" : "letter-s",
-          "opacity" : 1,
+          "image-name" : "circle-right.svg",
+          "name" : "check-3",
           "position" : {
-            "scale" : 1.24,
+            "scale" : 1.2,
             "translation-in-points" : [
-              -2.502239667020376,
-              -1.229394942196791
+              0,
+              -33.60000000000002
             ]
           }
         },
         {
-          "image-name" : "background.svg",
-          "name" : "background"
+          "image-name" : "circle-mid.svg",
+          "name" : "check-2",
+          "position" : {
+            "scale" : 1.2,
+            "translation-in-points" : [
+              0,
+              -33.60000000000002
+            ]
+          }
+        },
+        {
+          "glass" : true,
+          "image-name" : "circle-left.svg",
+          "name" : "check-1",
+          "opacity" : 0.5,
+          "position" : {
+            "scale" : 1.2,
+            "translation-in-points" : [
+              0,
+              -33.60000000000002
+            ]
+          }
+        },
+        {
+          "image-name" : "notch.svg",
+          "name" : "notch",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -3.550000000000068,
+              -210
+            ]
+          }
+        },
+        {
+          "fill-specializations" : [
+            {
+              "value" : "automatic"
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.00000,0.00000,0.00000,1.00000",
+                  "srgb:0.10196,0.16471,0.10980,1.00000"
+                ]
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "background-light.svg",
+          "name" : "background-light"
         }
       ],
       "shadow" : {
