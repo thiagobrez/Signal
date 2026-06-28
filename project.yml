@@ -38,6 +38,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: ski.brezin.signal
         PRODUCT_NAME: Signal
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_CFBundleDisplayName: Signal
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
