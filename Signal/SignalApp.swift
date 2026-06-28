@@ -28,9 +28,9 @@ extension NSImage {
         let inset: CGFloat = strokeWidth / 2 + 0.5
         let displayCornerRadius: CGFloat = 2.6
 
-        let notchWidth: CGFloat = 6
-        let notchDepth: CGFloat = 2
-        let notchCornerRadius: CGFloat = 0.9
+        let notchWidth: CGFloat = 7
+        let notchDepth: CGFloat = 2.4
+        let notchCornerRadius: CGFloat = 1
 
         let image = NSImage(size: size, flipped: true) { rect in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
