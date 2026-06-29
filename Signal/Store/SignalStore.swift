@@ -52,6 +52,7 @@ final class SignalStore {
             // ordinary per-task chime so the two sounds don't pile up.
             if completedCount == 3 {
                 celebrationTrigger &+= 1
+                Analytics.dayCompleted()
                 SoundPlayer.play(SettingsStore.celebrationSound)
             } else {
                 SoundPlayer.play(SettingsStore.completionSound)

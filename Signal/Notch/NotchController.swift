@@ -36,9 +36,10 @@ final class NotchController {
         }
     }
 
-    func presentInteractive() {
+    func presentInteractive(source: Analytics.OpenSource = .manual) {
         glanceHideTask?.cancel()
         store.refreshForToday()
+        Analytics.signalOpened(source: source)
         mode = .interactive
         presentationRequest &+= 1
 

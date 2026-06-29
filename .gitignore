@@ -1,5 +1,5 @@
-# Local signing config
-Config/Signing.local.xcconfig
+# Local-only config (signing team id, analytics app id, …)
+Config/*.local.xcconfig
 
 # Xcode / Swift build output
 build/

@@ -12,6 +12,9 @@ packages:
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     exactVersion: 1.10.0
+  TelemetryDeck:
+    url: https://github.com/TelemetryDeck/SwiftSDK
+    from: 2.0.0
 
 settings:
   base:
@@ -29,8 +32,8 @@ targets:
     type: application
     platform: macOS
     configFiles:
-      Debug: Config/Signing.xcconfig
-      Release: Config/Signing.xcconfig
+      Debug: Config/Build.xcconfig
+      Release: Config/Build.xcconfig
     sources:
       - path: Signal
     settings:
@@ -38,6 +41,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: ski.brezin.signal
         PRODUCT_NAME: Signal
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: Signal/Info.plist
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
         INFOPLIST_KEY_LSUIElement: YES
@@ -49,3 +53,4 @@ targets:
     dependencies:
       - package: DynamicNotchKit
       - package: KeyboardShortcuts
+      - package: TelemetryDeck

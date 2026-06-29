@@ -1,0 +1,5 @@
+// Build configuration entry point referenced by project.yml (configFiles).
+// Aggregates the per-concern xcconfigs so each stays focused; XcodeGen points a
+// single file per build configuration, and that file pulls in the rest.
+#include "Signing.xcconfig"
+#include "Analytics.xcconfig"

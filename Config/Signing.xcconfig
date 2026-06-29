@@ -1,6 +1,6 @@
 // Committed, safe to publish — contains NO Team ID.
 //
-// This file is referenced by project.yml (configFiles) and read by XcodeGen.
+// This file is pulled in via Config/Build.xcconfig (referenced by project.yml).
 // The real Apple Developer Team ID lives in Signing.local.xcconfig, which is
 // gitignored and pulled in by the optional include below. The "?" makes the
 // include optional, so the project still generates/builds without that file.

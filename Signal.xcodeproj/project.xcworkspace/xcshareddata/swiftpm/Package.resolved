@@ -1,5 +1,5 @@
 {
-  "originHash" : "99d2fc86b013987302550cc68dafee38b801109bd3120072fc321bf082dd7d2c",
+  "originHash" : "79f0b6a176a6597b6b03cf55c4241e60d0cd8210002e1714fd3ae63c9cc88d0c",
   "pins" : [
     {
       "identity" : "keyboardshortcuts",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "70caa8dea43e2d273cd5ab78885d7eff01df550c",
         "version" : "1.10.0"
+      }
+    },
+    {
+      "identity" : "swiftsdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/TelemetryDeck/SwiftSDK",
+      "state" : {
+        "revision" : "ad4a03ec7ea7416a4081370f21c86e55b02a5b88",
+        "version" : "2.14.1"
       }
     }
   ],

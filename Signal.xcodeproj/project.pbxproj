@@ -12,6 +12,7 @@
 		08F36652507A4AB93CE0FF1B /* SignalServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A620C14130D54DCE2B2A9 /* SignalServices.swift */; };
 		1AF44987ABA75D46DCB18913 /* pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4C4F741DBD56F9C4C17A0174 /* pop.wav */; };
 		30D307A0EDEFB9362A2137C3 /* bubble.wav in Resources */ = {isa = PBXBuildFile; fileRef = B56A8D7FF5758A4206738001 /* bubble.wav */; };
+		327C60E247DE7912CB4A84CD /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 7485CC3CC5D37982A205C704 /* TelemetryDeck */; };
 		32836E195FDFA7ED8AEB517D /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 307A5F65741E0033246A3B2A /* KeyboardShortcuts */; };
 		3824FED4BA0E410A23AB96D4 /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7748712533E7651295201A /* NotchController.swift */; };
 		38549BBAA9843F968099473A /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8D74719DA574C846852019 /* SettingsStore.swift */; };
@@ -19,6 +20,7 @@
 		3ECF97CFDB2BF7587829A391 /* KeyboardShortcuts+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */; };
 		6CD7359B6468D893D57D63D8 /* SignalNotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */; };
 		727A2D12D5D0E2E4BEBA8831 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
+		7DB9713BA5A60F03AA1709BD /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462ED15C9D00B34967E04C53 /* Analytics.swift */; };
 		7FAF10A54C6C081CFFA1A256 /* SignalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453E4D521FCA575CE77C9A3 /* SignalApp.swift */; };
 		83939F1D30F9B1A18AE76D65 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */; };
 		8E64B68854B57CF40038C07D /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
@@ -35,10 +37,13 @@
 		146D2AB23F5E793F6008D409 /* DayLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayLog.swift; sourceTree = "<group>"; };
 		1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalNotchView.swift; sourceTree = "<group>"; };
 		2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		462ED15C9D00B34967E04C53 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		4C4F741DBD56F9C4C17A0174 /* pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pop.wav; sourceTree = "<group>"; };
 		4E7748712533E7651295201A /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
+		62DCF92EBA015AEB3F97C53D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		703A620C14130D54DCE2B2A9 /* SignalServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalServices.swift; sourceTree = "<group>"; };
 		73845020201BE00A671F84BC /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
+		7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
 		85754D73DEB6E570698C3CD6 /* meadow.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meadow.wav; sourceTree = "<group>"; };
 		88B94E448EA5FDD667DF3D0F /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		8C8D74719DA574C846852019 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
@@ -47,7 +52,6 @@
 		B1389E0ACDE4C1E41AE3799A /* pencil.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pencil.wav; sourceTree = "<group>"; };
 		B56A8D7FF5758A4206738001 /* bubble.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bubble.wav; sourceTree = "<group>"; };
 		B6350E3A747785646888F518 /* Signal.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Signal.entitlements; sourceTree = "<group>"; };
-		B90D0814597E2043361DD7A4 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		C453E4D521FCA575CE77C9A3 /* SignalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalApp.swift; sourceTree = "<group>"; };
 		CABDE5D429850284CDE2585B /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		CB7E2BD16B84F461552B37B3 /* scribble.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = scribble.wav; sourceTree = "<group>"; };
@@ -65,6 +69,7 @@
 			files = (
 				3BDBBB7DA4E54534E0CF1E6C /* DynamicNotchKit in Frameworks */,
 				32836E195FDFA7ED8AEB517D /* KeyboardShortcuts in Frameworks */,
+				327C60E247DE7912CB4A84CD /* TelemetryDeck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -82,6 +87,7 @@
 		13DFB72E369D4207F5632672 /* Signal */ = {
 			isa = PBXGroup;
 			children = (
+				3D5609545FFDAB3C2A3C325C /* Analytics */,
 				CA3F084569DCD0789608C15B /* Models */,
 				867189B68BE65A936D460481 /* Notch */,
 				A3582C226156511295D8A2F1 /* Preferences */,
@@ -92,6 +98,7 @@
 				76C32D63C38B77706495484D /* Store */,
 				2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */,
 				CABDE5D429850284CDE2585B /* AppIcon.icon */,
+				62DCF92EBA015AEB3F97C53D /* Info.plist */,
 				8C8D74719DA574C846852019 /* SettingsStore.swift */,
 				B6350E3A747785646888F518 /* Signal.entitlements */,
 				C453E4D521FCA575CE77C9A3 /* SignalApp.swift */,
@@ -103,7 +110,7 @@
 		3AE451D3B747E973F7498CCC /* Config */ = {
 			isa = PBXGroup;
 			children = (
-				B90D0814597E2043361DD7A4 /* Signing.xcconfig */,
+				7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -119,6 +126,14 @@
 				AD40B91BE6D69CE63BBF11CC /* tube.wav */,
 			);
 			path = Sounds;
+			sourceTree = "<group>";
+		};
+		3D5609545FFDAB3C2A3C325C /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				462ED15C9D00B34967E04C53 /* Analytics.swift */,
+			);
+			path = Analytics;
 			sourceTree = "<group>";
 		};
 		76C32D63C38B77706495484D /* Store */ = {
@@ -224,6 +239,7 @@
 			packageProductDependencies = (
 				525E24A23AC8A26E90F43271 /* DynamicNotchKit */,
 				307A5F65741E0033246A3B2A /* KeyboardShortcuts */,
+				7485CC3CC5D37982A205C704 /* TelemetryDeck */,
 			);
 			productName = Signal;
 			productReference = 9D5999FF8532367E6DBD5F60 /* Signal.app */;
@@ -254,6 +270,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				6E02714E8FCBF0EF1283A71D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				5088E218E817856B5D2EF0E6 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
 				892239A6A90385B8CB507CC9 /* XCLocalSwiftPackageReference "LocalPackages/DynamicNotchKit" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -288,6 +305,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7DB9713BA5A60F03AA1709BD /* Analytics.swift in Sources */,
 				A6188962D97B6430646F8BA6 /* AppDelegate.swift in Sources */,
 				F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */,
 				3ECF97CFDB2BF7587829A391 /* KeyboardShortcuts+Names.swift in Sources */,
@@ -309,13 +327,14 @@
 /* Begin XCBuildConfiguration section */
 		2B3EDD5DC6EAA9B93F8C8376 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B90D0814597E2043361DD7A4 /* Signing.xcconfig */;
+			baseConfigurationReference = 7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Signal/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Signal;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -458,13 +477,14 @@
 		};
 		DD8F13248922B46C35AF417B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B90D0814597E2043361DD7A4 /* Signing.xcconfig */;
+			baseConfigurationReference = 7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Signal/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Signal;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -511,6 +531,14 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		5088E218E817856B5D2EF0E6 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 		6E02714E8FCBF0EF1283A71D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
@@ -530,6 +558,11 @@
 		525E24A23AC8A26E90F43271 /* DynamicNotchKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DynamicNotchKit;
+		};
+		7485CC3CC5D37982A205C704 /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5088E218E817856B5D2EF0E6 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

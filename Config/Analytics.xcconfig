@@ -1,0 +1,13 @@
+// Committed, safe to publish — contains NO secrets.
+//
+// Surfaces the TelemetryDeck App ID into the build as TELEMETRYDECK_APP_ID,
+// which Signal/Info.plist maps to the `TelemetryDeckAppID` key and Analytics.swift
+// reads at runtime. The real ID lives in Analytics.local.xcconfig, which is
+// gitignored and pulled in by the optional include below. The empty default
+// keeps the app building (analytics just stays off) when that file is absent.
+//
+// Setup:
+//   cp Config/Analytics.local.xcconfig.example Config/Analytics.local.xcconfig
+//   # edit Config/Analytics.local.xcconfig and set your TELEMETRYDECK_APP_ID
+//   xcodegen generate
+#include? "Analytics.local.xcconfig"

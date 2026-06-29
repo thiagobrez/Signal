@@ -40,7 +40,7 @@ final class SignalServices {
         if SettingsStore.openOnLaunch {
             scheduler.markPromptedToday()
             SoundPlayer.play(SettingsStore.openSound)
-            controller.presentInteractive()
+            controller.presentInteractive(source: .launch)
         }
     }
 }

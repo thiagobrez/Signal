@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- TelemetryDeck App ID, injected from TELEMETRYDECK_APP_ID (see Config/Analytics.xcconfig).
+	     Apple's generated Info.plist keys (LSUIElement, etc.) are merged on top of this file. -->
+	<key>TelemetryDeckAppID</key>
+	<string>$(TELEMETRYDECK_APP_ID)</string>
+</dict>
+</plist>

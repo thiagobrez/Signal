@@ -1,0 +1,12 @@
+// Template for local analytics config.
+//
+// Setup:
+//   cp Config/Analytics.local.xcconfig.example Config/Analytics.local.xcconfig
+//   # set TELEMETRYDECK_APP_ID below to your TelemetryDeck App ID
+//   xcodegen generate
+//
+// Find your App ID at https://dashboard.telemetrydeck.com -> your app -> Set Up App.
+//
+// Config/Analytics.local.xcconfig is gitignored so your App ID stays out of the
+// public repo. This .example file is committed as a reference.
+TELEMETRYDECK_APP_ID = YOUR_TELEMETRYDECK_APP_ID
