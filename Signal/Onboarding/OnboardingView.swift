@@ -64,21 +64,15 @@ struct OnboardingView: View {
                 .opacity(isLastPage ? 0 : 1)
                 .disabled(isLastPage)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 24)
         .padding(.top, 16)
         .frame(height: 40)
     }
 
     private var bottomBar: some View {
-        HStack {
-            Button("Back") { go(to: page - 1) }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .opacity(page > 0 ? 1 : 0)
-                .disabled(page == 0)
-
-            Spacer()
-
+        ZStack {
+            // Page dots: centered in the window, independent of the button
+            // widths — so "Next" growing to "Get Started" doesn't shift them.
             HStack(spacing: 7) {
                 ForEach(0..<pageCount, id: \.self) { index in
                     Circle()
@@ -88,13 +82,21 @@ struct OnboardingView: View {
             }
             .animation(.snappy(duration: 0.3), value: page)
 
-            Spacer()
+            HStack {
+                Button("Back") { go(to: page - 1) }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .opacity(page > 0 ? 1 : 0)
+                    .disabled(page == 0)
 
-            Button(isLastPage ? "Get Started" : "Next") {
-                if isLastPage { onFinish() } else { go(to: page + 1) }
+                Spacer()
+
+                Button(isLastPage ? "Get Started" : "Next") {
+                    if isLastPage { onFinish() } else { go(to: page + 1) }
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
             }
-            .buttonStyle(.borderedProminent)
-            .keyboardShortcut(.defaultAction)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 18)
