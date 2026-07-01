@@ -8,12 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		00CEEAF1D4209EDCA5D4DB07 /* scribble.wav in Resources */ = {isa = PBXBuildFile; fileRef = CB7E2BD16B84F461552B37B3 /* scribble.wav */; };
+		03EBE1A844DF22D16DF40F78 /* SignalQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008557C7E0D6B65492385BAC /* SignalQuote.swift */; };
 		0546BC32AA8E72C7F0895F3C /* pencil.wav in Resources */ = {isa = PBXBuildFile; fileRef = B1389E0ACDE4C1E41AE3799A /* pencil.wav */; };
 		08F36652507A4AB93CE0FF1B /* SignalServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A620C14130D54DCE2B2A9 /* SignalServices.swift */; };
 		1AF44987ABA75D46DCB18913 /* pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4C4F741DBD56F9C4C17A0174 /* pop.wav */; };
 		30D307A0EDEFB9362A2137C3 /* bubble.wav in Resources */ = {isa = PBXBuildFile; fileRef = B56A8D7FF5758A4206738001 /* bubble.wav */; };
 		327C60E247DE7912CB4A84CD /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 7485CC3CC5D37982A205C704 /* TelemetryDeck */; };
 		32836E195FDFA7ED8AEB517D /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 307A5F65741E0033246A3B2A /* KeyboardShortcuts */; };
+		37A76BD59AAE8DF9B946641B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD1AE2C032080FBD21F3FD8 /* OnboardingView.swift */; };
 		3824FED4BA0E410A23AB96D4 /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7748712533E7651295201A /* NotchController.swift */; };
 		38549BBAA9843F968099473A /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8D74719DA574C846852019 /* SettingsStore.swift */; };
 		3BDBBB7DA4E54534E0CF1E6C /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 525E24A23AC8A26E90F43271 /* DynamicNotchKit */; };
@@ -27,6 +29,7 @@
 		903BA73065746F8059593306 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
 		A6188962D97B6430646F8BA6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */; };
 		AA8F91BCB15AC076FD9DB118 /* tube.wav in Resources */ = {isa = PBXBuildFile; fileRef = AD40B91BE6D69CE63BBF11CC /* tube.wav */; };
+		AAC4775787D9967B61E97ACF /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */; };
 		CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
 		D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 85754D73DEB6E570698C3CD6 /* meadow.wav */; };
 		F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
@@ -34,12 +37,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		008557C7E0D6B65492385BAC /* SignalQuote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalQuote.swift; sourceTree = "<group>"; };
 		146D2AB23F5E793F6008D409 /* DayLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayLog.swift; sourceTree = "<group>"; };
 		1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalNotchView.swift; sourceTree = "<group>"; };
 		2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		462ED15C9D00B34967E04C53 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		4C4F741DBD56F9C4C17A0174 /* pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pop.wav; sourceTree = "<group>"; };
 		4E7748712533E7651295201A /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
+		506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindowController.swift; sourceTree = "<group>"; };
 		62DCF92EBA015AEB3F97C53D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		703A620C14130D54DCE2B2A9 /* SignalServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalServices.swift; sourceTree = "<group>"; };
 		73845020201BE00A671F84BC /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
@@ -58,6 +63,7 @@
 		D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoItem.swift; sourceTree = "<group>"; };
 		E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalStore.swift; sourceTree = "<group>"; };
+		ECD1AE2C032080FBD21F3FD8 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyboardShortcuts+Names.swift"; sourceTree = "<group>"; };
 		F97E8E46E48B621084C6EF16 /* DynamicNotchKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DynamicNotchKit; path = LocalPackages/DynamicNotchKit; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -90,6 +96,7 @@
 				3D5609545FFDAB3C2A3C325C /* Analytics */,
 				CA3F084569DCD0789608C15B /* Models */,
 				867189B68BE65A936D460481 /* Notch */,
+				6EA9FAD8254895626FE70294 /* Onboarding */,
 				A3582C226156511295D8A2F1 /* Preferences */,
 				A8EDFD94A26555771D38335E /* Resources */,
 				AE9CFCBD7D023D164FB3FE4D /* Schedule */,
@@ -102,6 +109,7 @@
 				8C8D74719DA574C846852019 /* SettingsStore.swift */,
 				B6350E3A747785646888F518 /* Signal.entitlements */,
 				C453E4D521FCA575CE77C9A3 /* SignalApp.swift */,
+				008557C7E0D6B65492385BAC /* SignalQuote.swift */,
 				703A620C14130D54DCE2B2A9 /* SignalServices.swift */,
 			);
 			path = Signal;
@@ -134,6 +142,15 @@
 				462ED15C9D00B34967E04C53 /* Analytics.swift */,
 			);
 			path = Analytics;
+			sourceTree = "<group>";
+		};
+		6EA9FAD8254895626FE70294 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				ECD1AE2C032080FBD21F3FD8 /* OnboardingView.swift */,
+				506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		76C32D63C38B77706495484D /* Store */ = {
@@ -310,11 +327,14 @@
 				F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */,
 				3ECF97CFDB2BF7587829A391 /* KeyboardShortcuts+Names.swift in Sources */,
 				3824FED4BA0E410A23AB96D4 /* NotchController.swift in Sources */,
+				37A76BD59AAE8DF9B946641B /* OnboardingView.swift in Sources */,
+				AAC4775787D9967B61E97ACF /* OnboardingWindowController.swift in Sources */,
 				83939F1D30F9B1A18AE76D65 /* PreferencesView.swift in Sources */,
 				903BA73065746F8059593306 /* Scheduler.swift in Sources */,
 				38549BBAA9843F968099473A /* SettingsStore.swift in Sources */,
 				7FAF10A54C6C081CFFA1A256 /* SignalApp.swift in Sources */,
 				6CD7359B6468D893D57D63D8 /* SignalNotchView.swift in Sources */,
+				03EBE1A844DF22D16DF40F78 /* SignalQuote.swift in Sources */,
 				08F36652507A4AB93CE0FF1B /* SignalServices.swift in Sources */,
 				CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */,
 				8E64B68854B57CF40038C07D /* SoundPlayer.swift in Sources */,
@@ -332,7 +352,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Signal/Info.plist;
@@ -483,7 +502,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Signal/Info.plist;

@@ -4,6 +4,7 @@ import Foundation
 /// `PreferencesView` reads/writes the same keys via `@AppStorage`.
 enum SettingsStore {
     enum Key {
+        static let hasSeenOnboarding = "hasSeenOnboarding"
         static let carryOverIncomplete = "carryOverIncomplete"
         static let openOnLaunch = "openOnLaunch"
         static let dailyPromptEnabled = "dailyPromptEnabled"
@@ -21,6 +22,7 @@ enum SettingsStore {
 
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
+            Key.hasSeenOnboarding: false,
             Key.carryOverIncomplete: true,
             Key.openOnLaunch: true,
             Key.dailyPromptEnabled: true,
@@ -38,6 +40,13 @@ enum SettingsStore {
     }
 
     private static var d: UserDefaults { .standard }
+
+    /// Read/write: the onboarding controller flips this once the user finishes
+    /// (or dismisses) the first-launch onboarding window.
+    static var hasSeenOnboarding: Bool {
+        get { d.bool(forKey: Key.hasSeenOnboarding) }
+        set { d.set(newValue, forKey: Key.hasSeenOnboarding) }
+    }
 
     static var carryOverIncomplete: Bool { d.bool(forKey: Key.carryOverIncomplete) }
     static var openOnLaunch: Bool { d.bool(forKey: Key.openOnLaunch) }
