@@ -16,7 +16,7 @@ final class DayLog {
         self.items = []
     }
 
-    /// Items in slot order (0...2).
+    /// Items in slot order (0-based, contiguous).
     var orderedItems: [TodoItem] {
         items.sorted { $0.order < $1.order }
     }

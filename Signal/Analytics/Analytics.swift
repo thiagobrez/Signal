@@ -6,7 +6,7 @@ import TelemetryDeck
 ///
 /// Privacy: TelemetryDeck collects no personal data. It derives an anonymous,
 /// salted per-install identifier, which is what lets us count *users* (e.g. how
-/// many people finished all three to-dos) without ever identifying anyone.
+/// many people finished all their to-dos) without ever identifying anyone.
 enum Analytics {
     /// TelemetryDeck app identifier, injected at build time from the
     /// `TELEMETRYDECK_APP_ID` xcconfig value via Signal/Info.plist — so the real
@@ -32,6 +32,7 @@ enum Analytics {
         case manual    // hotkey or menu-bar toggle
         case launch    // auto-opened at login
         case scheduled // the daily prompt fired
+        case reopen    // re-launched while running (Spotlight / Finder / Dock)
     }
 
     /// The interactive Signal panel was presented. Drives "opens per day".
@@ -39,8 +40,8 @@ enum Analytics {
         send("signalOpened", ["source": source.rawValue])
     }
 
-    /// All three of today's to-dos became complete. Drives "users completing the
-    /// three tasks per day" — TelemetryDeck reports both event count and unique
+    /// Every one of today's to-dos became complete. Drives "users completing
+    /// their tasks per day" — TelemetryDeck reports both event count and unique
     /// users for the same signal.
     static func dayCompleted() {
         send("dayCompleted")

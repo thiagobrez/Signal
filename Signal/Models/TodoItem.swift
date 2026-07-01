@@ -1,7 +1,8 @@
 import Foundation
 import SwiftData
 
-/// A single to-do. There are always exactly three per `DayLog`.
+/// A single to-do. A `DayLog` holds at least three, and more once the user adds
+/// them; `order` is its slot position within the day.
 @Model
 final class TodoItem {
     var text: String

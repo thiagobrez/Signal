@@ -1,7 +1,8 @@
 import SwiftUI
 import AppKit
 
-/// The entire primary UI: three fixed to-do slots shown inside the notch.
+/// The entire primary UI: the day's to-do slots shown inside the notch. Starts
+/// at three but grows as the user adds tasks.
 struct SignalNotchView: View {
     let store: SignalStore
     let controller: NotchController
@@ -42,8 +43,10 @@ struct SignalNotchView: View {
         "Something that matters…",
     ]
 
+    // The whole pool, shuffled — enough distinct suggestions to cover every slot
+    // (rows index into this modulo its length, so adding tasks never crashes).
     private static func randomPlaceholders() -> [String] {
-        Array(placeholderPool.shuffled().prefix(3))
+        placeholderPool.shuffled()
     }
 
     var body: some View {
@@ -59,12 +62,21 @@ struct SignalNotchView: View {
                     focused: $focused,
                     onSubmit: { advanceOrDismiss(from: pair.offset) },
                     onComplete: { focusNextEditable(after: pair.offset) },
-                    onEscape: { controller.hide() }
+                    onEscape: { controller.hide() },
+                    onDelete: { deleteTask(pair.element) },
+                    onTab: { advanceOrAdd(from: pair.offset) },
+                    onBacktab: { focusPrevious(from: pair.offset) }
                 )
+            }
+
+            if controller.mode == .interactive {
+                footer
             }
         }
         .padding(16)
         .frame(width: 340)
+        // Grow/shrink the card smoothly as tasks are added.
+        .animation(.snappy(duration: 0.25), value: store.items.count)
         // Depth-of-field: while the day is done the tasks recede out of focus so
         // the sharp grass in front is the subject; the blur lifts as the grass
         // parts, bringing the tasks back into focus.
@@ -99,12 +111,40 @@ struct SignalNotchView: View {
                 .font(.system(size: 10, weight: .bold))
                 .tracking(2.5)
             Spacer()
-            Text("\(store.completedCount)/3")
+            Text("\(store.completedCount)/\(store.items.count)")
                 .font(.system(size: 10, weight: .semibold))
                 .tracking(2.5)
                 .monospacedDigit()
         }
         .foregroundStyle(.white.opacity(0.4))
+    }
+
+    /// The "add a task" affordance, plus a quiet nudge once the list grows past
+    /// the three Signal is built around.
+    @ViewBuilder
+    private var footer: some View {
+        if store.canAddTask {
+            Button(action: addTask) {
+                HStack(spacing: 12) {
+                    Image(systemName: "plus.circle")
+                        .font(.system(size: 18))
+                    Text("Add a task")
+                        .font(.system(size: 15, weight: .medium))
+                    Spacer()
+                }
+                .foregroundStyle(.white.opacity(0.3))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+
+        // Kept last so the nudge always sits at the very bottom of the card.
+        if store.items.count > SignalStore.defaultTaskCount {
+            Text("Focus on the Signal. Filter the noise.")
+                .font(.system(size: 10))
+                .foregroundStyle(.white.opacity(0.3))
+                .transition(.opacity)
+        }
     }
 
     private var todayLabel: String {
@@ -141,6 +181,20 @@ struct SignalNotchView: View {
         }
     }
 
+    /// Append a slot and drop the caret straight into it so the user can keep
+    /// typing without reaching for the mouse.
+    private func addTask() {
+        guard let newIndex = store.addTask() else { return }
+        DispatchQueue.main.async { focused = newIndex }
+    }
+
+    /// Remove a slot. Focus is dropped rather than guessed at — the remaining
+    /// rows have just shifted, so the old focused index no longer maps cleanly.
+    private func deleteTask(_ item: TodoItem) {
+        focused = nil
+        store.deleteTask(item)
+    }
+
     private func advanceOrDismiss(from index: Int) {
         if index < store.items.count - 1 {
             focused = index + 1
@@ -148,6 +202,21 @@ struct SignalNotchView: View {
             store.save()
             controller.hide()
         }
+    }
+
+    /// Tab moves to the next slot. On the last slot, if it's filled, spill into a
+    /// fresh task and focus it so the user can keep capturing without a pause.
+    private func advanceOrAdd(from index: Int) {
+        if index < store.items.count - 1 {
+            focused = index + 1
+        } else if !store.items[index].text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            addTask()
+        }
+    }
+
+    /// Shift-Tab steps back to the previous slot (no-op on the first).
+    private func focusPrevious(from index: Int) {
+        if index > 0 { focused = index - 1 }
     }
 
     /// After a task is checked off, move focus to the next still-editable slot —
@@ -355,6 +424,11 @@ private struct TodoRow: View {
     let onSubmit: () -> Void
     let onComplete: () -> Void
     let onEscape: () -> Void
+    let onDelete: () -> Void
+    let onTab: () -> Void
+    let onBacktab: () -> Void
+
+    @State private var hovering = false
 
     /// Fixed height for the text area so the row never shifts vertically when the
     /// field is swapped for a `Text` on completion. The vertical jump *within*
@@ -397,14 +471,33 @@ private struct TodoRow: View {
                         index: index,
                         focusedIndex: $focused,
                         onSubmit: onSubmit,
-                        onEscape: onEscape
+                        onEscape: onEscape,
+                        onTab: onTab,
+                        onBacktab: onBacktab
                     )
                 }
             }
             .frame(height: Self.textRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Reserve the trailing gutter whenever deletion is allowed so the
+            // text width doesn't jump as the button fades in on hover.
+            if store.canDeleteTask {
+                Button(action: onDelete) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .frame(width: 16, height: 16)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .opacity(hovering ? 1 : 0)
+                .help("Delete task")
+            }
         }
+        .onHover { hovering = $0 }
         .animation(.snappy(duration: 0.2), value: item.isCompleted)
+        .animation(.easeInOut(duration: 0.15), value: hovering)
     }
 }
 
@@ -420,6 +513,8 @@ private struct PlainTextField: NSViewRepresentable {
     @Binding var focusedIndex: Int?
     let onSubmit: () -> Void
     let onEscape: () -> Void
+    let onTab: () -> Void
+    let onBacktab: () -> Void
 
     private static let font = NSFont.systemFont(ofSize: 15, weight: .medium)
 
@@ -485,11 +580,19 @@ private struct PlainTextField: NSViewRepresentable {
         @objc func didSubmit(_ sender: NSTextField) { parent.onSubmit() }
 
         func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
-            if selector == #selector(NSResponder.cancelOperation(_:)) {
+            switch selector {
+            case #selector(NSResponder.cancelOperation(_:)):
                 parent.onEscape()
                 return true
+            case #selector(NSResponder.insertTab(_:)):
+                parent.onTab()
+                return true
+            case #selector(NSResponder.insertBacktab(_:)):
+                parent.onBacktab()
+                return true
+            default:
+                return false
             }
-            return false
         }
     }
 }
