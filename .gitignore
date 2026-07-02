@@ -13,3 +13,6 @@ xcuserdata/
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# Node (changesets release tooling only)
+node_modules/

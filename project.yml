@@ -24,7 +24,10 @@ settings:
     # See Config/Signing.local.xcconfig.example.
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.0"
+    # Managed by changesets: package.json is the source of truth, and
+    # scripts/sync-version.sh rewrites this line. Do not hand-edit.
+    MARKETING_VERSION: "1.0.0"
+    # Overridden per-release in CI (xcodebuild CURRENT_PROJECT_VERSION=<n>).
     CURRENT_PROJECT_VERSION: "1"
 
 targets:
@@ -54,3 +57,15 @@ targets:
       - package: DynamicNotchKit
       - package: KeyboardShortcuts
       - package: TelemetryDeck
+
+# Shared scheme so `xcodebuild -scheme Signal` works in CI (schemes only
+# auto-generate when the project is opened in Xcode's UI).
+schemes:
+  Signal:
+    build:
+      targets:
+        Signal: all
+    run:
+      config: Debug
+    archive:
+      config: Release

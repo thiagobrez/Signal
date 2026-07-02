@@ -1,0 +1,13 @@
+{
+  "name": "signal",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "changeset": "changeset",
+    "version": "changeset version && ./scripts/sync-version.sh",
+    "tag": "changeset tag"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.0"
+  }
+}

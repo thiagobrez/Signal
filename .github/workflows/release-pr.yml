@@ -1,0 +1,68 @@
+# Release orchestration via changesets.
+#
+# On every push to master:
+#   - Pending changesets exist  -> opens/updates the "Version Packages" PR
+#     (bumps package.json + project.yml via scripts/sync-version.sh, writes
+#     CHANGELOG.md).
+#   - Version PR just merged    -> `changeset tag` creates tag vX.Y.Z, the
+#     action pushes it and creates the GitHub Release from the CHANGELOG
+#     entry, then the build job (same run) attaches the notarized DMG and
+#     uploads to App Store Connect.
+#
+# The build runs via workflow_call in this same run on purpose: tags pushed
+# with the default GITHUB_TOKEN do NOT trigger `on: push: tags` workflows, so
+# a tag-triggered build would need a PAT. Do not refactor to a tag trigger
+# without introducing one.
+name: Release
+on:
+  push:
+    branches: [master]
+
+concurrency: release-master
+
+permissions:
+  contents: write # push version commit + tag, create the GitHub Release
+  pull-requests: write # open/update the Version Packages PR
+
+jobs:
+  changesets:
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # changeset tag needs full tag history
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Version PR or tag release
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: npm run version # changeset version + sync-version.sh
+          publish: npm run tag # changeset tag
+          commit: "chore: release"
+          title: "chore: release"
+          createGithubReleases: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read released version
+        id: version
+        if: steps.changesets.outputs.published == 'true'
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: changesets
+    if: needs.changesets.outputs.published == 'true'
+    uses: ./.github/workflows/release-build.yml
+    with:
+      tag: v${{ needs.changesets.outputs.version }}
+    secrets: inherit
