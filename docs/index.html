@@ -56,6 +56,37 @@
 
     main { display: block; }
 
+    /* ---------- Header ---------- */
+
+    .site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: flex-end;
+      padding: 18px 22px;
+      pointer-events: none;
+    }
+    .icon-btn {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      -webkit-backdrop-filter: saturate(180%) blur(12px);
+      backdrop-filter: saturate(180%) blur(12px);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .icon-btn:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--text) 10%, var(--card)); }
+    .icon-btn:active { transform: translateY(0) scale(0.96); }
+
     section {
       max-width: 680px;
       margin: 0 auto;
@@ -154,6 +185,7 @@
       display: inline-flex;
       align-items: center;
       gap: 9px;
+      height: 52px;
       border-radius: 12px;
       text-decoration: none;
       font-weight: 600;
@@ -165,7 +197,7 @@
     .btn-appstore {
       background: var(--text);
       color: var(--bg);
-      padding: 11px 20px;
+      padding: 0 20px;
       font-size: 15px;
     }
     .btn-appstore svg { flex-shrink: 0; }
@@ -175,21 +207,8 @@
     .btn-secondary {
       border: 1.5px solid var(--btn-secondary-border);
       color: var(--text);
-      padding: 12px 20px;
+      padding: 0 20px;
       font-size: 15px;
-    }
-
-    .btn-accent {
-      background: var(--accent);
-      color: #fff;
-      padding: 11px 18px;
-      font-size: 14.5px;
-    }
-    .btn-outline {
-      border: 1.5px solid var(--btn-secondary-border);
-      color: var(--text);
-      padding: 10px 18px;
-      font-size: 14.5px;
     }
 
     /* ---------- Notch animation (mirrors NotchLoopAnimation) ---------- */
@@ -410,9 +429,11 @@
       display: flex;
       gap: 12px;
       justify-content: center;
+      align-items: center;
       flex-wrap: wrap;
       margin-top: 26px;
     }
+    .sponsor-row iframe { display: block; }
 
     .footer-links {
       display: flex;
@@ -432,6 +453,13 @@
   </style>
 </head>
 <body>
+<header class="site-header">
+  <a class="icon-btn" href="https://github.com/thiagobrez/Signal" target="_blank" rel="noopener" aria-label="Signal on GitHub" title="View on GitHub">
+    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+  </a>
+</header>
 <main>
 
   <!-- Hero (onboarding: Welcome) -->
@@ -610,19 +638,7 @@
       </a>
     </div>
     <div class="sponsor-row reveal-text">
-      <a class="btn btn-accent" href="https://github.com/sponsors/thiagobrez" target="_blank" rel="noopener">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-          <path d="M8 14.25l-.345-.666C4.451 10.855 1.75 8.65 1.75 6.02 1.75 3.98 3.28 2.5 5.25 2.5c1.13 0 2.16.57 2.75 1.48A3.35 3.35 0 0 1 10.75 2.5c1.97 0 3.5 1.48 3.5 3.52 0 2.63-2.7 4.835-5.905 7.564z"/>
-        </svg>
-        Sponsor on GitHub
-      </a>
-      <a class="btn btn-outline" href="https://buymeacoffee.com/thiagobrez" target="_blank" rel="noopener">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M17 8h1a3 3 0 0 1 0 6h-1M3 8h14v7a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/>
-          <path d="M7 2.5v2M11 2.5v2M15 2.5v2"/>
-        </svg>
-        Buy me a coffee
-      </a>
+      <iframe src="https://github.com/sponsors/thiagobrez/button" title="Sponsor thiagobrez" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
     </div>
     <div class="footer-links">
       <a href="https://github.com/thiagobrez/Signal" target="_blank" rel="noopener">Source</a>
