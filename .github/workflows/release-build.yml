@@ -153,6 +153,15 @@ jobs:
             "Signal-${{ steps.ver.outputs.version }}.dmg" \
             /tmp/build/export-devid/Signal.app
 
+      # create-dmg produces an unsigned image; notarization accepts that (it
+      # validates the app inside), but Gatekeeper's spctl check on the DMG
+      # itself fails with "no usable signature" unless the DMG is signed too.
+      - name: Sign DMG
+        run: |
+          codesign --force --timestamp --sign "Developer ID Application" \
+            "Signal-${{ steps.ver.outputs.version }}.dmg"
+          codesign --verify --verbose=2 "Signal-${{ steps.ver.outputs.version }}.dmg"
+
       - name: Notarize and staple
         run: |
           xcrun notarytool submit "Signal-${{ steps.ver.outputs.version }}.dmg" \
