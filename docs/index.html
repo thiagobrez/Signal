@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal — Three things a day</title>
+  <meta name="description" content="Signal is a macOS app for focusing on three things a day. It lives in your notch, slides down when you need it, and stays out of the way when you don't.">
+  <meta property="og:title" content="Signal — Three things a day">
+  <meta property="og:description" content="A macOS app for focusing on three things a day. Lives in your notch, always a glance away.">
+  <meta property="og:type" content="website">
+  <style>
+    :root {
+      --accent: #34c759;
+      --bg: #fafafa;
+      --bg-hero: linear-gradient(180deg, #cfe6f230 0%, #dceedb38 55%, #cde9b630 100%);
+      --text: #1d1d1f;
+      --text-secondary: #55555c;
+      --text-tertiary: #8b8b92;
+      --card: rgba(0, 0, 0, 0.045);
+      --card-border: rgba(0, 0, 0, 0.08);
+      --keycap-bg: rgba(0, 0, 0, 0.06);
+      --keycap-border: rgba(0, 0, 0, 0.15);
+      --btn-secondary-border: rgba(0, 0, 0, 0.18);
+      --footer-border: rgba(0, 0, 0, 0.08);
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #131315;
+        --bg-hero: linear-gradient(180deg, #36465f22 0%, #26352f26 55%, #1a2a1c22 100%);
+        --text: #f2f2f4;
+        --text-secondary: #a9a9b0;
+        --text-tertiary: #77777e;
+        --card: rgba(255, 255, 255, 0.055);
+        --card-border: rgba(255, 255, 255, 0.09);
+        --keycap-bg: rgba(255, 255, 255, 0.07);
+        --keycap-border: rgba(255, 255, 255, 0.16);
+        --btn-secondary-border: rgba(255, 255, 255, 0.22);
+        --footer-border: rgba(255, 255, 255, 0.09);
+        --shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    main { display: block; }
+
+    section {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 88px 28px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: clamp(40px, 8vw, 56px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    h2 {
+      font-size: clamp(26px, 5vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      margin-bottom: 14px;
+    }
+
+    p.body { font-size: 16px; color: var(--text-secondary); }
+    p.small { font-size: 13.5px; color: var(--text-tertiary); margin-top: 12px; }
+
+    /* ---------- Scroll reveal (mirrors onboarding hero entrance) ---------- */
+
+    .reveal-hero, .reveal-text {
+      opacity: 0;
+      transition: opacity 0.45s cubic-bezier(0.2, 0.9, 0.3, 1), transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    .reveal-hero { transform: scale(0.85); }
+    .reveal-text { transform: translateY(14px); }
+    .revealed .reveal-hero, .revealed .reveal-text { opacity: 1; transform: none; }
+
+    /* ---------- Hero ---------- */
+
+    .hero {
+      max-width: none;
+      padding: 96px 28px 88px;
+      background: var(--bg-hero);
+    }
+    .hero-inner { max-width: 680px; margin: 0 auto; }
+
+    .app-icon {
+      display: block;
+      width: 148px;
+      height: 148px;
+      margin: 0 auto 22px;
+      filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.22));
+    }
+    .app-icon img { display: block; width: 100%; height: 100%; }
+    @media (prefers-color-scheme: dark) {
+      .app-icon { filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.6)); }
+    }
+
+    .tagline {
+      font-size: 19px;
+      color: var(--text-secondary);
+      margin-top: 12px;
+    }
+
+    .quote {
+      position: relative;
+      max-width: 440px;
+      margin: 36px auto 0;
+      padding: 10px 36px;
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+    .quote .attribution {
+      font-family: "Apple Chancery", "Snell Roundhand", "Segoe Script", cursive;
+      font-size: 17px;
+      margin-top: 8px;
+    }
+    .quote .mark {
+      position: absolute;
+      font-family: "Apple Chancery", "Snell Roundhand", "Segoe Script", cursive;
+      font-size: 52px;
+      line-height: 1;
+      color: var(--text-secondary);
+      opacity: 0.25;
+    }
+    .quote .mark.open { top: -8px; left: 0; transform: rotate(-12deg); }
+    .quote .mark.close { bottom: -14px; right: 0; transform: rotate(12deg); }
+
+    .cta-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0) scale(0.98); }
+
+    .btn-appstore {
+      background: var(--text);
+      color: var(--bg);
+      padding: 11px 20px;
+      font-size: 15px;
+    }
+    .btn-appstore svg { flex-shrink: 0; }
+    .btn-appstore .lines { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2; }
+    .btn-appstore .lines small { font-size: 10.5px; font-weight: 500; opacity: 0.75; }
+
+    .btn-secondary {
+      border: 1.5px solid var(--btn-secondary-border);
+      color: var(--text);
+      padding: 12px 20px;
+      font-size: 15px;
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+      padding: 11px 18px;
+      font-size: 14.5px;
+    }
+    .btn-outline {
+      border: 1.5px solid var(--btn-secondary-border);
+      color: var(--text);
+      padding: 10px 18px;
+      font-size: 14.5px;
+    }
+
+    /* ---------- Notch animation (mirrors NotchLoopAnimation) ---------- */
+
+    .notch-stage {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 34px;
+    }
+    @media (max-width: 520px) {
+      .notch-stage { height: 152px; }
+      .notch-demo { transform: scale(0.66); transform-origin: top center; }
+    }
+
+    .notch-demo {
+      position: relative;
+      flex-shrink: 0;
+      width: 460px;
+      height: 230px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgb(43, 33, 77), rgb(84, 54, 112));
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .notch-menubar {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      height: 23px;
+      padding: 0 14px;
+      background: rgba(0, 0, 0, 0.22);
+    }
+    .notch-menubar .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); }
+    .notch-menubar .pill { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.3); }
+    .notch-menubar .pill.bright { background: rgba(255, 255, 255, 0.45); }
+    .notch-menubar .spacer { flex: 1; }
+
+    .notch-panel {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 98px;
+      height: 20px;
+      background: #000;
+      border-radius: 0 0 9px 9px;
+      overflow: hidden;
+      transition: width 0.4s ease-in-out, height 0.4s ease-in-out,
+                  border-radius 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+    }
+    .notch-panel.open {
+      width: 233px;
+      height: 150px;
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.45);
+      transition: width 0.45s cubic-bezier(0.3, 1.25, 0.42, 1), height 0.45s cubic-bezier(0.3, 1.25, 0.42, 1),
+                  border-radius 0.45s cubic-bezier(0.3, 1.25, 0.42, 1), box-shadow 0.45s ease;
+    }
+
+    .notch-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 18px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .notch-panel.open .notch-tasks { opacity: 1; transition: opacity 0.3s ease 0.12s; }
+
+    .notch-task { display: flex; align-items: center; gap: 12px; }
+    .notch-task .ring {
+      width: 17px; height: 17px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      flex-shrink: 0;
+    }
+    .notch-task.done .ring { border-color: var(--accent); background: var(--accent); }
+    .notch-task .bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.55); }
+    .notch-task.done .bar { background: rgba(255, 255, 255, 0.25); }
+
+    /* ---------- Keycaps (mirrors KeyCap / HotkeyKeysView) ---------- */
+
+    .keycaps {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 34px;
+    }
+    .keycap {
+      min-width: 56px;
+      height: 56px;
+      padding: 0 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 600;
+      border-radius: 13px;
+      background: var(--keycap-bg);
+      border: 1px solid var(--keycap-border);
+      transition: transform 0.15s cubic-bezier(0.2, 0.9, 0.3, 1), background 0.15s ease;
+    }
+    .keycap.pressed { transform: translateY(3px) scale(0.95); background: color-mix(in srgb, var(--accent) 18%, var(--keycap-bg)); }
+
+    /* ---------- Tasks checklist (mirrors TasksChecklistAnimation) ---------- */
+
+    .checklist {
+      width: 300px;
+      max-width: 100%;
+      margin: 0 auto 34px;
+      padding: 18px;
+      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      text-align: left;
+    }
+    .check-row { display: flex; align-items: center; gap: 12px; }
+
+    .check-box { position: relative; width: 20px; height: 20px; flex-shrink: 0; }
+    .check-box .ring, .check-box .mark {
+      position: absolute;
+      inset: 0;
+      transition: opacity 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    .check-box .ring { border: 2px solid color-mix(in srgb, var(--text-secondary) 40%, transparent); border-radius: 50%; }
+    .check-box .mark { color: var(--accent); transform: scale(0.4); opacity: 0; }
+    .check-box .mark svg { display: block; width: 100%; height: 100%; }
+    .check-row.done .ring { opacity: 0; transform: scale(0.5); }
+    .check-row.done .mark { opacity: 1; transform: scale(1); }
+
+    .check-label {
+      position: relative;
+      font-size: 15px;
+      font-weight: 500;
+      transition: color 0.35s ease;
+    }
+    .check-label::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 100%;
+      height: 1.5px;
+      background: var(--text-secondary);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    .check-row.done .check-label { color: var(--text-secondary); }
+    .check-row.done .check-label::after { transform: scaleX(1); }
+
+    /* ---------- Schedule feature rows ---------- */
+
+    .glyph-hero {
+      width: 96px;
+      height: 96px;
+      margin: 0 auto 30px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+
+    .feature-rows {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 22px;
+      margin-top: 26px;
+      text-align: left;
+    }
+    .feature-row { display: flex; gap: 15px; align-items: flex-start; }
+    .feature-row .icon { color: var(--accent); flex-shrink: 0; width: 28px; display: flex; justify-content: center; margin-top: 2px; }
+    .feature-row h3 { font-size: 15.5px; font-weight: 600; }
+    .feature-row p { font-size: 14px; color: var(--text-secondary); max-width: 320px; }
+
+    /* ---------- Footer ---------- */
+
+    footer {
+      border-top: 1px solid var(--footer-border);
+      padding: 56px 28px 44px;
+      text-align: center;
+    }
+    .footer-inner { max-width: 680px; margin: 0 auto; }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid var(--card-border);
+      margin-bottom: 14px;
+    }
+    .built-by { font-size: 15.5px; font-weight: 600; }
+
+    .social-row {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .social-row a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.15s ease;
+    }
+    .social-row a:hover { color: var(--text); }
+
+    .sponsor-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 34px;
+      font-size: 13px;
+    }
+    .footer-links a { color: var(--text-tertiary); text-decoration: none; }
+    .footer-links a:hover { color: var(--text-secondary); }
+    .copyright { margin-top: 14px; font-size: 12.5px; color: var(--text-tertiary); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal-hero, .reveal-text { opacity: 1; transform: none; transition: none; }
+      .notch-panel, .notch-tasks, .keycap, .check-box .ring, .check-box .mark, .check-label::after { transition: none; }
+    }
+  </style>
+</head>
+<body>
+<main>
+
+  <!-- Hero (onboarding: Welcome) -->
+  <section class="hero reveal-section">
+    <div class="hero-inner">
+      <picture class="app-icon reveal-hero">
+        <source srcset="assets/app-icon-dark.png" media="(prefers-color-scheme: dark)">
+        <img src="assets/app-icon-light.png" width="148" height="148" alt="Signal app icon">
+      </picture>
+
+      <h1 class="reveal-text">Signal</h1>
+      <p class="tagline reveal-text">A macOS app for focusing on three things a day.</p>
+
+      <blockquote class="quote reveal-text">
+        <span class="mark open" aria-hidden="true">&ldquo;</span>
+        Every day, there's three things you gotta get done.
+        That's called the signal.
+        Everything that stops you from getting it done is the noise.
+        <div class="attribution">— Steve Jobs</div>
+        <span class="mark close" aria-hidden="true">&rdquo;</span>
+      </blockquote>
+
+      <div class="cta-row reveal-text">
+        <!-- TODO: replace href with the Mac App Store URL when published -->
+        <a class="btn btn-appstore" href="#">
+          <svg width="22" height="26" viewBox="0 0 22 26" fill="currentColor" aria-hidden="true">
+            <path d="M18.3 13.8c0-3 2.5-4.5 2.6-4.6-1.4-2.1-3.6-2.4-4.4-2.4-1.9-.2-3.6 1.1-4.6 1.1-.9 0-2.4-1.1-4-1-2 0-3.9 1.2-5 3-2.1 3.7-.5 9.2 1.5 12.2 1 1.5 2.2 3.1 3.8 3 1.5-.1 2.1-1 3.9-1s2.4 1 4 1c1.7 0 2.7-1.5 3.7-3 1.2-1.7 1.7-3.4 1.7-3.5-.1 0-3.2-1.2-3.2-4.8zM15.3 4.8c.8-1 1.4-2.4 1.2-3.8-1.2 0-2.7.8-3.5 1.8-.8.9-1.5 2.3-1.3 3.7 1.4.1 2.8-.7 3.6-1.7z"/>
+          </svg>
+          <span class="lines"><small>Download on the</small>Mac App Store</span>
+        </a>
+        <!-- TODO: point at the direct .dmg asset once a release binary exists -->
+        <a class="btn btn-secondary" href="https://github.com/thiagobrez/Signal/releases/latest">Download for macOS</a>
+      </div>
+      <p class="small reveal-text">Requires macOS 14 (Sonoma) or later. Free and open source.</p>
+    </div>
+  </section>
+
+  <!-- Notch (onboarding page 1) -->
+  <section class="reveal-section">
+    <div class="notch-stage reveal-hero">
+    <div class="notch-demo" id="notch-demo" aria-label="Animation of the Signal panel sliding down from the notch">
+      <div class="notch-menubar" aria-hidden="true">
+        <span class="dot"></span>
+        <span class="pill bright" style="width:24px"></span>
+        <span class="pill" style="width:18px"></span>
+        <span class="spacer"></span>
+        <span class="pill" style="width:14px"></span>
+        <span class="pill" style="width:17px"></span>
+      </div>
+      <div class="notch-panel" id="notch-panel" aria-hidden="true">
+        <div class="notch-tasks">
+          <div class="notch-task done"><span class="ring"></span><span class="bar" style="width:141px"></span></div>
+          <div class="notch-task"><span class="ring"></span><span class="bar" style="width:172px"></span></div>
+          <div class="notch-task"><span class="ring"></span><span class="bar" style="width:113px"></span></div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <h2 class="reveal-text">Signal lives in your notch</h2>
+    <p class="body reveal-text">It slides down from the top of your screen.<br>Your day's tasks, always a glance away.</p>
+  </section>
+
+  <!-- Hotkey (onboarding page 2) -->
+  <section class="reveal-section">
+    <div class="keycaps reveal-hero" id="keycaps" aria-label="Keyboard shortcut: Control Option S">
+      <span class="keycap">⌃</span>
+      <span class="keycap">⌥</span>
+      <span class="keycap">S</span>
+    </div>
+    <h2 class="reveal-text">Summon it from anywhere</h2>
+    <p class="body reveal-text">Press your hotkey to bring it up — and put it away — from any app.</p>
+    <p class="small reveal-text">You can change it anytime in Preferences.</p>
+  </section>
+
+  <!-- Tasks (onboarding page 3) -->
+  <section class="reveal-section">
+    <div class="checklist reveal-hero" id="checklist" aria-label="Animation of three tasks being checked off">
+      <div class="check-row">
+        <span class="check-box">
+          <span class="ring"></span>
+          <span class="mark"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="10" cy="10" r="10"/><path d="M6 10.2l2.6 2.6L14 7" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </span>
+        <span class="check-label">Ship the onboarding</span>
+      </div>
+      <div class="check-row">
+        <span class="check-box">
+          <span class="ring"></span>
+          <span class="mark"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="10" cy="10" r="10"/><path d="M6 10.2l2.6 2.6L14 7" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </span>
+        <span class="check-label">Reply to that email</span>
+      </div>
+      <div class="check-row">
+        <span class="check-box">
+          <span class="ring"></span>
+          <span class="mark"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="10" cy="10" r="10"/><path d="M6 10.2l2.6 2.6L14 7" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </span>
+        <span class="check-label">Plan tomorrow</span>
+      </div>
+    </div>
+    <h2 class="reveal-text">Three tasks. That's the Signal.</h2>
+    <p class="body reveal-text">Each day, pick the three things that actually matter.<br>Get them done, and you've moved the needle.</p>
+    <p class="small reveal-text">You can add extra tasks, but we encourage you not to. Cut the noise.</p>
+  </section>
+
+  <!-- Schedule (onboarding page 4) -->
+  <section class="reveal-section">
+    <div class="glyph-hero reveal-hero" aria-hidden="true">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="16" rx="2.5"/>
+        <path d="M3 9.5h18M8 3v3.5M16 3v3.5"/>
+        <circle cx="15.5" cy="15" r="3.4"/>
+        <path d="M15.5 13.4V15l1.1 1.1"/>
+      </svg>
+    </div>
+    <h2 class="reveal-text">Show up on schedule</h2>
+    <div class="feature-rows reveal-text">
+      <div class="feature-row">
+        <span class="icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v3M5.6 7.6l2.1 2.1M18.4 7.6l-2.1 2.1M7.5 16a4.5 4.5 0 0 1 9 0M2 16h3M19 16h3M3 20h18"/>
+          </svg>
+        </span>
+        <div>
+          <h3>Opens at the start of your day</h3>
+          <p>Launch at login, or at a time you choose.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <span class="icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3.5 8A9 9 0 1 1 3 12M3 4v4h4"/>
+            <path d="M12 8v4l2.5 2.5"/>
+          </svg>
+        </span>
+        <div>
+          <h3>Quick glances through the day</h3>
+          <p>Brief, gentle check-ins to keep your Signal in view.</p>
+        </div>
+      </div>
+    </div>
+    <p class="small reveal-text">Fine-tune it all in Preferences.</p>
+  </section>
+
+  <!-- Preferences (onboarding page 5) -->
+  <section class="reveal-section">
+    <div class="glyph-hero reveal-hero" aria-hidden="true">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M3 7h10M17 7h4M3 12h4M11 12h10M3 17h13M20 17h1"/>
+        <circle cx="15" cy="7" r="2"/>
+        <circle cx="9" cy="12" r="2"/>
+        <circle cx="18" cy="17" r="2"/>
+      </svg>
+    </div>
+    <h2 class="reveal-text">Make it yours</h2>
+    <p class="body reveal-text">Customize sounds, your hotkey, and when Signal shows up.</p>
+  </section>
+
+</main>
+
+<footer class="reveal-section">
+  <div class="footer-inner">
+    <img class="avatar reveal-hero" src="https://github.com/thiagobrez.png?size=128" alt="Thiago Brezinski" width="64" height="64" loading="lazy">
+    <p class="built-by reveal-text">Built by Thiago Brezinski</p>
+    <div class="social-row reveal-text">
+      <a href="https://github.com/thiagobrez" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        @thiagobrez
+      </a>
+      <a href="https://x.com/thiagobrez" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+        @thiagobrez
+      </a>
+    </div>
+    <div class="sponsor-row reveal-text">
+      <a class="btn btn-accent" href="https://github.com/sponsors/thiagobrez" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 14.25l-.345-.666C4.451 10.855 1.75 8.65 1.75 6.02 1.75 3.98 3.28 2.5 5.25 2.5c1.13 0 2.16.57 2.75 1.48A3.35 3.35 0 0 1 10.75 2.5c1.97 0 3.5 1.48 3.5 3.52 0 2.63-2.7 4.835-5.905 7.564z"/>
+        </svg>
+        Sponsor on GitHub
+      </a>
+      <a class="btn btn-outline" href="https://buymeacoffee.com/thiagobrez" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 8h1a3 3 0 0 1 0 6h-1M3 8h14v7a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/>
+          <path d="M7 2.5v2M11 2.5v2M15 2.5v2"/>
+        </svg>
+        Buy me a coffee
+      </a>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/thiagobrez/Signal" target="_blank" rel="noopener">Source</a>
+      <a href="support">Support</a>
+      <a href="privacy-policy">Privacy Policy</a>
+    </div>
+    <p class="copyright">© <span id="year"></span> Thiago Brezinski</p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Scroll reveal: sections animate in like the onboarding pages (hero scales
+  // up from 85%, text fades in) the first time they enter the viewport.
+  const sections = document.querySelectorAll(".reveal-section");
+  if (reducedMotion) {
+    sections.forEach((s) => s.classList.add("revealed"));
+  } else {
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("revealed");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.25 });
+    sections.forEach((s) => revealObserver.observe(s));
+  }
+
+  // Runs an async step loop for a demo element, but only while it is on
+  // screen. Each loop function receives an isCancelled() callback and must
+  // return when it reports true.
+  function loopWhileVisible(element, loop) {
+    if (reducedMotion) return;
+    let cancelled = true;
+    new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && cancelled) {
+          cancelled = false;
+          loop(() => cancelled);
+        } else if (!entry.isIntersecting) {
+          cancelled = true;
+        }
+      });
+    }, { threshold: 0.4 }).observe(element);
+  }
+
+  const sleep = (s) => new Promise((r) => setTimeout(r, s * 1000));
+
+  // Notch demo: idle 1s → spring open, hold 3s → ease closed → pause 0.6s.
+  // Matches NotchLoopAnimation.runLoop() in the app.
+  const notchPanel = document.getElementById("notch-panel");
+  loopWhileVisible(document.getElementById("notch-demo"), async (isCancelled) => {
+    while (!isCancelled()) {
+      notchPanel.classList.remove("open");
+      await sleep(1);
+      if (isCancelled()) break;
+      notchPanel.classList.add("open");
+      await sleep(3.45);
+      if (isCancelled()) break;
+      notchPanel.classList.remove("open");
+      await sleep(1);
+    }
+    notchPanel.classList.remove("open");
+  });
+
+  // Tasks demo: 0.9s → tick tasks one by one 0.8s apart → hold 2.2s → reset.
+  // Matches TasksChecklistAnimation.runLoop() in the app.
+  const checkRows = document.querySelectorAll("#checklist .check-row");
+  loopWhileVisible(document.getElementById("checklist"), async (isCancelled) => {
+    while (!isCancelled()) {
+      checkRows.forEach((row) => row.classList.remove("done"));
+      await sleep(0.9);
+      for (const row of checkRows) {
+        if (isCancelled()) break;
+        row.classList.add("done");
+        await sleep(0.8);
+      }
+      if (isCancelled()) break;
+      await sleep(1.75);
+    }
+    checkRows.forEach((row) => row.classList.remove("done"));
+  });
+
+  // Keycaps: a gentle press ripple across ⌃ ⌥ S, then a pause.
+  const keycaps = document.querySelectorAll("#keycaps .keycap");
+  loopWhileVisible(document.getElementById("keycaps"), async (isCancelled) => {
+    while (!isCancelled()) {
+      await sleep(1.4);
+      for (const cap of keycaps) {
+        if (isCancelled()) break;
+        cap.classList.add("pressed");
+        await sleep(0.14);
+      }
+      await sleep(0.35);
+      keycaps.forEach((cap) => cap.classList.remove("pressed"));
+    }
+    keycaps.forEach((cap) => cap.classList.remove("pressed"));
+  });
+</script>
+</body>
+</html>
