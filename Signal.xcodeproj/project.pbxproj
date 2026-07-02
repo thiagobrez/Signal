@@ -20,6 +20,7 @@
 		38549BBAA9843F968099473A /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8D74719DA574C846852019 /* SettingsStore.swift */; };
 		3BDBBB7DA4E54534E0CF1E6C /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 525E24A23AC8A26E90F43271 /* DynamicNotchKit */; };
 		3ECF97CFDB2BF7587829A391 /* KeyboardShortcuts+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */; };
+		580596D8C403EEFF454F8305 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F879369015787A57B62384C1 /* AboutView.swift */; };
 		6CD7359B6468D893D57D63D8 /* SignalNotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */; };
 		727A2D12D5D0E2E4BEBA8831 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
 		7DB9713BA5A60F03AA1709BD /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462ED15C9D00B34967E04C53 /* Analytics.swift */; };
@@ -31,6 +32,7 @@
 		AA8F91BCB15AC076FD9DB118 /* tube.wav in Resources */ = {isa = PBXBuildFile; fileRef = AD40B91BE6D69CE63BBF11CC /* tube.wav */; };
 		AAC4775787D9967B61E97ACF /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */; };
 		CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
+		D27F6F6256F88FDA46401552 /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */; };
 		D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 85754D73DEB6E570698C3CD6 /* meadow.wav */; };
 		F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
 		FE6969C474390CFCC52DEFDF /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
@@ -38,6 +40,7 @@
 
 /* Begin PBXFileReference section */
 		008557C7E0D6B65492385BAC /* SignalQuote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalQuote.swift; sourceTree = "<group>"; };
+		0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsView.swift; sourceTree = "<group>"; };
 		146D2AB23F5E793F6008D409 /* DayLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayLog.swift; sourceTree = "<group>"; };
 		1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalNotchView.swift; sourceTree = "<group>"; };
 		2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -64,6 +67,7 @@
 		DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoItem.swift; sourceTree = "<group>"; };
 		E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalStore.swift; sourceTree = "<group>"; };
 		ECD1AE2C032080FBD21F3FD8 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		F879369015787A57B62384C1 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyboardShortcuts+Names.swift"; sourceTree = "<group>"; };
 		F97E8E46E48B621084C6EF16 /* DynamicNotchKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DynamicNotchKit; path = LocalPackages/DynamicNotchKit; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -173,6 +177,8 @@
 		A3582C226156511295D8A2F1 /* Preferences */ = {
 			isa = PBXGroup;
 			children = (
+				F879369015787A57B62384C1 /* AboutView.swift */,
+				0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */,
 				D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */,
 			);
 			path = Preferences;
@@ -322,6 +328,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				580596D8C403EEFF454F8305 /* AboutView.swift in Sources */,
+				D27F6F6256F88FDA46401552 /* AcknowledgementsView.swift in Sources */,
 				7DB9713BA5A60F03AA1709BD /* Analytics.swift in Sources */,
 				A6188962D97B6430646F8BA6 /* AppDelegate.swift in Sources */,
 				F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */,
@@ -418,7 +426,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -483,7 +491,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

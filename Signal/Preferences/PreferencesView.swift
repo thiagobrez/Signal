@@ -52,8 +52,6 @@ struct PreferencesView: View {
                 Picker("Until", selection: $glanceEnd) { hourOptions }
                     .disabled(!glancesEnabled)
             }
-
-            Section { SignalQuote() }
         }
         .formStyle(.grouped)
         .frame(width: 440)

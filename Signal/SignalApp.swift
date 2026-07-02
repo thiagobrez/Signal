@@ -12,7 +12,12 @@ struct SignalApp: App {
         }
 
         Settings {
-            PreferencesView()
+            TabView {
+                PreferencesView()
+                    .tabItem { Label("Settings", systemImage: "gearshape") }
+                AboutView()
+                    .tabItem { Label("About", systemImage: "info.circle") }
+            }
         }
     }
 }
