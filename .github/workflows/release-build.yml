@@ -180,10 +180,20 @@ jobs:
         if: inputs.attach-dmg
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+          VERSION: ${{ steps.ver.outputs.version }}
         run: |
-          cp "Signal-${{ steps.ver.outputs.version }}.dmg" Signal.dmg
-          gh release upload "${{ inputs.tag }}" \
-            "Signal-${{ steps.ver.outputs.version }}.dmg" Signal.dmg --clobber
+          # The changesets flow creates the release (with changelog notes)
+          # before this job runs; for bootstrapped/manual tags it won't exist
+          # yet, so create it here with the latest CHANGELOG.md section.
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            awk '/^## /{if (found) exit; found=1; next} found' CHANGELOG.md > /tmp/notes.md || true
+            [ -s /tmp/notes.md ] || echo "Signal $VERSION" > /tmp/notes.md
+            gh release create "$TAG" --verify-tag \
+              --title "Signal $VERSION" --notes-file /tmp/notes.md
+          fi
+          cp "Signal-$VERSION.dmg" Signal.dmg
+          gh release upload "$TAG" "Signal-$VERSION.dmg" Signal.dmg --clobber
 
       - name: Upload dry-run artifact
         if: ${{ !inputs.attach-dmg }}
