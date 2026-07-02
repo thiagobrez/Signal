@@ -62,6 +62,16 @@ jobs:
           ref: ${{ inputs.tag }}
           fetch-depth: 0 # build number = git rev-list --count
 
+      # The runner defaults to Xcode 16.x, which predates the Icon Composer
+      # .icon format (Signal/AppIcon.icon) and silently builds an app with no
+      # icon — App Store validation then rejects it. Pick the newest 26+.
+      - name: Select Xcode 26+
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_2[6-9]*.app | sort -V | tail -1)
+          [ -n "$XCODE" ] || { echo "No Xcode 26+ found on runner" >&2; exit 1; }
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
       - name: Install tools
         run: brew install xcodegen create-dmg
 
