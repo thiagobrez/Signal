@@ -6,6 +6,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         Analytics.start()
         SignalServices.shared.start()
+        #if !APPSTORE
+        // Kick off Sparkle's scheduled background update checks.
+        _ = UpdaterManager.shared
+        #endif
     }
 
     /// Re-launching an already-running agent app (Spotlight, Finder, `open -a`)

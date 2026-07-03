@@ -77,7 +77,42 @@ struct AcknowledgementsView: View {
     // MARK: - Data
 
     /// License texts are reproduced verbatim from each dependency's LICENSE file.
-    private static let acknowledgements: [Acknowledgement] = [
+    /// Sparkle ships only in the direct-download build, so its credit is
+    /// compiled out of the App Store variant along with the framework.
+    private static let acknowledgements: [Acknowledgement] = {
+        var acknowledgements = baseAcknowledgements
+        #if !APPSTORE
+        acknowledgements.append(sparkleAcknowledgement)
+        #endif
+        return acknowledgements
+    }()
+
+    #if !APPSTORE
+    private static let sparkleAcknowledgement = Acknowledgement(
+        name: "Sparkle",
+        url: URL(string: "https://github.com/sparkle-project/Sparkle")!,
+        license: """
+        Copyright (c) 2006-2013 Andy Matuschak.
+        Copyright (c) 2009-2013 Elgato Systems GmbH.
+        Copyright (c) 2011-2014 Kornel Lesiński.
+        Copyright (c) 2015-2017 Mayur Pawashe.
+        Copyright (c) 2014 C.W. Betts.
+        Copyright (c) 2014 Petroules Corporation.
+        Copyright (c) 2014 Big Nerd Ranch.
+        All rights reserved.
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+        The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+        Sparkle additionally bundles third-party components under their own permissive licenses; see the LICENSE file in the Sparkle repository for the full texts.
+        """
+    )
+    #endif
+
+    private static let baseAcknowledgements: [Acknowledgement] = [
         Acknowledgement(
             name: "KeyboardShortcuts",
             url: URL(string: "https://github.com/sindresorhus/KeyboardShortcuts")!,

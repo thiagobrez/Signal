@@ -8,8 +8,16 @@ and GitHub Actions. Every release produces:
   (plus an unversioned `Signal.dmg` copy so
   `https://github.com/thiagobrez/Signal/releases/latest/download/Signal.dmg`
   always points at the latest version),
-- an **App Store Connect upload** of the same archive (TestFlight distribution
-  and App Review submission stay manual in ASC).
+- an updated **Sparkle appcast** (`docs/appcast.xml`, committed to `master`
+  and served by GitHub Pages at
+  `https://thiagobrez.github.io/Signal/appcast.xml`) so existing
+  direct-download installs auto-update,
+- an **App Store Connect upload** (TestFlight distribution and App Review
+  submission stay manual in ASC).
+
+Two separate archives are built: the `Signal` scheme (direct download, links
+Sparkle) and the `SignalAppStore` scheme (no Sparkle — the App Store rejects
+apps that embed their own updater; MAS users update through the App Store).
 
 ## Day-to-day flow
 
@@ -36,3 +44,35 @@ Commits without changesets never trigger a release.
   re-dispatching, e.g. after a failed ASC upload of the same version).
 - The committed `Signal.xcodeproj` may lag behind `project.yml`; CI always runs
   `xcodegen generate` first. Run it locally too before archiving by hand.
+
+## Automatic updates (Sparkle)
+
+Direct-download builds self-update via [Sparkle](https://sparkle-project.org):
+the app polls `https://thiagobrez.github.io/Signal/appcast.xml`, which the
+**Build & Publish** workflow regenerates and commits to `docs/` on `master`
+after notarizing each release DMG. Every appcast item is EdDSA-signed.
+
+One-time setup (already done if `SUPublicEDKey` in `Signal/Info.plist` holds a
+real key):
+
+1. Download the Sparkle distribution matching `SPARKLE_TOOLS_VERSION` in
+   `release-build.yml` and run `./bin/generate_keys`. Paste the printed
+   **public** key into `Signal/Info.plist` → `SUPublicEDKey` (safe to commit).
+2. Export the private key with `./bin/generate_keys -x /tmp/sparkle_key`, add
+   the file's contents as the `SPARKLE_ED_PRIVATE_KEY` repo secret, then
+   delete the file. Losing this key means shipped apps reject future updates,
+   so keep the Keychain copy backed up.
+
+Notes:
+
+- Keep `SPARKLE_TOOLS_VERSION` in `release-build.yml` in sync with the Sparkle
+  package version in `project.yml`.
+- Users on versions released before Sparkle was added must re-download the DMG
+  once; auto-update works from then on.
+
+## Required repo secrets
+
+`APPLE_TEAM_ID`, `DEVELOPER_ID_APPLICATION_P12_BASE64`,
+`DEVELOPER_ID_APPLICATION_P12_PASSWORD`, `APP_STORE_CONNECT_API_KEY_ID`,
+`APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_P8_BASE64`,
+`TELEMETRYDECK_APP_ID`, `SPARKLE_ED_PRIVATE_KEY`.

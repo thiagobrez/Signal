@@ -108,7 +108,23 @@ extension NSImage {
 }
 
 private struct MenuBarContent: View {
+    #if !APPSTORE
+    @ObservedObject private var updater = UpdaterManager.shared
+    #endif
+
     var body: some View {
+        #if !APPSTORE
+        // Non-intrusive nudge for users who never quit the app: the update
+        // is already downloaded, this installs it and relaunches.
+        if let version = updater.pendingUpdateVersion {
+            Button("Update Available (\(version)) — Restart to Apply") {
+                UpdaterManager.shared.applyPendingUpdate()
+            }
+
+            Divider()
+        }
+        #endif
+
         Button("Show / Hide Signal") {
             SignalServices.shared.controller.toggle()
         }
