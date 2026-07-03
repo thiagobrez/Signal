@@ -22,8 +22,7 @@
 
 <div align="center">
 
-<!-- TODO: replace with the Mac App Store URL once published -->
-[**Mac App Store**](# "Coming soon") *(coming soon)* &nbsp;·&nbsp; [**Download for macOS**](https://github.com/thiagobrez/Signal/releases/latest)
+[**Mac App Store**](https://apps.apple.com/pt/app/signal-three-things-a-day/id6784999549) &nbsp;·&nbsp; [**Download for macOS**](https://github.com/thiagobrez/Signal/releases/latest/download/Signal.dmg)
 
 </div>
 
