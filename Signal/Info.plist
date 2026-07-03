@@ -20,7 +20,7 @@
 	     secret. Public half is safe to commit. See RELEASING.md for the
 	     one-time `generate_keys` setup. -->
 	<key>SUPublicEDKey</key>
-	<string>REPLACE_WITH_SPARKLE_PUBLIC_ED_KEY</string>
+	<string>IfTNP2XW1vLzxlQdXKE+iC5wQvKWoo1xJ1kH2/x3w4s=</string>
 	<!-- Sparkle: required for sandboxed apps (spawns the privileged installer
 	     via an XPC service). The Downloader XPC service is NOT needed because
 	     the app already has com.apple.security.network.client. -->
