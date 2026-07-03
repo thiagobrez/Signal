@@ -15,6 +15,9 @@ packages:
   TelemetryDeck:
     url: https://github.com/TelemetryDeck/SwiftSDK
     from: 2.0.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.9.4
 
 settings:
   base:
@@ -30,8 +33,11 @@ settings:
     # Overridden per-release in CI (xcodebuild CURRENT_PROJECT_VERSION=<n>).
     CURRENT_PROJECT_VERSION: "1"
 
-targets:
-  Signal:
+# Two app variants share everything through this template. They must be
+# separate targets (not configs) because Sparkle may only be linked into the
+# direct-download build: the Mac App Store rejects apps that embed it.
+targetTemplates:
+  SignalApp:
     type: application
     platform: macOS
     configFiles:
@@ -39,12 +45,16 @@ targets:
       Release: Config/Build.xcconfig
     sources:
       - path: Signal
+        excludes:
+          # Each variant's own INFOPLIST_FILE is excluded from resources
+          # automatically, but the *other* variant's plist would be bundled
+          # as a stray resource without this.
+          - "Info*.plist"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ski.brezin.signal
         PRODUCT_NAME: Signal
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_FILE: Signal/Info.plist
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
         INFOPLIST_KEY_LSUIElement: YES
@@ -58,13 +68,40 @@ targets:
       - package: KeyboardShortcuts
       - package: TelemetryDeck
 
-# Shared scheme so `xcodebuild -scheme Signal` works in CI (schemes only
+targets:
+  # Direct-download (DMG) variant: self-updates via Sparkle. This is the
+  # default target for local development.
+  Signal:
+    templates: [SignalApp]
+    settings:
+      base:
+        INFOPLIST_FILE: Signal/Info.plist
+    dependencies:
+      - package: Sparkle
+  # Mac App Store variant: no Sparkle, update UI compiled out via APPSTORE.
+  SignalAppStore:
+    templates: [SignalApp]
+    settings:
+      base:
+        INFOPLIST_FILE: Signal/Info-AppStore.plist
+        # $(inherited) keeps XcodeGen's DEBUG condition in Debug builds.
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) APPSTORE"
+
+# Shared schemes so `xcodebuild -scheme <name>` works in CI (schemes only
 # auto-generate when the project is opened in Xcode's UI).
 schemes:
   Signal:
     build:
       targets:
         Signal: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+  SignalAppStore:
+    build:
+      targets:
+        SignalAppStore: all
     run:
       config: Debug
     archive:

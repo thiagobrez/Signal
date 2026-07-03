@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Info.plist for the MAC APP STORE variant. It must contain no Sparkle
+	     (SU*) keys — the App Store owns updates and rejects apps that embed
+	     their own updater. The direct-download variant uses Info.plist; keep
+	     any non-Sparkle keys in sync between the two files.
+	     Apple's generated Info.plist keys (LSUIElement, etc.) are merged on top. -->
+
+	<!-- TelemetryDeck App ID, injected from TELEMETRYDECK_APP_ID (see Config/Analytics.xcconfig). -->
+	<key>TelemetryDeckAppID</key>
+	<string>$(TELEMETRYDECK_APP_ID)</string>
+</dict>
+</plist>

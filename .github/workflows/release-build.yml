@@ -1,7 +1,11 @@
 # Builds, signs, notarizes and publishes a tagged release:
-#   archive -> Developer ID export -> DMG -> notarize + staple
-#           -> attach DMG to the GitHub Release
-#           -> App Store Connect upload (pkg built + uploaded by xcodebuild)
+#   archive (Signal)         -> Developer ID export -> DMG -> notarize + staple
+#                            -> attach DMG to the GitHub Release
+#                            -> sign + publish Sparkle appcast to docs/ (GitHub Pages)
+#   archive (SignalAppStore) -> App Store Connect upload (pkg built + uploaded by xcodebuild)
+#
+# Two archives are required: only the direct-download target links Sparkle
+# (the App Store rejects apps that embed it), so the binaries differ.
 #
 # Normally invoked by release-pr.yml (workflow_call) right after the tag is
 # created. workflow_dispatch exists for re-runs and for dry-running the
@@ -59,7 +63,10 @@ jobs:
       ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
       ASC_KEY_PATH: /tmp/asc/AuthKey.p8
-      ARCHIVE_PATH: /tmp/build/Signal.xcarchive
+      ARCHIVE_PATH_DIRECT: /tmp/build/Signal-Direct.xcarchive
+      ARCHIVE_PATH_MAS: /tmp/build/Signal-AppStore.xcarchive
+      # Keep in sync with the Sparkle version in project.yml.
+      SPARKLE_TOOLS_VERSION: "2.9.4"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -121,11 +128,24 @@ jobs:
           mkdir -p "$(dirname "$ASC_KEY_PATH")"
           echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$ASC_KEY_PATH"
 
-      - name: Archive
+      - name: Archive (direct / Sparkle)
         run: |
           xcodebuild -project Signal.xcodeproj -scheme Signal -configuration Release \
             -destination "generic/platform=macOS" \
-            -archivePath "$ARCHIVE_PATH" \
+            -archivePath "$ARCHIVE_PATH_DIRECT" \
+            CURRENT_PROJECT_VERSION="${{ steps.ver.outputs.build }}" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            archive
+
+      - name: Archive (App Store)
+        if: inputs.upload-appstore
+        run: |
+          xcodebuild -project Signal.xcodeproj -scheme SignalAppStore -configuration Release \
+            -destination "generic/platform=macOS" \
+            -archivePath "$ARCHIVE_PATH_MAS" \
             CURRENT_PROJECT_VERSION="${{ steps.ver.outputs.build }}" \
             -allowProvisioningUpdates \
             -authenticationKeyPath "$ASC_KEY_PATH" \
@@ -137,7 +157,7 @@ jobs:
         run: |
           sed "s/__TEAM_ID__/$APPLE_TEAM_ID/" .github/export-options/developer-id.plist > /tmp/eo-devid.plist
           xcodebuild -exportArchive \
-            -archivePath "$ARCHIVE_PATH" \
+            -archivePath "$ARCHIVE_PATH_DIRECT" \
             -exportOptionsPlist /tmp/eo-devid.plist \
             -exportPath /tmp/build/export-devid \
             -allowProvisioningUpdates \
@@ -199,6 +219,54 @@ jobs:
           cp "Signal-$VERSION.dmg" Signal.dmg
           gh release upload "$TAG" "Signal-$VERSION.dmg" Signal.dmg --clobber
 
+      # The appcast is what Sparkle-equipped installs poll for updates. It is
+      # regenerated from scratch each release (single item — Sparkle only
+      # offers the latest version) and committed to docs/ on master, which
+      # GitHub Pages serves at https://thiagobrez.github.io/Signal/appcast.xml.
+      # Runs after notarization so the EdDSA signature covers the stapled
+      # bytes users actually download.
+      - name: Publish Sparkle appcast
+        if: inputs.attach-dmg
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          [ -n "$SPARKLE_ED_PRIVATE_KEY" ] \
+            || { echo "SPARKLE_ED_PRIVATE_KEY secret is not set (see RELEASING.md)" >&2; exit 1; }
+
+          curl -fsSL -o /tmp/sparkle.tar.xz \
+            "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_TOOLS_VERSION/Sparkle-$SPARKLE_TOOLS_VERSION.tar.xz"
+          mkdir -p /tmp/sparkle
+          tar -xJf /tmp/sparkle.tar.xz -C /tmp/sparkle
+
+          # Stage the DMG plus release notes. The .html must share the DMG's
+          # basename for generate_appcast --embed-release-notes to pick it up.
+          mkdir -p /tmp/appcast
+          cp "Signal-$VERSION.dmg" /tmp/appcast/
+          awk '/^## /{if (found) exit; found=1; next} found' CHANGELOG.md > /tmp/notes.md || true
+          [ -s /tmp/notes.md ] || echo "Signal $VERSION" > /tmp/notes.md
+          npx --yes marked --gfm < /tmp/notes.md > "/tmp/appcast/Signal-$VERSION.html"
+
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > /tmp/eddsa.key
+          /tmp/sparkle/bin/generate_appcast /tmp/appcast \
+            --ed-key-file /tmp/eddsa.key \
+            --download-url-prefix "https://github.com/thiagobrez/Signal/releases/download/v$VERSION/" \
+            --link "https://thiagobrez.github.io/Signal/" \
+            --embed-release-notes \
+            -o /tmp/appcast/appcast.xml
+          rm -f /tmp/eddsa.key
+
+          # This job checked out the release tag; the appcast lives on master.
+          git fetch origin master
+          git worktree add /tmp/site origin/master
+          cp /tmp/appcast/appcast.xml /tmp/site/docs/appcast.xml
+          cd /tmp/site
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/appcast.xml
+          git commit -m "chore: publish appcast for v$VERSION [skip ci]"
+          git push origin HEAD:master
+
       - name: Upload dry-run artifact
         if: ${{ !inputs.attach-dmg }}
         uses: actions/upload-artifact@v4
@@ -211,7 +279,7 @@ jobs:
         run: |
           sed "s/__TEAM_ID__/$APPLE_TEAM_ID/" .github/export-options/app-store.plist > /tmp/eo-appstore.plist
           xcodebuild -exportArchive \
-            -archivePath "$ARCHIVE_PATH" \
+            -archivePath "$ARCHIVE_PATH_MAS" \
             -exportOptionsPlist /tmp/eo-appstore.plist \
             -exportPath /tmp/build/export-appstore \
             -allowProvisioningUpdates \

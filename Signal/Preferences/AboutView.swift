@@ -7,6 +7,9 @@ import SwiftUI
 /// a sheet rather than living inline here).
 struct AboutView: View {
     @State private var showingAcknowledgements = false
+    #if !APPSTORE
+    @ObservedObject private var updater = UpdaterManager.shared
+    #endif
 
     private static let repoURL = URL(string: "https://github.com/thiagobrez/Signal")!
     private static let authorGitHubURL = URL(string: "https://github.com/thiagobrez")!
@@ -16,6 +19,9 @@ struct AboutView: View {
     var body: some View {
         VStack(spacing: 20) {
             appIdentity
+            #if !APPSTORE
+            updates
+            #endif
             buttons
             SignalQuote()
                 .frame(maxWidth: 360)
@@ -47,6 +53,31 @@ struct AboutView: View {
                 .foregroundStyle(.secondary)
         }
     }
+
+    // MARK: - Updates (direct-download builds only; the App Store owns
+    // updates for the MAS variant)
+
+    #if !APPSTORE
+    private var updates: some View {
+        VStack(spacing: 10) {
+            Button("Check for Updates…") {
+                UpdaterManager.shared.checkForUpdates()
+            }
+            .buttonStyle(.bordered)
+            .disabled(!updater.canCheckForUpdates)
+
+            Toggle(
+                "Automatically download and install updates",
+                isOn: Binding(
+                    get: { updater.automaticUpdatesEnabled },
+                    set: { updater.automaticUpdatesEnabled = $0 }
+                )
+            )
+            .toggleStyle(.checkbox)
+            .font(.system(size: 12))
+        }
+    }
+    #endif
 
     // MARK: - Built by
 

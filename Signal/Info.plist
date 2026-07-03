@@ -2,9 +2,38 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- TelemetryDeck App ID, injected from TELEMETRYDECK_APP_ID (see Config/Analytics.xcconfig).
-	     Apple's generated Info.plist keys (LSUIElement, etc.) are merged on top of this file. -->
+	<!-- Info.plist for the DIRECT-DOWNLOAD (DMG) variant: this is the one with
+	     the Sparkle (SU*) keys. The Mac App Store variant uses Info-AppStore.plist,
+	     which must stay Sparkle-free. Keep any non-Sparkle keys in sync between
+	     the two files.
+	     Apple's generated Info.plist keys (LSUIElement, etc.) are merged on top. -->
+
+	<!-- TelemetryDeck App ID, injected from TELEMETRYDECK_APP_ID (see Config/Analytics.xcconfig). -->
 	<key>TelemetryDeckAppID</key>
 	<string>$(TELEMETRYDECK_APP_ID)</string>
+
+	<!-- Sparkle: where the updater looks for new versions (published by CI,
+	     see .github/workflows/release-build.yml). -->
+	<key>SUFeedURL</key>
+	<string>https://thiagobrez.github.io/Signal/appcast.xml</string>
+	<!-- Sparkle: EdDSA public key matching the SPARKLE_ED_PRIVATE_KEY repo
+	     secret. Public half is safe to commit. See RELEASING.md for the
+	     one-time `generate_keys` setup. -->
+	<key>SUPublicEDKey</key>
+	<string>REPLACE_WITH_SPARKLE_PUBLIC_ED_KEY</string>
+	<!-- Sparkle: required for sandboxed apps (spawns the privileged installer
+	     via an XPC service). The Downloader XPC service is NOT needed because
+	     the app already has com.apple.security.network.client. -->
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
+	<!-- Sparkle: default automatic checks ON and skip the first-run
+	     "check automatically?" permission prompt; the About tab checkbox is
+	     the user's control. -->
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<!-- Sparkle: default to downloading updates in the background and
+	     installing silently on quit/relaunch. -->
+	<key>SUAutomaticallyUpdate</key>
+	<true/>
 </dict>
 </plist>

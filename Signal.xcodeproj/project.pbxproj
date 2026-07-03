@@ -11,29 +11,61 @@
 		03EBE1A844DF22D16DF40F78 /* SignalQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008557C7E0D6B65492385BAC /* SignalQuote.swift */; };
 		0546BC32AA8E72C7F0895F3C /* pencil.wav in Resources */ = {isa = PBXBuildFile; fileRef = B1389E0ACDE4C1E41AE3799A /* pencil.wav */; };
 		08F36652507A4AB93CE0FF1B /* SignalServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A620C14130D54DCE2B2A9 /* SignalServices.swift */; };
+		0FD934AF18467C0D6DDA3299 /* bubble.wav in Resources */ = {isa = PBXBuildFile; fileRef = B56A8D7FF5758A4206738001 /* bubble.wav */; };
+		11E840DDA3FC43E65E509E0A /* SignalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453E4D521FCA575CE77C9A3 /* SignalApp.swift */; };
+		15475CFBFA7AB76916762331 /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */; };
+		18DEC422943D9FEA5A7D6A4E /* KeyboardShortcuts+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */; };
 		1AF44987ABA75D46DCB18913 /* pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4C4F741DBD56F9C4C17A0174 /* pop.wav */; };
+		1F642132401680546E551213 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
+		242231A5CCB521FDAB83BEF2 /* tube.wav in Resources */ = {isa = PBXBuildFile; fileRef = AD40B91BE6D69CE63BBF11CC /* tube.wav */; };
+		244A5D5C9551D4A95121D7BA /* pencil.wav in Resources */ = {isa = PBXBuildFile; fileRef = B1389E0ACDE4C1E41AE3799A /* pencil.wav */; };
+		29ACE01CA7A07BE91ED9FFD7 /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7748712533E7651295201A /* NotchController.swift */; };
+		2D95712B6D0C0487E16CDDC2 /* SignalNotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */; };
 		30D307A0EDEFB9362A2137C3 /* bubble.wav in Resources */ = {isa = PBXBuildFile; fileRef = B56A8D7FF5758A4206738001 /* bubble.wav */; };
 		327C60E247DE7912CB4A84CD /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 7485CC3CC5D37982A205C704 /* TelemetryDeck */; };
 		32836E195FDFA7ED8AEB517D /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 307A5F65741E0033246A3B2A /* KeyboardShortcuts */; };
 		37A76BD59AAE8DF9B946641B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD1AE2C032080FBD21F3FD8 /* OnboardingView.swift */; };
+		381E6BE72F1CF0DAD4CA8FE8 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */; };
 		3824FED4BA0E410A23AB96D4 /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7748712533E7651295201A /* NotchController.swift */; };
 		38549BBAA9843F968099473A /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8D74719DA574C846852019 /* SettingsStore.swift */; };
 		3BDBBB7DA4E54534E0CF1E6C /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 525E24A23AC8A26E90F43271 /* DynamicNotchKit */; };
 		3ECF97CFDB2BF7587829A391 /* KeyboardShortcuts+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */; };
+		49A5ADF0EB4D6649FB790CB1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */; };
 		580596D8C403EEFF454F8305 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F879369015787A57B62384C1 /* AboutView.swift */; };
+		5E17A535D5FC3E0214668300 /* SignalServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A620C14130D54DCE2B2A9 /* SignalServices.swift */; };
+		5E8C4F10C09AB8A1FBE86D78 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 2CDB29FC81558E1F023D4ADC /* KeyboardShortcuts */; };
+		5F004980DC460A2281F0F17F /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD1AE2C032080FBD21F3FD8 /* OnboardingView.swift */; };
+		654E8F6AB7A4B42B3C38A82F /* meadow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 85754D73DEB6E570698C3CD6 /* meadow.wav */; };
 		6CD7359B6468D893D57D63D8 /* SignalNotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */; };
 		727A2D12D5D0E2E4BEBA8831 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
+		7340E7C960D0B0FB091CBA83 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = B280BAD1315E22650C657F91 /* TelemetryDeck */; };
+		75C7AFE4A25EBA6E968B278C /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8D74719DA574C846852019 /* SettingsStore.swift */; };
+		7C93202460ECD6EE211F74C6 /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */; };
 		7DB9713BA5A60F03AA1709BD /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462ED15C9D00B34967E04C53 /* Analytics.swift */; };
 		7FAF10A54C6C081CFFA1A256 /* SignalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453E4D521FCA575CE77C9A3 /* SignalApp.swift */; };
+		8109AC1CA51325A097906DD6 /* scribble.wav in Resources */ = {isa = PBXBuildFile; fileRef = CB7E2BD16B84F461552B37B3 /* scribble.wav */; };
 		83939F1D30F9B1A18AE76D65 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */; };
+		89CDCCB06B8FAEB5A9CD2F10 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
 		8E64B68854B57CF40038C07D /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
 		903BA73065746F8059593306 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
+		90D7833D74AE9CB9746536CE /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F879369015787A57B62384C1 /* AboutView.swift */; };
+		948F4E6B2E1D33FDC895FA02 /* pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4C4F741DBD56F9C4C17A0174 /* pop.wav */; };
 		A6188962D97B6430646F8BA6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */; };
 		AA8F91BCB15AC076FD9DB118 /* tube.wav in Resources */ = {isa = PBXBuildFile; fileRef = AD40B91BE6D69CE63BBF11CC /* tube.wav */; };
 		AAC4775787D9967B61E97ACF /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */; };
+		B81B699C68126F4F4360A4E5 /* UpdaterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */; };
+		BB729B3E8046B64FBE0CB016 /* UpdaterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */; };
+		BC391A1D707873A245507449 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
+		BCB72BF78669CCE888703935 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
+		CD575E14343E55CFA5891885 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
 		CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
 		D27F6F6256F88FDA46401552 /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */; };
 		D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 85754D73DEB6E570698C3CD6 /* meadow.wav */; };
+		DC01A8EAD1D7221CB3085182 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462ED15C9D00B34967E04C53 /* Analytics.swift */; };
+		E3B1F1081E1611ADC8E10A69 /* SignalQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008557C7E0D6B65492385BAC /* SignalQuote.swift */; };
+		EFED4F987C3570E1D4B42406 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
+		F0834126ECD6A0A9C897E8C8 /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7DE1A9A552F49F0CF15F95EA /* DynamicNotchKit */; };
+		F42B88AB80B775ABCB9C2084 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BD2156A0FBF41D9300662BAF /* Sparkle */; };
 		F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
 		FE6969C474390CFCC52DEFDF /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
 /* End PBXBuildFile section */
@@ -42,13 +74,13 @@
 		008557C7E0D6B65492385BAC /* SignalQuote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalQuote.swift; sourceTree = "<group>"; };
 		0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsView.swift; sourceTree = "<group>"; };
 		146D2AB23F5E793F6008D409 /* DayLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayLog.swift; sourceTree = "<group>"; };
+		165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterManager.swift; sourceTree = "<group>"; };
 		1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalNotchView.swift; sourceTree = "<group>"; };
 		2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		462ED15C9D00B34967E04C53 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		4C4F741DBD56F9C4C17A0174 /* pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pop.wav; sourceTree = "<group>"; };
 		4E7748712533E7651295201A /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
 		506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindowController.swift; sourceTree = "<group>"; };
-		62DCF92EBA015AEB3F97C53D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		703A620C14130D54DCE2B2A9 /* SignalServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalServices.swift; sourceTree = "<group>"; };
 		73845020201BE00A671F84BC /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
 		7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
@@ -57,6 +89,7 @@
 		8C8D74719DA574C846852019 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		9D5999FF8532367E6DBD5F60 /* Signal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Signal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD40B91BE6D69CE63BBF11CC /* tube.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = tube.wav; sourceTree = "<group>"; };
+		B0E5EC4A1EE4C90E59A17DA3 /* SignalAppStore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SignalAppStore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1389E0ACDE4C1E41AE3799A /* pencil.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pencil.wav; sourceTree = "<group>"; };
 		B56A8D7FF5758A4206738001 /* bubble.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bubble.wav; sourceTree = "<group>"; };
 		B6350E3A747785646888F518 /* Signal.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Signal.entitlements; sourceTree = "<group>"; };
@@ -73,6 +106,16 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		9DB0C860832A62EB4832D8CD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0834126ECD6A0A9C897E8C8 /* DynamicNotchKit in Frameworks */,
+				5E8C4F10C09AB8A1FBE86D78 /* KeyboardShortcuts in Frameworks */,
+				7340E7C960D0B0FB091CBA83 /* TelemetryDeck in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A86FA74E50236106210B83D9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -80,6 +123,7 @@
 				3BDBBB7DA4E54534E0CF1E6C /* DynamicNotchKit in Frameworks */,
 				32836E195FDFA7ED8AEB517D /* KeyboardShortcuts in Frameworks */,
 				327C60E247DE7912CB4A84CD /* TelemetryDeck in Frameworks */,
+				F42B88AB80B775ABCB9C2084 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,7 +153,6 @@
 				76C32D63C38B77706495484D /* Store */,
 				2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */,
 				CABDE5D429850284CDE2585B /* AppIcon.icon */,
-				62DCF92EBA015AEB3F97C53D /* Info.plist */,
 				8C8D74719DA574C846852019 /* SettingsStore.swift */,
 				B6350E3A747785646888F518 /* Signal.entitlements */,
 				C453E4D521FCA575CE77C9A3 /* SignalApp.swift */,
@@ -180,6 +223,7 @@
 				F879369015787A57B62384C1 /* AboutView.swift */,
 				0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */,
 				D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */,
+				165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -213,6 +257,7 @@
 			isa = PBXGroup;
 			children = (
 				9D5999FF8532367E6DBD5F60 /* Signal.app */,
+				B0E5EC4A1EE4C90E59A17DA3 /* SignalAppStore.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -246,6 +291,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		83E258A6DB80B773A18DED07 /* SignalAppStore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C35CA5F5158B4FDEB6794724 /* Build configuration list for PBXNativeTarget "SignalAppStore" */;
+			buildPhases = (
+				20D4EBB1CEEFBA4A3D4E577D /* Sources */,
+				6D633469360812433E457ED6 /* Resources */,
+				9DB0C860832A62EB4832D8CD /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SignalAppStore;
+			packageProductDependencies = (
+				7DE1A9A552F49F0CF15F95EA /* DynamicNotchKit */,
+				2CDB29FC81558E1F023D4ADC /* KeyboardShortcuts */,
+				B280BAD1315E22650C657F91 /* TelemetryDeck */,
+			);
+			productName = SignalAppStore;
+			productReference = B0E5EC4A1EE4C90E59A17DA3 /* SignalAppStore.app */;
+			productType = "com.apple.product-type.application";
+		};
 		AC6A4C5D9DE6F0E0B4A0E04E /* Signal */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D79D973A7FB99E3A44CF8227 /* Build configuration list for PBXNativeTarget "Signal" */;
@@ -263,6 +330,7 @@
 				525E24A23AC8A26E90F43271 /* DynamicNotchKit */,
 				307A5F65741E0033246A3B2A /* KeyboardShortcuts */,
 				7485CC3CC5D37982A205C704 /* TelemetryDeck */,
+				BD2156A0FBF41D9300662BAF /* Sparkle */,
 			);
 			productName = Signal;
 			productReference = 9D5999FF8532367E6DBD5F60 /* Signal.app */;
@@ -277,6 +345,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					83E258A6DB80B773A18DED07 = {
+						ProvisioningStyle = Automatic;
+					};
 					AC6A4C5D9DE6F0E0B4A0E04E = {
 						ProvisioningStyle = Automatic;
 					};
@@ -293,6 +364,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				6E02714E8FCBF0EF1283A71D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				262154615B3E7DAA60212BF1 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				5088E218E817856B5D2EF0E6 /* XCRemoteSwiftPackageReference "SwiftSDK" */,
 				892239A6A90385B8CB507CC9 /* XCLocalSwiftPackageReference "LocalPackages/DynamicNotchKit" */,
 			);
@@ -302,11 +374,26 @@
 			projectRoot = "";
 			targets = (
 				AC6A4C5D9DE6F0E0B4A0E04E /* Signal */,
+				83E258A6DB80B773A18DED07 /* SignalAppStore */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		6D633469360812433E457ED6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BC391A1D707873A245507449 /* AppIcon.icon in Resources */,
+				0FD934AF18467C0D6DDA3299 /* bubble.wav in Resources */,
+				654E8F6AB7A4B42B3C38A82F /* meadow.wav in Resources */,
+				244A5D5C9551D4A95121D7BA /* pencil.wav in Resources */,
+				948F4E6B2E1D33FDC895FA02 /* pop.wav in Resources */,
+				8109AC1CA51325A097906DD6 /* scribble.wav in Resources */,
+				242231A5CCB521FDAB83BEF2 /* tube.wav in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D85CE5696E0E4563C56B9A9C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -324,6 +411,33 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		20D4EBB1CEEFBA4A3D4E577D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90D7833D74AE9CB9746536CE /* AboutView.swift in Sources */,
+				15475CFBFA7AB76916762331 /* AcknowledgementsView.swift in Sources */,
+				DC01A8EAD1D7221CB3085182 /* Analytics.swift in Sources */,
+				49A5ADF0EB4D6649FB790CB1 /* AppDelegate.swift in Sources */,
+				89CDCCB06B8FAEB5A9CD2F10 /* DayLog.swift in Sources */,
+				18DEC422943D9FEA5A7D6A4E /* KeyboardShortcuts+Names.swift in Sources */,
+				29ACE01CA7A07BE91ED9FFD7 /* NotchController.swift in Sources */,
+				5F004980DC460A2281F0F17F /* OnboardingView.swift in Sources */,
+				7C93202460ECD6EE211F74C6 /* OnboardingWindowController.swift in Sources */,
+				381E6BE72F1CF0DAD4CA8FE8 /* PreferencesView.swift in Sources */,
+				EFED4F987C3570E1D4B42406 /* Scheduler.swift in Sources */,
+				75C7AFE4A25EBA6E968B278C /* SettingsStore.swift in Sources */,
+				11E840DDA3FC43E65E509E0A /* SignalApp.swift in Sources */,
+				2D95712B6D0C0487E16CDDC2 /* SignalNotchView.swift in Sources */,
+				E3B1F1081E1611ADC8E10A69 /* SignalQuote.swift in Sources */,
+				5E17A535D5FC3E0214668300 /* SignalServices.swift in Sources */,
+				1F642132401680546E551213 /* SignalStore.swift in Sources */,
+				CD575E14343E55CFA5891885 /* SoundPlayer.swift in Sources */,
+				BCB72BF78669CCE888703935 /* TodoItem.swift in Sources */,
+				BB729B3E8046B64FBE0CB016 /* UpdaterManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CCA9DD53B157AF4FD18F1326 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -347,12 +461,65 @@
 				CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */,
 				8E64B68854B57CF40038C07D /* SoundPlayer.swift in Sources */,
 				727A2D12D5D0E2E4BEBA8831 /* TodoItem.swift in Sources */,
+				B81B699C68126F4F4360A4E5 /* UpdaterManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		1E73A7381550EDD14AE69E5F /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Signal/Info-AppStore.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Signal;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ski.brezin.signal;
+				PRODUCT_NAME = Signal;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) APPSTORE";
+			};
+			name = Release;
+		};
+		2945335A3866BB26B8CAB6A4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Signal/Signal.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Signal/Info-AppStore.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Signal;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ski.brezin.signal;
+				PRODUCT_NAME = Signal;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) APPSTORE";
+			};
+			name = Debug;
+		};
 		2B3EDD5DC6EAA9B93F8C8376 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */;
@@ -426,7 +593,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.0.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -491,7 +658,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.0.2;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -540,6 +707,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		C35CA5F5158B4FDEB6794724 /* Build configuration list for PBXNativeTarget "SignalAppStore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2945335A3866BB26B8CAB6A4 /* Debug */,
+				1E73A7381550EDD14AE69E5F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		D79D973A7FB99E3A44CF8227 /* Build configuration list for PBXNativeTarget "Signal" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -559,6 +735,14 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		262154615B3E7DAA60212BF1 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.4;
+			};
+		};
 		5088E218E817856B5D2EF0E6 /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
@@ -578,6 +762,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2CDB29FC81558E1F023D4ADC /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6E02714E8FCBF0EF1283A71D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
 		307A5F65741E0033246A3B2A /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 6E02714E8FCBF0EF1283A71D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
@@ -591,6 +780,20 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 5088E218E817856B5D2EF0E6 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
 			productName = TelemetryDeck;
+		};
+		7DE1A9A552F49F0CF15F95EA /* DynamicNotchKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DynamicNotchKit;
+		};
+		B280BAD1315E22650C657F91 /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5088E218E817856B5D2EF0E6 /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
+		};
+		BD2156A0FBF41D9300662BAF /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 262154615B3E7DAA60212BF1 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
