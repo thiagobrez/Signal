@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Signal</title>
+        <item>
+            <title>1.1.0</title>
+            <pubDate>Sat, 04 Jul 2026 00:50:03 +0000</pubDate>
+            <link>https://thiagobrez.github.io/Signal/</link>
+            <sparkle:version>56</sparkle:version>
+            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h3>Minor Changes</h3>
+<ul>
+<li>901e7c0: Add automatic updates for direct-download installs.</li>
+</ul>
+
+]]></description>
+            <enclosure url="https://github.com/thiagobrez/Signal/releases/download/v1.1.0/Signal-1.1.0.dmg" length="4021539" type="application/octet-stream" sparkle:edSignature="w1Ehw5NaHTwmsDCcK6OlKSY3vAHaXOkG73MW/BAO21eigBAHpJLbGyhAGcrcWx39b+Kp6Z+ATMBqhWWy8mobBA=="/>
+        </item>
+    </channel>
+</rss>
