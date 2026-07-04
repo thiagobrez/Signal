@@ -330,6 +330,58 @@
         font-size: 15px;
       }
 
+      .brew-row {
+        display: flex;
+        justify-content: center;
+        margin-top: 16px;
+      }
+      .brew-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 40px;
+        padding: 0 5px 0 16px;
+        border: 1.5px solid var(--btn-secondary-border);
+        border-radius: 10px;
+      }
+      .brew-pill code {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+      .brew-pill code .prompt {
+        color: var(--text-tertiary);
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .brew-copy {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border: none;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+      .brew-copy:hover {
+        background: color-mix(in srgb, var(--text) 10%, transparent);
+        color: var(--text);
+      }
+      .brew-copy .check {
+        display: none;
+      }
+      .brew-copy.copied .copy {
+        display: none;
+      }
+      .brew-copy.copied .check {
+        display: block;
+        color: var(--accent, #34c759);
+      }
+
       /* ---------- Notch animation (mirrors NotchLoopAnimation) ---------- */
 
       .notch-stage {
@@ -770,6 +822,51 @@
               >Download for macOS</a
             >
           </div>
+          <div class="brew-row reveal-text">
+            <span class="brew-pill">
+              <code
+                ><span class="prompt" aria-hidden="true">$&nbsp;</span
+                >brew install thiagobrez/tap/signal</code
+              >
+              <button
+                class="brew-copy"
+                id="brew-copy"
+                type="button"
+                aria-label="Copy Homebrew install command"
+                title="Copy"
+              >
+                <svg
+                  class="copy"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-1.5v-1.5H14a.5.5 0 0 0 .5-.5V2a.5.5 0 0 0-.5-.5H7a.5.5 0 0 0-.5.5v1.5H5V2z"
+                  />
+                  <path
+                    d="M0 7a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V7zm2-.5a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V7a.5.5 0 0 0-.5-.5H2z"
+                  />
+                </svg>
+                <svg
+                  class="check"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M2.5 8.5l3.5 3.5 7.5-8" />
+                </svg>
+              </button>
+            </span>
+          </div>
           <p class="small reveal-text">
             Requires macOS 14 (Sonoma) or later. Free and open source.
           </p>
@@ -1086,6 +1183,16 @@
 
     <script>
       document.getElementById("year").textContent = new Date().getFullYear();
+
+      // Homebrew install snippet: copy to clipboard, flash a checkmark.
+      const brewCopy = document.getElementById("brew-copy");
+      brewCopy.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(
+          "brew install thiagobrez/tap/signal"
+        );
+        brewCopy.classList.add("copied");
+        setTimeout(() => brewCopy.classList.remove("copied"), 1500);
+      });
 
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)"

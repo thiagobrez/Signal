@@ -267,6 +267,33 @@ jobs:
           git commit -m "chore: publish appcast for v$VERSION [skip ci]"
           git push origin HEAD:master
 
+      # The cask pins the sha256 of the exact DMG uploaded above, so this must
+      # run after the release upload. Pushed straight to the tap's main branch
+      # (no PR) so `brew install thiagobrez/tap/signal` serves the new version
+      # as soon as the release is out. The cask template lives in
+      # scripts/update-homebrew-cask.sh.
+      - name: Update Homebrew tap
+        if: inputs.attach-dmg
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          [ -n "$TAP_TOKEN" ] \
+            || { echo "HOMEBREW_TAP_TOKEN secret is not set (see RELEASING.md)" >&2; exit 1; }
+          SHA256=$(shasum -a 256 "Signal-$VERSION.dmg" | awk '{print $1}')
+          git clone --depth 1 \
+            "https://x-access-token:$TAP_TOKEN@github.com/thiagobrez/homebrew-tap.git" /tmp/tap
+          ./scripts/update-homebrew-cask.sh "$VERSION" "$SHA256" /tmp/tap
+          cd /tmp/tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/signal.rb
+          # --clobber-style idempotency for dispatch re-runs: an identical cask
+          # produces an empty diff, which is success, not failure.
+          git diff --cached --quiet && { echo "cask already up to date"; exit 0; }
+          git commit -m "signal $VERSION"
+          git push origin HEAD:main
+
       - name: Upload dry-run artifact
         if: ${{ !inputs.attach-dmg }}
         uses: actions/upload-artifact@v4

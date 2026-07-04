@@ -12,6 +12,9 @@ and GitHub Actions. Every release produces:
   and served by GitHub Pages at
   `https://thiagobrez.github.io/Signal/appcast.xml`) so existing
   direct-download installs auto-update,
+- an updated **Homebrew cask** in
+  [thiagobrez/homebrew-tap](https://github.com/thiagobrez/homebrew-tap)
+  (`brew install thiagobrez/tap/signal`), pointing at the same DMG,
 - an **App Store Connect upload** (TestFlight distribution and App Review
   submission stay manual in ASC).
 
@@ -70,9 +73,23 @@ Notes:
 - Users on versions released before Sparkle was added must re-download the DMG
   once; auto-update works from then on.
 
+## Homebrew tap
+
+`brew install thiagobrez/tap/signal` installs the release DMG. The **Build &
+Publish** workflow regenerates `Casks/signal.rb` in
+[thiagobrez/homebrew-tap](https://github.com/thiagobrez/homebrew-tap) from the
+template in `scripts/update-homebrew-cask.sh` and pushes it directly to the
+tap's `main` — never edit the cask in the tap repo by hand.
+
+The push authenticates with the `HOMEBREW_TAP_TOKEN` repo secret: a
+fine-grained PAT scoped to the `homebrew-tap` repository with **Contents:
+read and write**. When it expires, mint a new one at
+GitHub → Settings → Developer settings → Fine-grained tokens and update the
+secret.
+
 ## Required repo secrets
 
 `APPLE_TEAM_ID`, `DEVELOPER_ID_APPLICATION_P12_BASE64`,
 `DEVELOPER_ID_APPLICATION_P12_PASSWORD`, `APP_STORE_CONNECT_API_KEY_ID`,
 `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_KEY_P8_BASE64`,
-`TELEMETRYDECK_APP_ID`, `SPARKLE_ED_PRIVATE_KEY`.
+`TELEMETRYDECK_APP_ID`, `SPARKLE_ED_PRIVATE_KEY`, `HOMEBREW_TAP_TOKEN`.

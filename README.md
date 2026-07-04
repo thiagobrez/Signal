@@ -26,6 +26,13 @@
 
 </div>
 
+Or with [Homebrew](https://brew.sh) — installs the same signed, notarized
+build as the direct download:
+
+```sh
+brew install thiagobrez/tap/signal
+```
+
 Requires macOS 14 (Sonoma) or later. Free and open source.
 
 ## What is Signal?
