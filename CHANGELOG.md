@@ -1,5 +1,11 @@
 # signal
 
+## 1.1.0
+
+### Minor Changes
+
+- 901e7c0: Add automatic updates for direct-download installs.
+
 ## 1.0.2
 
 ### Patch Changes
