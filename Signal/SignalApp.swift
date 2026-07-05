@@ -108,6 +108,8 @@ extension NSImage {
 }
 
 private struct MenuBarContent: View {
+    @Environment(\.openSettings) private var openSettings
+
     #if !APPSTORE
     @ObservedObject private var updater = UpdaterManager.shared
     #endif
@@ -136,8 +138,12 @@ private struct MenuBarContent: View {
 
         Divider()
 
-        SettingsLink {
-            Text("Preferences…")
+        // Not `SettingsLink`: as an accessory (`LSUIElement`) app we're never
+        // frontmost, so the plain link opens the Settings window *behind* the
+        // active app. Activate first, then open, so it always comes to front.
+        Button("Preferences…") {
+            NSApp.activate(ignoringOtherApps: true)
+            openSettings()
         }
         .keyboardShortcut(",", modifiers: .command)
 
