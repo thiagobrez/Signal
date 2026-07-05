@@ -112,6 +112,11 @@ private struct MenuBarContent: View {
     @ObservedObject private var updater = UpdaterManager.shared
     #endif
 
+    #if APPSTORE
+    private static let writeReviewURL =
+        URL(string: "https://apps.apple.com/app/id6784999549?action=write-review")!
+    #endif
+
     var body: some View {
         #if !APPSTORE
         // Non-intrusive nudge for users who never quit the app: the update
@@ -135,6 +140,15 @@ private struct MenuBarContent: View {
             Text("Preferences…")
         }
         .keyboardShortcut(",", modifiers: .command)
+
+        #if APPSTORE
+        // Deep link straight to the App Store review sheet rather than
+        // StoreKit's requestReview: an explicit click should always work,
+        // while requestReview may be silently throttled by the system.
+        Button("Rate Signal…") {
+            NSWorkspace.shared.open(Self.writeReviewURL)
+        }
+        #endif
 
         Divider()
 

@@ -5,6 +5,7 @@ import Foundation
 enum SettingsStore {
     enum Key {
         static let hasSeenOnboarding = "hasSeenOnboarding"
+        static let hasRequestedReview = "hasRequestedReview"
         static let carryOverIncomplete = "carryOverIncomplete"
         static let openOnLaunch = "openOnLaunch"
         static let dailyPromptEnabled = "dailyPromptEnabled"
@@ -23,6 +24,7 @@ enum SettingsStore {
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
             Key.hasSeenOnboarding: false,
+            Key.hasRequestedReview: false,
             Key.carryOverIncomplete: true,
             Key.openOnLaunch: true,
             Key.dailyPromptEnabled: true,
@@ -46,6 +48,13 @@ enum SettingsStore {
     static var hasSeenOnboarding: Bool {
         get { d.bool(forKey: Key.hasSeenOnboarding) }
         set { d.set(newValue, forKey: Key.hasSeenOnboarding) }
+    }
+
+    /// Read/write: flipped the first time the App Store build asks for a
+    /// rating after a completed day, so the ask only ever happens once.
+    static var hasRequestedReview: Bool {
+        get { d.bool(forKey: Key.hasRequestedReview) }
+        set { d.set(newValue, forKey: Key.hasRequestedReview) }
     }
 
     static var carryOverIncomplete: Bool { d.bool(forKey: Key.carryOverIncomplete) }

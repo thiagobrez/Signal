@@ -1,5 +1,8 @@
 import SwiftUI
 import AppKit
+#if APPSTORE
+import StoreKit
+#endif
 
 /// The entire primary UI: the day's to-do slots shown inside the notch. Starts
 /// at three but grows as the user adds tasks.
@@ -11,6 +14,10 @@ struct SignalNotchView: View {
     @State private var placeholders: [String] = SignalNotchView.randomPlaceholders()
     @State private var celebrating = false
     @State private var blurred = false
+
+    #if APPSTORE
+    @Environment(\.requestReview) private var requestReview
+    #endif
 
     /// A pool of suggestions spanning software development, project management,
     /// design, and everyday chores. One is shown per empty slot, refreshed each
@@ -178,6 +185,17 @@ struct SignalNotchView: View {
             blurred = false
             try? await Task.sleep(for: .seconds(GrassBlade.exitStagger + GrassBlade.exitSlide + 0.1))
             celebrating = false
+
+            #if APPSTORE
+            // First completed day: ask for a rating once ever, and only after
+            // the grass has fully cleared so the ask never steps on the moment.
+            if !SettingsStore.hasRequestedReview {
+                SettingsStore.hasRequestedReview = true
+                // Let the card settle for a beat before the system dialog.
+                try? await Task.sleep(for: .seconds(0.5))
+                requestReview()
+            }
+            #endif
         }
     }
 
