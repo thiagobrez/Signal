@@ -72,6 +72,7 @@
         --btn-secondary-border: rgba(0, 0, 0, 0.18);
         --footer-border: rgba(0, 0, 0, 0.08);
         --shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+        --stats-bar: #007aff;
       }
       @media (prefers-color-scheme: dark) {
         :root {
@@ -92,6 +93,7 @@
           --btn-secondary-border: rgba(255, 255, 255, 0.22);
           --footer-border: rgba(255, 255, 255, 0.09);
           --shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+          --stats-bar: #0a84ff;
         }
       }
 
@@ -609,6 +611,192 @@
         transform: scaleX(1);
       }
 
+      /* ---------- Task Stats window (mirrors StatsLoopAnimation) ---------- */
+
+      .stats-stage {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 34px;
+      }
+      .stats-window {
+        width: 400px;
+        max-width: 100%;
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        box-shadow: var(--shadow);
+        text-align: left;
+      }
+      @media (max-width: 460px) {
+        .stats-window {
+          transform: scale(0.82);
+          transform-origin: top center;
+        }
+      }
+      .stats-titlebar {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        height: 28px;
+        padding: 0 12px;
+        border-bottom: 1px solid var(--card-border);
+      }
+      .stats-titlebar .tl {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--text-secondary) 45%, transparent);
+      }
+      .stats-body {
+        display: flex;
+      }
+      .stats-sidebar {
+        width: 128px;
+        flex-shrink: 0;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        border-right: 1px solid var(--card-border);
+        background: color-mix(in srgb, var(--text) 3%, transparent);
+      }
+      .stats-overview {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        border-radius: 7px;
+        background: color-mix(in srgb, var(--accent) 15%, transparent);
+      }
+      .stats-overview svg {
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+      .stats-overview .lbl {
+        height: 6px;
+        width: 52px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--text) 40%, transparent);
+      }
+      .stats-day {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 6px;
+      }
+      .stats-day .lbl {
+        height: 6px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--text-secondary) 40%, transparent);
+      }
+      .stats-day .tick {
+        margin-left: auto;
+        width: 11px;
+        height: 11px;
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+      .stats-day .tick svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .stats-day .tick.pending {
+        width: 16px;
+        height: 6px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--text-secondary) 30%, transparent);
+      }
+      .stats-content {
+        flex: 1;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .stats-card {
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--text) 4.5%, transparent);
+        padding: 12px;
+      }
+      .stats-donut-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .stats-donut {
+        position: relative;
+        width: 66px;
+        height: 66px;
+        flex-shrink: 0;
+      }
+      .stats-donut svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+      .stats-donut .track {
+        fill: none;
+        stroke: color-mix(in srgb, var(--text-secondary) 22%, transparent);
+        stroke-width: 5;
+      }
+      .stats-donut .fill {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 5;
+        stroke-linecap: round;
+        stroke-dasharray: 100.53;
+        stroke-dashoffset: 100.53;
+        transition: stroke-dashoffset 0.9s cubic-bezier(0.3, 0.9, 0.3, 1);
+      }
+      .stats-window.filled .stats-donut .fill {
+        stroke-dashoffset: 30.16; /* ~70% of the 100.53 circumference */
+      }
+      .stats-pct {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .stats-stat-lines {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .stats-stat-lines .ln {
+        height: 8px;
+        width: 88px;
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--text) 40%, transparent);
+      }
+      .stats-stat-lines .ln.sm {
+        height: 6px;
+        width: 62px;
+        background: color-mix(in srgb, var(--text-secondary) 35%, transparent);
+      }
+      .stats-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 9px;
+        height: 74px;
+      }
+      .stats-bars .bar {
+        flex: 1;
+        height: 6%;
+        border-radius: 3px;
+        background: var(--stats-bar);
+        transition: height 0.6s cubic-bezier(0.3, 1.1, 0.4, 1);
+        transition-delay: var(--d, 0s);
+      }
+      .stats-window.filled .stats-bars .bar {
+        height: var(--h);
+      }
+
       /* ---------- Schedule feature rows ---------- */
 
       .glyph-hero {
@@ -740,7 +928,9 @@
         .keycap,
         .check-box .ring,
         .check-box .mark,
-        .check-label::after {
+        .check-label::after,
+        .stats-donut .fill,
+        .stats-bars .bar {
           transition: none;
         }
       }
@@ -919,11 +1109,11 @@
         <div
           class="keycaps reveal-hero"
           id="keycaps"
-          aria-label="Keyboard shortcut: Control Option S"
+          aria-label="Keyboard shortcut: Command Shift T"
         >
-          <span class="keycap">⌃</span>
-          <span class="keycap">⌥</span>
-          <span class="keycap">S</span>
+          <span class="keycap">⌘</span>
+          <span class="keycap">⇧</span>
+          <span class="keycap">T</span>
         </div>
         <h2 class="reveal-text">Summon it from anywhere</h2>
         <p class="body reveal-text">
@@ -1018,7 +1208,125 @@
         </p>
       </section>
 
-      <!-- Schedule (onboarding page 4) -->
+      <!-- Task Stats (onboarding page 4) -->
+      <section class="reveal-section">
+        <div class="stats-stage reveal-hero">
+          <div
+            class="stats-window"
+            id="stats-demo"
+            aria-label="Animation of the Task Stats window: a completion ring filling to 70% while a weekday bar chart rises"
+          >
+            <div class="stats-titlebar" aria-hidden="true">
+              <span class="tl"></span><span class="tl"></span
+              ><span class="tl"></span>
+            </div>
+            <div class="stats-body" aria-hidden="true">
+              <div class="stats-sidebar">
+                <div class="stats-overview">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                  >
+                    <path d="M4 20V10M12 20V4M20 20v-7" />
+                  </svg>
+                  <span class="lbl"></span>
+                </div>
+                <div class="stats-day">
+                  <span class="lbl" style="width: 52px"></span>
+                  <span class="tick">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <circle cx="10" cy="10" r="10" />
+                      <path
+                        d="M6 10.2l2.6 2.6L14 7"
+                        fill="none"
+                        stroke="var(--bg)"
+                        stroke-width="2.2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="stats-day">
+                  <span class="lbl" style="width: 40px"></span>
+                  <span class="tick">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <circle cx="10" cy="10" r="10" />
+                      <path
+                        d="M6 10.2l2.6 2.6L14 7"
+                        fill="none"
+                        stroke="var(--bg)"
+                        stroke-width="2.2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="stats-day">
+                  <span class="lbl" style="width: 56px"></span>
+                  <span class="tick pending"></span>
+                </div>
+                <div class="stats-day">
+                  <span class="lbl" style="width: 36px"></span>
+                  <span class="tick">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <circle cx="10" cy="10" r="10" />
+                      <path
+                        d="M6 10.2l2.6 2.6L14 7"
+                        fill="none"
+                        stroke="var(--bg)"
+                        stroke-width="2.2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+              <div class="stats-content">
+                <div class="stats-card stats-donut-card">
+                  <div class="stats-donut">
+                    <svg viewBox="0 0 44 44">
+                      <circle class="track" cx="22" cy="22" r="16" />
+                      <circle class="fill" cx="22" cy="22" r="16" />
+                    </svg>
+                    <span class="stats-pct">0%</span>
+                  </div>
+                  <div class="stats-stat-lines">
+                    <span class="ln"></span>
+                    <span class="ln sm"></span>
+                  </div>
+                </div>
+                <div class="stats-card stats-bars">
+                  <span class="bar" style="--h: 45%; --d: 0s"></span>
+                  <span class="bar" style="--h: 30%; --d: 0.04s"></span>
+                  <span class="bar" style="--h: 38%; --d: 0.08s"></span>
+                  <span class="bar" style="--h: 68%; --d: 0.12s"></span>
+                  <span class="bar" style="--h: 42%; --d: 0.16s"></span>
+                  <span class="bar" style="--h: 72%; --d: 0.2s"></span>
+                  <span class="bar" style="--h: 100%; --d: 0.24s"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <h2 class="reveal-text">See your progress</h2>
+        <p class="body reveal-text">
+          Look back on every day — your completion rate, and the days you
+          finished in full.
+        </p>
+        <p class="small reveal-text">
+          Open Task Stats anytime with its own hotkey, ⌘⇧Y.
+        </p>
+      </section>
+
+      <!-- Schedule (onboarding page 5) -->
       <section class="reveal-section">
         <div class="glyph-hero reveal-hero" aria-hidden="true">
           <svg
@@ -1088,7 +1396,7 @@
         <p class="small reveal-text">Fine-tune it all in Preferences.</p>
       </section>
 
-      <!-- Preferences (onboarding page 5) -->
+      <!-- Preferences (onboarding page 6) -->
       <section class="reveal-section">
         <div class="glyph-hero reveal-hero" aria-hidden="true">
           <svg
@@ -1220,19 +1528,28 @@
 
       // Runs an async step loop for a demo element, but only while it is on
       // screen. Each loop function receives an isCancelled() callback and must
-      // return when it reports true.
+      // return when it reports true. At most one loop instance runs per
+      // element: a cancelled loop is still winding down while it sits in a
+      // sleep, so a fresh one only starts after the old one has fully exited —
+      // otherwise scrolling out and back in stacks concurrent loops that fight
+      // over the same element.
       function loopWhileVisible(element, loop) {
         if (reducedMotion) return;
         let cancelled = true;
+        let running = false;
+        const maybeStart = () => {
+          if (cancelled || running) return;
+          running = true;
+          Promise.resolve(loop(() => cancelled)).finally(() => {
+            running = false;
+            maybeStart(); // re-entered the viewport while winding down
+          });
+        };
         new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
-              if (entry.isIntersecting && cancelled) {
-                cancelled = false;
-                loop(() => cancelled);
-              } else if (!entry.isIntersecting) {
-                cancelled = true;
-              }
+              cancelled = !entry.isIntersecting;
+              maybeStart();
             });
           },
           { threshold: 0.4 }
@@ -1282,7 +1599,55 @@
         }
       );
 
-      // Keycaps: a gentle press ripple across ⌃ ⌥ S, then a pause.
+      // Task Stats demo: the completion ring fills to 70% (number counting up)
+      // while the weekday bars rise, holds, then resets. Matches
+      // StatsLoopAnimation.runLoop() in the app.
+      const statsDemo = document.getElementById("stats-demo");
+      const statsPct = statsDemo.querySelector(".stats-pct");
+
+      // Only one count animation may write to the label at a time — each call
+      // cancels the previous one, so an up-count can't fight a down-count.
+      let statsRaf = 0;
+      function animateStatsNumber(from, to, dur) {
+        cancelAnimationFrame(statsRaf);
+        const start = performance.now();
+        function frame(now) {
+          // A rAF timestamp is the frame's vsync time and can predate `start`
+          // — clamp below too, or the ease extrapolates past the endpoints.
+          const t = Math.max(0, Math.min(1, (now - start) / (dur * 1000)));
+          const eased = 1 - Math.pow(1 - t, 3);
+          statsPct.textContent = Math.round(from + (to - from) * eased) + "%";
+          if (t < 1) statsRaf = requestAnimationFrame(frame);
+        }
+        statsRaf = requestAnimationFrame(frame);
+      }
+
+      if (reducedMotion) {
+        // No loop will run — show the filled end state so the chart isn't blank.
+        statsDemo.classList.add("filled");
+        statsPct.textContent = "70%";
+      } else {
+        loopWhileVisible(statsDemo, async (isCancelled) => {
+          while (!isCancelled()) {
+            statsDemo.classList.remove("filled");
+            statsPct.textContent = "0%";
+            await sleep(0.9);
+            if (isCancelled()) break;
+            statsDemo.classList.add("filled");
+            animateStatsNumber(0, 70, 0.9);
+            await sleep(3.2);
+            if (isCancelled()) break;
+            statsDemo.classList.remove("filled");
+            animateStatsNumber(70, 0, 0.5);
+            await sleep(0.9);
+          }
+          statsDemo.classList.remove("filled");
+          cancelAnimationFrame(statsRaf);
+          statsPct.textContent = "0%";
+        });
+      }
+
+      // Keycaps: a gentle press ripple across ⌘ ⇧ T, then a pause.
       const keycaps = document.querySelectorAll("#keycaps .keycap");
       loopWhileVisible(
         document.getElementById("keycaps"),

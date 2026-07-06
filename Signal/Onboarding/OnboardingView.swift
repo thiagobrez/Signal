@@ -17,7 +17,7 @@ struct OnboardingView: View {
     /// Drives the direction of the slide transition between pages.
     @State private var forward = true
 
-    private let pageCount = 6
+    private let pageCount = 7
     private var isLastPage: Bool { page == pageCount - 1 }
 
     var body: some View {
@@ -48,7 +48,8 @@ struct OnboardingView: View {
         case 1: NotchPage()
         case 2: HotkeyPage()
         case 3: TasksPage()
-        case 4: SchedulePage()
+        case 4: StatsPage()
+        case 5: SchedulePage()
         default: PreferencesPage()
         }
     }
@@ -537,6 +538,202 @@ private struct TasksChecklistAnimation: View {
             guard !Task.isCancelled else { return }
             withAnimation(.easeInOut(duration: 0.45)) { doneCount = 0 }
             try? await Task.sleep(for: .seconds(0.6))
+        }
+    }
+}
+
+private struct StatsPage: View {
+    var body: some View {
+        PageScaffold(title: "See your progress") {
+            StatsLoopAnimation()
+        } content: {
+            VStack(spacing: 14) {
+                PageText("Look back on every day — your completion rate, and the days you finished in full.")
+                PageText("Open Task Stats anytime with its own hotkey.", secondary: true)
+            }
+        }
+    }
+}
+
+/// A looping mock of the Task Stats window: the completion ring sweeps up to a
+/// percentage while the weekday bars rise, holds, then resets and repeats.
+private struct StatsLoopAnimation: View {
+    @State private var filled = false
+
+    /// Relative bar heights (0–1), tallest on the right — echoes the app's
+    /// "best day of the week" chart.
+    private let bars: [CGFloat] = [0.45, 0.3, 0.38, 0.68, 0.42, 0.72, 1.0]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            titleBar
+            Divider().opacity(0.4)
+            HStack(spacing: 0) {
+                sidebar
+                Divider().opacity(0.4)
+                content
+            }
+        }
+        .frame(width: 320, height: 188)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(nsColor: .textBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .shadow(color: .black.opacity(0.18), radius: 14, y: 8)
+        .task { await runLoop() }
+    }
+
+    private var titleBar: some View {
+        HStack(spacing: 5) {
+            ForEach(0..<3) { _ in
+                Circle().fill(Color.secondary.opacity(0.35)).frame(width: 6, height: 6)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 9)
+        .frame(height: 24)
+    }
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 5) {
+                Image(systemName: "chart.bar.xaxis")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.green)
+                Capsule().fill(Color.primary.opacity(0.4)).frame(width: 40, height: 5)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.green.opacity(0.15))
+            )
+
+            dayRow(width: 46, done: true)
+            dayRow(width: 38, done: true)
+            dayRow(width: 52, done: false)
+            dayRow(width: 34, done: true)
+            Spacer(minLength: 0)
+        }
+        .padding(8)
+        .frame(width: 104)
+        .frame(maxHeight: .infinity)
+        .background(Color.primary.opacity(0.035))
+    }
+
+    private func dayRow(width: CGFloat, done: Bool) -> some View {
+        HStack(spacing: 5) {
+            Capsule().fill(Color.secondary.opacity(0.4)).frame(width: width, height: 5)
+            Spacer(minLength: 0)
+            if done {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.green)
+            } else {
+                Capsule().fill(Color.secondary.opacity(0.3)).frame(width: 11, height: 5)
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    private var content: some View {
+        VStack(spacing: 8) {
+            donutCard
+            barsCard
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var donutCard: some View {
+        HStack(spacing: 12) {
+            DonutRing(progress: filled ? 0.70 : 0)
+                .frame(width: 52, height: 52)
+            VStack(alignment: .leading, spacing: 7) {
+                statLine(value: 54, label: 40)
+                statLine(value: 46, label: 34)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.05))
+        )
+    }
+
+    private func statLine(value: CGFloat, label: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Capsule().fill(Color.primary.opacity(0.45)).frame(width: value, height: 6)
+            Capsule().fill(Color.secondary.opacity(0.3)).frame(width: label, height: 4)
+        }
+    }
+
+    private var barsCard: some View {
+        HStack(alignment: .bottom, spacing: 7) {
+            ForEach(bars.indices, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(Color.blue.opacity(0.85))
+                    .frame(width: 9, height: max(3, (filled ? bars[index] : 0.06) * 34))
+                    .animation(
+                        .spring(response: 0.55, dampingFraction: 0.8).delay(Double(index) * 0.05),
+                        value: filled
+                    )
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.05))
+        )
+    }
+
+    @MainActor
+    private func runLoop() async {
+        while !Task.isCancelled {
+            filled = false
+            try? await Task.sleep(for: .seconds(0.8))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeInOut(duration: 0.85)) { filled = true }
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeInOut(duration: 0.5)) { filled = false }
+            try? await Task.sleep(for: .seconds(0.7))
+        }
+    }
+}
+
+/// A donut whose sweep and centered percentage stay in lock-step: because the
+/// view is `Animatable`, its `progress` is interpolated frame-by-frame, so the
+/// number counts up as the ring fills.
+private struct DonutRing: View, Animatable {
+    var progress: Double
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    var body: some View {
+        let clamped = max(0, min(1, progress))
+        return ZStack {
+            Circle().stroke(Color.secondary.opacity(0.18), lineWidth: 7)
+            Circle()
+                .trim(from: 0, to: clamped)
+                .stroke(Color.green, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            Text("\(Int((clamped * 100).rounded()))%")
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.primary)
         }
     }
 }

@@ -28,6 +28,7 @@ struct PreferencesView: View {
 
             Section("Hotkey") {
                 KeyboardShortcuts.Recorder("Toggle Signal", name: .toggleSignal)
+                KeyboardShortcuts.Recorder("Toggle Task Stats", name: .toggleStats)
             }
 
             Section("Daily prompt") {

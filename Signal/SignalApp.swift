@@ -136,6 +136,11 @@ private struct MenuBarContent: View {
             SignalServices.shared.controller.toggle()
         }
 
+        // `present()` rather than `toggle()`: a menu click should always show.
+        Button("Task Stats…") {
+            SignalServices.shared.stats.present()
+        }
+
         Divider()
 
         // Not `SettingsLink`: as an accessory (`LSUIElement`) app we're never

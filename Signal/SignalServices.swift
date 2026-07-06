@@ -12,6 +12,7 @@ final class SignalServices {
     let controller: NotchController
     let scheduler: Scheduler
     let onboarding: OnboardingWindowController
+    let stats: StatsWindowController
 
     private init() {
         SettingsStore.registerDefaults()
@@ -26,15 +27,24 @@ final class SignalServices {
         controller = NotchController(store: store)
         scheduler = Scheduler(controller: controller)
         onboarding = OnboardingWindowController()
+        stats = StatsWindowController(container: container)
     }
 
-    /// Wires up the hotkey, scheduler, and the launch-time prompt. Called from the AppDelegate.
+    /// Wires up the hotkeys, scheduler, and the launch-time prompt. Called from the AppDelegate.
     func start() {
-        if KeyboardShortcuts.getShortcut(for: .toggleSignal) == nil {
-            KeyboardShortcuts.setShortcut(.init(.s, modifiers: [.control, .option]), for: .toggleSignal)
-        }
+        migrateToggleSignalShortcutIfNeeded()
+
         KeyboardShortcuts.onKeyUp(for: .toggleSignal) { [controller] in
             controller.toggle()
+        }
+
+        // Opening stats first thing on a new day must still create today's
+        // log (with carry-over) before the window shows it.
+        stats.willPresent = { [store] in
+            store.refreshForToday()
+        }
+        KeyboardShortcuts.onKeyUp(for: .toggleStats) { [stats] in
+            stats.toggle()
         }
 
         scheduler.start()
@@ -52,6 +62,20 @@ final class SignalServices {
             scheduler.markPromptedToday()
             SoundPlayer.play(SettingsStore.openSound)
             controller.presentInteractive(source: .launch)
+        }
+    }
+
+    /// The default toggle chord changed from ⌃⌥S to ⌘⇧T. Earlier launch code
+    /// wrote the old default into UserDefaults as if the user had chosen it,
+    /// so installs still on it are moved to the new default once; a custom
+    /// chord is left alone. The flag keeps a later deliberate choice of ⌃⌥S
+    /// from being reset again.
+    private func migrateToggleSignalShortcutIfNeeded() {
+        guard !SettingsStore.didMigrateToggleSignalShortcut else { return }
+        SettingsStore.didMigrateToggleSignalShortcut = true
+
+        if KeyboardShortcuts.getShortcut(for: .toggleSignal) == .init(.s, modifiers: [.control, .option]) {
+            KeyboardShortcuts.reset(.toggleSignal)
         }
     }
 }

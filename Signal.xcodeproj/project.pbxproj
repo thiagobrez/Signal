@@ -11,6 +11,7 @@
 		03EBE1A844DF22D16DF40F78 /* SignalQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008557C7E0D6B65492385BAC /* SignalQuote.swift */; };
 		0546BC32AA8E72C7F0895F3C /* pencil.wav in Resources */ = {isa = PBXBuildFile; fileRef = B1389E0ACDE4C1E41AE3799A /* pencil.wav */; };
 		08F36652507A4AB93CE0FF1B /* SignalServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A620C14130D54DCE2B2A9 /* SignalServices.swift */; };
+		0AFD5A8D2367B0DF579283C2 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6358254F1F4002673C3D2D1A /* StatsView.swift */; };
 		0FD934AF18467C0D6DDA3299 /* bubble.wav in Resources */ = {isa = PBXBuildFile; fileRef = B56A8D7FF5758A4206738001 /* bubble.wav */; };
 		11E840DDA3FC43E65E509E0A /* SignalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453E4D521FCA575CE77C9A3 /* SignalApp.swift */; };
 		15475CFBFA7AB76916762331 /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */; };
@@ -31,6 +32,9 @@
 		3BDBBB7DA4E54534E0CF1E6C /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 525E24A23AC8A26E90F43271 /* DynamicNotchKit */; };
 		3ECF97CFDB2BF7587829A391 /* KeyboardShortcuts+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */; };
 		49A5ADF0EB4D6649FB790CB1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */; };
+		4B15E001C3B00CBCE6D8011A /* StatsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB88C8ED63626236905C763 /* StatsCalculator.swift */; };
+		4C8F3BC18F387B56A3C898AE /* StatsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB88C8ED63626236905C763 /* StatsCalculator.swift */; };
+		57939519C4740E3B15A17227 /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C92EDF42D1B31D0626721A9 /* OverviewView.swift */; };
 		580596D8C403EEFF454F8305 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F879369015787A57B62384C1 /* AboutView.swift */; };
 		5E17A535D5FC3E0214668300 /* SignalServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A620C14130D54DCE2B2A9 /* SignalServices.swift */; };
 		5E8C4F10C09AB8A1FBE86D78 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 2CDB29FC81558E1F023D4ADC /* KeyboardShortcuts */; };
@@ -40,11 +44,13 @@
 		727A2D12D5D0E2E4BEBA8831 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
 		7340E7C960D0B0FB091CBA83 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = B280BAD1315E22650C657F91 /* TelemetryDeck */; };
 		75C7AFE4A25EBA6E968B278C /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8D74719DA574C846852019 /* SettingsStore.swift */; };
+		789D107BF7681C29EFDC9542 /* DayDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE0C8BAC5E5E983F0113E37 /* DayDetailView.swift */; };
 		7C93202460ECD6EE211F74C6 /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */; };
 		7DB9713BA5A60F03AA1709BD /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462ED15C9D00B34967E04C53 /* Analytics.swift */; };
 		7FAF10A54C6C081CFFA1A256 /* SignalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453E4D521FCA575CE77C9A3 /* SignalApp.swift */; };
 		8109AC1CA51325A097906DD6 /* scribble.wav in Resources */ = {isa = PBXBuildFile; fileRef = CB7E2BD16B84F461552B37B3 /* scribble.wav */; };
 		83939F1D30F9B1A18AE76D65 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */; };
+		83FBA7C5A7E4CB777AFBB5BC /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C92EDF42D1B31D0626721A9 /* OverviewView.swift */; };
 		89CDCCB06B8FAEB5A9CD2F10 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
 		8E64B68854B57CF40038C07D /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
 		903BA73065746F8059593306 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
@@ -53,6 +59,9 @@
 		A6188962D97B6430646F8BA6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */; };
 		AA8F91BCB15AC076FD9DB118 /* tube.wav in Resources */ = {isa = PBXBuildFile; fileRef = AD40B91BE6D69CE63BBF11CC /* tube.wav */; };
 		AAC4775787D9967B61E97ACF /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */; };
+		ABD664FA0C04E048EB4E6841 /* DayDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE0C8BAC5E5E983F0113E37 /* DayDetailView.swift */; };
+		B50C859C7169176E1CE79AB2 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6358254F1F4002673C3D2D1A /* StatsView.swift */; };
+		B792BEDC9F2F0E213A960CE0 /* StatsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3A748EE9D12BCE0EECB0EC /* StatsWindowController.swift */; };
 		B81B699C68126F4F4360A4E5 /* UpdaterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */; };
 		BB729B3E8046B64FBE0CB016 /* UpdaterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */; };
 		BC391A1D707873A245507449 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
@@ -66,6 +75,7 @@
 		EFED4F987C3570E1D4B42406 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
 		F0834126ECD6A0A9C897E8C8 /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7DE1A9A552F49F0CF15F95EA /* DynamicNotchKit */; };
 		F42B88AB80B775ABCB9C2084 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BD2156A0FBF41D9300662BAF /* Sparkle */; };
+		F5529D4FD3E89ECD701970B8 /* StatsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3A748EE9D12BCE0EECB0EC /* StatsWindowController.swift */; };
 		F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
 		FE6969C474390CFCC52DEFDF /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
 /* End PBXBuildFile section */
@@ -73,14 +83,19 @@
 /* Begin PBXFileReference section */
 		008557C7E0D6B65492385BAC /* SignalQuote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalQuote.swift; sourceTree = "<group>"; };
 		0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsView.swift; sourceTree = "<group>"; };
+		0EB88C8ED63626236905C763 /* StatsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsCalculator.swift; sourceTree = "<group>"; };
+		0FE0C8BAC5E5E983F0113E37 /* DayDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDetailView.swift; sourceTree = "<group>"; };
 		146D2AB23F5E793F6008D409 /* DayLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayLog.swift; sourceTree = "<group>"; };
 		165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterManager.swift; sourceTree = "<group>"; };
 		1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalNotchView.swift; sourceTree = "<group>"; };
+		1E3A748EE9D12BCE0EECB0EC /* StatsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsWindowController.swift; sourceTree = "<group>"; };
 		2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		462ED15C9D00B34967E04C53 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		4C4F741DBD56F9C4C17A0174 /* pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pop.wav; sourceTree = "<group>"; };
+		4C92EDF42D1B31D0626721A9 /* OverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewView.swift; sourceTree = "<group>"; };
 		4E7748712533E7651295201A /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
 		506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindowController.swift; sourceTree = "<group>"; };
+		6358254F1F4002673C3D2D1A /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		703A620C14130D54DCE2B2A9 /* SignalServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalServices.swift; sourceTree = "<group>"; };
 		73845020201BE00A671F84BC /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
 		7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
@@ -138,6 +153,18 @@
 			path = Shortcuts;
 			sourceTree = "<group>";
 		};
+		07E869D05F834A4119F602F8 /* Stats */ = {
+			isa = PBXGroup;
+			children = (
+				0FE0C8BAC5E5E983F0113E37 /* DayDetailView.swift */,
+				4C92EDF42D1B31D0626721A9 /* OverviewView.swift */,
+				0EB88C8ED63626236905C763 /* StatsCalculator.swift */,
+				6358254F1F4002673C3D2D1A /* StatsView.swift */,
+				1E3A748EE9D12BCE0EECB0EC /* StatsWindowController.swift */,
+			);
+			path = Stats;
+			sourceTree = "<group>";
+		};
 		13DFB72E369D4207F5632672 /* Signal */ = {
 			isa = PBXGroup;
 			children = (
@@ -150,6 +177,7 @@
 				AE9CFCBD7D023D164FB3FE4D /* Schedule */,
 				05BD7D04AF635335285962B3 /* Shortcuts */,
 				FE804179A515C6BB6A7BAA33 /* Sound */,
+				07E869D05F834A4119F602F8 /* Stats */,
 				76C32D63C38B77706495484D /* Store */,
 				2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */,
 				CABDE5D429850284CDE2585B /* AppIcon.icon */,
@@ -419,11 +447,13 @@
 				15475CFBFA7AB76916762331 /* AcknowledgementsView.swift in Sources */,
 				DC01A8EAD1D7221CB3085182 /* Analytics.swift in Sources */,
 				49A5ADF0EB4D6649FB790CB1 /* AppDelegate.swift in Sources */,
+				789D107BF7681C29EFDC9542 /* DayDetailView.swift in Sources */,
 				89CDCCB06B8FAEB5A9CD2F10 /* DayLog.swift in Sources */,
 				18DEC422943D9FEA5A7D6A4E /* KeyboardShortcuts+Names.swift in Sources */,
 				29ACE01CA7A07BE91ED9FFD7 /* NotchController.swift in Sources */,
 				5F004980DC460A2281F0F17F /* OnboardingView.swift in Sources */,
 				7C93202460ECD6EE211F74C6 /* OnboardingWindowController.swift in Sources */,
+				57939519C4740E3B15A17227 /* OverviewView.swift in Sources */,
 				381E6BE72F1CF0DAD4CA8FE8 /* PreferencesView.swift in Sources */,
 				EFED4F987C3570E1D4B42406 /* Scheduler.swift in Sources */,
 				75C7AFE4A25EBA6E968B278C /* SettingsStore.swift in Sources */,
@@ -433,6 +463,9 @@
 				5E17A535D5FC3E0214668300 /* SignalServices.swift in Sources */,
 				1F642132401680546E551213 /* SignalStore.swift in Sources */,
 				CD575E14343E55CFA5891885 /* SoundPlayer.swift in Sources */,
+				4B15E001C3B00CBCE6D8011A /* StatsCalculator.swift in Sources */,
+				0AFD5A8D2367B0DF579283C2 /* StatsView.swift in Sources */,
+				F5529D4FD3E89ECD701970B8 /* StatsWindowController.swift in Sources */,
 				BCB72BF78669CCE888703935 /* TodoItem.swift in Sources */,
 				BB729B3E8046B64FBE0CB016 /* UpdaterManager.swift in Sources */,
 			);
@@ -446,11 +479,13 @@
 				D27F6F6256F88FDA46401552 /* AcknowledgementsView.swift in Sources */,
 				7DB9713BA5A60F03AA1709BD /* Analytics.swift in Sources */,
 				A6188962D97B6430646F8BA6 /* AppDelegate.swift in Sources */,
+				ABD664FA0C04E048EB4E6841 /* DayDetailView.swift in Sources */,
 				F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */,
 				3ECF97CFDB2BF7587829A391 /* KeyboardShortcuts+Names.swift in Sources */,
 				3824FED4BA0E410A23AB96D4 /* NotchController.swift in Sources */,
 				37A76BD59AAE8DF9B946641B /* OnboardingView.swift in Sources */,
 				AAC4775787D9967B61E97ACF /* OnboardingWindowController.swift in Sources */,
+				83FBA7C5A7E4CB777AFBB5BC /* OverviewView.swift in Sources */,
 				83939F1D30F9B1A18AE76D65 /* PreferencesView.swift in Sources */,
 				903BA73065746F8059593306 /* Scheduler.swift in Sources */,
 				38549BBAA9843F968099473A /* SettingsStore.swift in Sources */,
@@ -460,6 +495,9 @@
 				08F36652507A4AB93CE0FF1B /* SignalServices.swift in Sources */,
 				CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */,
 				8E64B68854B57CF40038C07D /* SoundPlayer.swift in Sources */,
+				4C8F3BC18F387B56A3C898AE /* StatsCalculator.swift in Sources */,
+				B50C859C7169176E1CE79AB2 /* StatsView.swift in Sources */,
+				B792BEDC9F2F0E213A960CE0 /* StatsWindowController.swift in Sources */,
 				727A2D12D5D0E2E4BEBA8831 /* TodoItem.swift in Sources */,
 				B81B699C68126F4F4360A4E5 /* UpdaterManager.swift in Sources */,
 			);
@@ -593,7 +631,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -658,7 +696,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

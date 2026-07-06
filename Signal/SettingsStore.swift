@@ -6,6 +6,7 @@ enum SettingsStore {
     enum Key {
         static let hasSeenOnboarding = "hasSeenOnboarding"
         static let hasRequestedReview = "hasRequestedReview"
+        static let didMigrateToggleSignalShortcut = "didMigrateToggleSignalShortcut"
         static let carryOverIncomplete = "carryOverIncomplete"
         static let openOnLaunch = "openOnLaunch"
         static let dailyPromptEnabled = "dailyPromptEnabled"
@@ -25,6 +26,7 @@ enum SettingsStore {
         UserDefaults.standard.register(defaults: [
             Key.hasSeenOnboarding: false,
             Key.hasRequestedReview: false,
+            Key.didMigrateToggleSignalShortcut: false,
             Key.carryOverIncomplete: true,
             Key.openOnLaunch: true,
             Key.dailyPromptEnabled: true,
@@ -55,6 +57,13 @@ enum SettingsStore {
     static var hasRequestedReview: Bool {
         get { d.bool(forKey: Key.hasRequestedReview) }
         set { d.set(newValue, forKey: Key.hasRequestedReview) }
+    }
+
+    /// Read/write: flipped after the one-time move of installs still on the
+    /// old auto-written ⌃⌥S default over to the new ⌘⇧T default.
+    static var didMigrateToggleSignalShortcut: Bool {
+        get { d.bool(forKey: Key.didMigrateToggleSignalShortcut) }
+        set { d.set(newValue, forKey: Key.didMigrateToggleSignalShortcut) }
     }
 
     static var carryOverIncomplete: Bool { d.bool(forKey: Key.carryOverIncomplete) }
