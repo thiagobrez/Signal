@@ -3,19 +3,24 @@
     <channel>
         <title>Signal</title>
         <item>
-            <title>1.1.0</title>
-            <pubDate>Sat, 04 Jul 2026 00:50:03 +0000</pubDate>
+            <title>1.2.0</title>
+            <pubDate>Thu, 09 Jul 2026 18:15:52 +0000</pubDate>
             <link>https://thiagobrez.github.io/Signal/</link>
-            <sparkle:version>56</sparkle:version>
-            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <sparkle:version>61</sparkle:version>
+            <sparkle:shortVersionString>1.2.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <description><![CDATA[<h3>Minor Changes</h3>
 <ul>
-<li>901e7c0: Add automatic updates for direct-download installs.</li>
+<li>599d50f: Prompt for App Store review after completing the day for the first time</li>
+<li>756064b: Add Task Stats view with a new hotkey to view statistics</li>
+</ul>
+<h3>Patch Changes</h3>
+<ul>
+<li>e621a6d: Fix Preferences window not coming to foreground when opening</li>
 </ul>
 
 ]]></description>
-            <enclosure url="https://github.com/thiagobrez/Signal/releases/download/v1.1.0/Signal-1.1.0.dmg" length="4021539" type="application/octet-stream" sparkle:edSignature="w1Ehw5NaHTwmsDCcK6OlKSY3vAHaXOkG73MW/BAO21eigBAHpJLbGyhAGcrcWx39b+Kp6Z+ATMBqhWWy8mobBA=="/>
+            <enclosure url="https://github.com/thiagobrez/Signal/releases/download/v1.2.0/Signal-1.2.0.dmg" length="4138357" type="application/octet-stream" sparkle:edSignature="K+0UwS+K/TreIhKB1yjMOGMkoOWKr2tFwkwdY0TfDPytXr2DAkbcYjnEj2W7Ne7OlEc0N/SYqE6L2FwVnN3fCQ=="/>
         </item>
     </channel>
 </rss>
