@@ -1,5 +1,16 @@
 # signal
 
+## 1.2.0
+
+### Minor Changes
+
+- 599d50f: Prompt for App Store review after completing the day for the first time
+- 756064b: Add Task Stats view with a new hotkey to view statistics
+
+### Patch Changes
+
+- e621a6d: Fix Preferences window not coming to foreground when opening
+
 ## 1.1.0
 
 ### Minor Changes
