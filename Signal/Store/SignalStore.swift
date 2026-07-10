@@ -42,6 +42,10 @@ final class SignalStore {
             today = createDayLog(for: startOfToday)
         }
 
+        if let today {
+            materializePending(into: today, on: startOfToday)
+        }
+
         items = today?.orderedItems ?? []
     }
 
@@ -116,6 +120,78 @@ final class SignalStore {
 
     func save() {
         try? context.save()
+    }
+
+    // MARK: - Scheduling
+
+    /// Moves a row out of today and into the future: stores a `ScheduledTask`
+    /// built from the parsed phrase, then removes the source slot (or just
+    /// clears it when the day is already at its floor).
+    func schedule(_ item: TodoItem, parse: ScheduleParse) {
+        let task = ScheduledTask(text: parse.cleanText, dueDate: parse.dueDate, recurrence: parse.recurrence)
+        context.insert(task)
+
+        if canDeleteTask {
+            deleteTask(item)
+        } else {
+            item.text = ""
+            save()
+        }
+    }
+
+    /// Fills today with any scheduled tasks that have come due. Idempotent —
+    /// delivered one-time tasks fail the `deliveredAt == nil` predicate and
+    /// recurring tasks advance `dueDate` past today — so it's safe on every
+    /// open. Blank slots are claimed first, then the day grows up to its cap;
+    /// when full, one-time tasks stay pending for the next open and recurring
+    /// tasks skip the occurrence.
+    private func materializePending(into log: DayLog, on date: Date) {
+        let descriptor = FetchDescriptor<ScheduledTask>(
+            predicate: #Predicate { $0.dueDate <= date && $0.deliveredAt == nil },
+            sortBy: [SortDescriptor(\.createdAt)]
+        )
+        guard let due = try? context.fetch(descriptor), !due.isEmpty else { return }
+
+        var changed = false
+        for task in due {
+            let text = task.text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Carry-over may already have brought the same unfinished task
+            // into today (e.g. an incomplete "every day" task) — don't double up.
+            let alreadyPresent = log.items.contains {
+                !$0.isCompleted && $0.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .caseInsensitiveCompare(text) == .orderedSame
+            }
+
+            if !alreadyPresent {
+                if let blank = log.orderedItems.first(where: {
+                    !$0.isCompleted && $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }) {
+                    blank.text = task.text
+                } else if log.items.count < Self.maxTaskCount {
+                    let item = TodoItem(text: task.text, isCompleted: false, order: log.items.count)
+                    item.day = log
+                    context.insert(item)
+                } else {
+                    // Day is full: recurring skips this occurrence; one-time
+                    // stays pending and is retried on the next open.
+                    if task.isRecurring {
+                        task.dueDate = task.nextOccurrence(after: date)
+                        changed = true
+                    }
+                    continue
+                }
+            }
+
+            if task.isRecurring {
+                task.dueDate = task.nextOccurrence(after: date)
+            } else {
+                task.deliveredAt = Date()
+            }
+            changed = true
+        }
+
+        if changed { save() }
     }
 
     // MARK: - Day transition

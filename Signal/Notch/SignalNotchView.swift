@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import SwiftData
 #if APPSTORE
 import StoreKit
 #endif
@@ -14,6 +15,9 @@ struct SignalNotchView: View {
     @State private var placeholders: [String] = SignalNotchView.randomPlaceholders()
     @State private var celebrating = false
     @State private var blurred = false
+    /// Rows mid-scheduling: the "Scheduled for…" label shown during the brief
+    /// confirmation beat before the row leaves today.
+    @State private var scheduledConfirmation: [PersistentIdentifier: String] = [:]
 
     #if APPSTORE
     @Environment(\.requestReview) private var requestReview
@@ -66,8 +70,9 @@ struct SignalNotchView: View {
                     index: pair.offset,
                     store: store,
                     placeholder: placeholders[pair.offset % placeholders.count],
+                    confirmationLabel: scheduledConfirmation[pair.element.persistentModelID],
                     focused: $focused,
-                    onSubmit: { advanceOrDismiss(from: pair.offset) },
+                    onSubmit: { parse in submit(pair.element, at: pair.offset, parse: parse) },
                     onComplete: { focusNextEditable(after: pair.offset) },
                     onEscape: { controller.hide() },
                     onDelete: { deleteTask(pair.element) },
@@ -219,6 +224,35 @@ struct SignalNotchView: View {
         } else {
             store.save()
             controller.hide()
+        }
+    }
+
+    /// Enter: when the task ends in a date phrase, schedule it away; otherwise
+    /// confirm it and advance exactly as before.
+    private func submit(_ item: TodoItem, at index: Int, parse: ScheduleParse?) {
+        if let parse {
+            scheduleTask(item, at: index, parse: parse)
+        } else {
+            advanceOrDismiss(from: index)
+        }
+    }
+
+    /// Hold the row for a beat showing where the task went, then move it out of
+    /// today and put the caret back to work — into the row that slid up, or
+    /// dismiss when the scheduled row was the last one (mirroring Enter).
+    private func scheduleTask(_ item: TodoItem, at index: Int, parse: ScheduleParse) {
+        focused = nil
+        scheduledConfirmation[item.persistentModelID] = parse.confirmationLabel
+        Task {
+            try? await Task.sleep(for: .seconds(0.9))
+            scheduledConfirmation[item.persistentModelID] = nil
+            store.schedule(item, parse: parse)
+            if index < store.items.count {
+                // Defer so focus lands after the rows re-render.
+                DispatchQueue.main.async { focused = index }
+            } else {
+                controller.hide()
+            }
         }
     }
 
@@ -438,8 +472,11 @@ private struct TodoRow: View {
     let index: Int
     let store: SignalStore
     let placeholder: String
+    /// Non-nil while the post-Enter "Scheduled for…" beat is showing; the row
+    /// is frozen (no field, no checkbox) until it leaves today.
+    let confirmationLabel: String?
     @Binding var focused: Int?
-    let onSubmit: () -> Void
+    let onSubmit: (ScheduleParse?) -> Void
     let onComplete: () -> Void
     let onEscape: () -> Void
     let onDelete: () -> Void
@@ -447,6 +484,9 @@ private struct TodoRow: View {
     let onBacktab: () -> Void
 
     @State private var hovering = false
+    /// Live parse of the field's trailing date phrase — tints the ↵ hint green
+    /// when Enter would schedule instead of just advancing.
+    @State private var parse: ScheduleParse?
 
     /// Fixed height for the text area so the row never shifts vertically when the
     /// field is swapped for a `Text` on completion. The vertical jump *within*
@@ -472,12 +512,20 @@ private struct TodoRow: View {
                     .contentTransition(.symbolEffect(.replace))
             }
             .buttonStyle(.plain)
-            .disabled(!item.isCompleted && isEmpty)
+            .disabled(confirmationLabel != nil || (!item.isCompleted && isEmpty))
 
             // A live TextField doesn't render `.strikethrough` on macOS, so once an
             // item is completed (and no longer editable) we show a Text instead.
             Group {
-                if item.isCompleted {
+                if let confirmationLabel {
+                    HStack(spacing: 6) {
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(confirmationLabel)
+                            .font(.system(size: 15, weight: .medium))
+                    }
+                    .foregroundStyle(Color.green)
+                } else if item.isCompleted {
                     Text(item.text.isEmpty ? " " : item.text)
                         .strikethrough(true, color: .white.opacity(0.6))
                         .foregroundStyle(.white.opacity(0.5))
@@ -489,6 +537,7 @@ private struct TodoRow: View {
                         index: index,
                         focusedIndex: $focused,
                         onSubmit: onSubmit,
+                        onParseChange: { parse = $0 },
                         onEscape: onEscape,
                         onTab: onTab,
                         onBacktab: onBacktab
@@ -498,23 +547,31 @@ private struct TodoRow: View {
             .frame(height: Self.textRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Reserve the trailing gutter whenever deletion is allowed so the
-            // text width doesn't jump as the button fades in on hover.
-            if store.canDeleteTask {
-                Button(action: onDelete) {
-                    Image(systemName: "xmark")
+            // Trailing gutter, always reserved so the text width never jumps:
+            // delete on hover, otherwise the ↵ confirm hint while editing —
+            // green when Enter would schedule the task to another day.
+            ZStack {
+                if hovering, store.canDeleteTask, confirmationLabel == nil {
+                    Button(action: onDelete) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .frame(width: 16, height: 16)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Delete task")
+                } else if focused == index, !item.isCompleted, confirmationLabel == nil {
+                    Image(systemName: "return")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .frame(width: 16, height: 16)
-                        .contentShape(Rectangle())
+                        .foregroundStyle(parse != nil ? Color.green : Color.white.opacity(0.35))
                 }
-                .buttonStyle(.plain)
-                .opacity(hovering ? 1 : 0)
-                .help("Delete task")
             }
+            .frame(width: 16, height: 16)
         }
         .onHover { hovering = $0 }
         .animation(.snappy(duration: 0.2), value: item.isCompleted)
+        .animation(.snappy(duration: 0.2), value: confirmationLabel)
         .animation(.easeInOut(duration: 0.15), value: hovering)
     }
 }
@@ -529,7 +586,12 @@ private struct PlainTextField: NSViewRepresentable {
     let placeholder: String
     let index: Int
     @Binding var focusedIndex: Int?
-    let onSubmit: () -> Void
+    /// Called with the trailing date phrase parsed at Enter time — non-nil
+    /// means "schedule this task" rather than the plain confirm-and-advance.
+    let onSubmit: (ScheduleParse?) -> Void
+    /// Fires whenever the live parse of the text changes, so the row can tint
+    /// its ↵ hint while the phrase itself is highlighted in the field.
+    let onParseChange: (ScheduleParse?) -> Void
     let onEscape: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
@@ -584,18 +646,58 @@ private struct PlainTextField: NSViewRepresentable {
 
     final class Coordinator: NSObject, NSTextFieldDelegate {
         var parent: PlainTextField
+        private var lastParse: ScheduleParse?
         init(_ parent: PlainTextField) { self.parent = parent }
 
         func controlTextDidChange(_ note: Notification) {
             guard let field = note.object as? NSTextField else { return }
             parent.text = field.stringValue
+            refreshParse(for: field)
         }
 
         func controlTextDidBeginEditing(_ note: Notification) {
             if parent.focusedIndex != parent.index { parent.focusedIndex = parent.index }
+            // Re-highlight a phrase that was typed earlier but never confirmed.
+            if let field = note.object as? NSTextField { refreshParse(for: field) }
         }
 
-        @objc func didSubmit(_ sender: NSTextField) { parent.onSubmit() }
+        // Parse fresh at submit time so Enter always acts on what's visible.
+        @objc func didSubmit(_ sender: NSTextField) {
+            parent.onSubmit(NaturalDateParser.parse(sender.stringValue))
+        }
+
+        /// Re-parse the trailing date phrase and paint it in the field editor.
+        /// The attributes live only in the editor, so an unfocused field
+        /// re-renders plain white from `stringValue` — nothing leaks into the
+        /// model, and resetting the full range every keystroke is also what
+        /// clears the highlight once the phrase stops matching.
+        private func refreshParse(for field: NSTextField) {
+            let parse = NaturalDateParser.parse(field.stringValue)
+            if parse != lastParse {
+                lastParse = parse
+                // Defer: begin-editing can fire inside a SwiftUI view update.
+                let onParseChange = parent.onParseChange
+                DispatchQueue.main.async { onParseChange(parse) }
+            }
+
+            guard let editor = field.currentEditor() as? NSTextView,
+                  let storage = editor.textStorage else { return }
+            let full = NSRange(location: 0, length: storage.length)
+            storage.beginEditing()
+            storage.removeAttribute(.backgroundColor, range: full)
+            storage.addAttribute(.foregroundColor, value: NSColor.white, range: full)
+            if let parse, NSMaxRange(parse.matchedRange) <= storage.length {
+                storage.addAttribute(.foregroundColor, value: NSColor.systemGreen, range: parse.matchedRange)
+                storage.addAttribute(
+                    .backgroundColor,
+                    value: NSColor.systemGreen.withAlphaComponent(0.22),
+                    range: parse.matchedRange
+                )
+            }
+            storage.endEditing()
+            // Don't let fresh keystrokes inherit the highlight's attributes.
+            editor.typingAttributes = [.font: PlainTextField.font, .foregroundColor: NSColor.white]
+        }
 
         func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
             switch selector {

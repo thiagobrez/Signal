@@ -5,9 +5,10 @@ import KeyboardShortcuts
 
 /// First-launch onboarding: a small paged tour that welcomes the user and
 /// explains the ideas behind Signal — where it lives (the notch), the hotkey,
-/// the three tasks (the signal), the scheduling, and the Preferences. Hosted in
-/// a plain `NSWindow` by `OnboardingWindowController`; `onFinish` is called when
-/// the user reaches the end (or taps Skip).
+/// the three tasks (the signal), planning tasks ahead in plain words, the stats,
+/// when it shows up, and the Preferences. Hosted in a plain `NSWindow` by
+/// `OnboardingWindowController`; `onFinish` is called when the user reaches the
+/// end (or taps Skip).
 struct OnboardingView: View {
     /// Called when onboarding is completed or skipped. The window controller
     /// uses this to persist the "seen" flag and close the window.
@@ -17,7 +18,7 @@ struct OnboardingView: View {
     /// Drives the direction of the slide transition between pages.
     @State private var forward = true
 
-    private let pageCount = 7
+    private let pageCount = 8
     private var isLastPage: Bool { page == pageCount - 1 }
 
     var body: some View {
@@ -48,8 +49,9 @@ struct OnboardingView: View {
         case 1: NotchPage()
         case 2: HotkeyPage()
         case 3: TasksPage()
-        case 4: StatsPage()
-        case 5: SchedulePage()
+        case 4: PlanAheadPage()
+        case 5: StatsPage()
+        case 6: SchedulePage()
         default: PreferencesPage()
         }
     }
@@ -538,6 +540,154 @@ private struct TasksChecklistAnimation: View {
             guard !Task.isCancelled else { return }
             withAnimation(.easeInOut(duration: 0.45)) { doneCount = 0 }
             try? await Task.sleep(for: .seconds(0.6))
+        }
+    }
+}
+
+private struct PlanAheadPage: View {
+    var body: some View {
+        PageScaffold(title: "Plan ahead, in plain words") {
+            ScheduleTypingAnimation()
+        } content: {
+            VStack(spacing: 12) {
+                PageText("Add a day to any task as you type — “tomorrow”, “monday”, “in 2 weeks”.\nIt shows up on its own when it's due.")
+                PageText("Make it recurring with “every day” or “every Monday”.", secondary: true)
+            }
+        }
+    }
+}
+
+/// A looping demo of natural-language scheduling: a task types itself out, the
+/// trailing date word lights up green with the ↵ confirm hint, then Enter files
+/// it away as “Scheduled for tomorrow” — before clearing and starting over.
+private struct ScheduleTypingAnimation: View {
+    @State private var typed = ""
+    @State private var highlighting = false
+    @State private var confirmed = false
+    @State private var caretOn = true
+
+    private let base = "Do the dishes"
+    private let phrase = "tomorrow"
+    private var fullText: String { "\(base) \(phrase)" }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            activeRow
+            placeholderRow
+        }
+        .padding(15)
+        .frame(width: 300)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.black)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.white.opacity(0.08), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.25), radius: 14, y: 8)
+        .task { await runLoop() }
+    }
+
+    private var activeRow: some View {
+        HStack(spacing: 12) {
+            Circle()
+                .strokeBorder(.white.opacity(confirmed ? 0.2 : 0.35), lineWidth: 1.5)
+                .frame(width: 17, height: 17)
+
+            ZStack(alignment: .leading) {
+                if confirmed {
+                    HStack(spacing: 6) {
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Scheduled for tomorrow")
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .foregroundStyle(.green)
+                    .transition(.opacity)
+                } else if highlighting {
+                    HStack(spacing: 5) {
+                        Text(base)
+                            .foregroundStyle(.white)
+                        Text(phrase)
+                            .foregroundStyle(.green)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(
+                                Color.green.opacity(0.22),
+                                in: RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            )
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                } else {
+                    HStack(spacing: 1) {
+                        Text(typed)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.white)
+                        Rectangle()
+                            .fill(.white)
+                            .frame(width: 2, height: 17)
+                            .opacity(caretOn ? 1 : 0.15)
+                    }
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            Image(systemName: "return")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.green)
+                .opacity(highlighting && !confirmed ? 1 : 0)
+        }
+    }
+
+    private var placeholderRow: some View {
+        HStack(spacing: 12) {
+            Circle()
+                .strokeBorder(.white.opacity(0.18), lineWidth: 1.5)
+                .frame(width: 17, height: 17)
+            Text("Prep for the week…")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white.opacity(0.25))
+            Spacer(minLength: 0)
+        }
+    }
+
+    @MainActor
+    private func runLoop() async {
+        // The caret pulses independently for the life of the view.
+        withAnimation(.easeInOut(duration: 0.55).repeatForever(autoreverses: true)) {
+            caretOn = false
+        }
+        while !Task.isCancelled {
+            typed = ""
+            highlighting = false
+            confirmed = false
+            try? await Task.sleep(for: .seconds(0.7))
+            guard !Task.isCancelled else { return }
+
+            // Type the task out, character by character.
+            for index in fullText.indices {
+                typed = String(fullText[...index])
+                try? await Task.sleep(for: .seconds(0.055))
+                guard !Task.isCancelled else { return }
+            }
+
+            try? await Task.sleep(for: .seconds(0.35))
+            guard !Task.isCancelled else { return }
+            withAnimation(.snappy(duration: 0.3)) { highlighting = true }
+
+            try? await Task.sleep(for: .seconds(1.4))
+            guard !Task.isCancelled else { return }
+            withAnimation(.snappy(duration: 0.35)) { confirmed = true }
+
+            try? await Task.sleep(for: .seconds(1.6))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeInOut(duration: 0.4)) {
+                confirmed = false
+                highlighting = false
+                typed = ""
+            }
+            try? await Task.sleep(for: .seconds(0.7))
         }
     }
 }

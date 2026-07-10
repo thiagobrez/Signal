@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00CEEAF1D4209EDCA5D4DB07 /* scribble.wav in Resources */ = {isa = PBXBuildFile; fileRef = CB7E2BD16B84F461552B37B3 /* scribble.wav */; };
+		01D8F51F66071C34131CCC4E /* NaturalDateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1334E4232F4E61339C73F41 /* NaturalDateParser.swift */; };
 		03EBE1A844DF22D16DF40F78 /* SignalQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008557C7E0D6B65492385BAC /* SignalQuote.swift */; };
 		0546BC32AA8E72C7F0895F3C /* pencil.wav in Resources */ = {isa = PBXBuildFile; fileRef = B1389E0ACDE4C1E41AE3799A /* pencil.wav */; };
 		08F36652507A4AB93CE0FF1B /* SignalServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A620C14130D54DCE2B2A9 /* SignalServices.swift */; };
@@ -45,6 +46,7 @@
 		7340E7C960D0B0FB091CBA83 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = B280BAD1315E22650C657F91 /* TelemetryDeck */; };
 		75C7AFE4A25EBA6E968B278C /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8D74719DA574C846852019 /* SettingsStore.swift */; };
 		789D107BF7681C29EFDC9542 /* DayDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE0C8BAC5E5E983F0113E37 /* DayDetailView.swift */; };
+		79E5B8A8F8E754E8F4C80D47 /* ScheduledTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D4C0775993C7180B14E24B /* ScheduledTask.swift */; };
 		7C93202460ECD6EE211F74C6 /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */; };
 		7DB9713BA5A60F03AA1709BD /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462ED15C9D00B34967E04C53 /* Analytics.swift */; };
 		7FAF10A54C6C081CFFA1A256 /* SignalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453E4D521FCA575CE77C9A3 /* SignalApp.swift */; };
@@ -55,7 +57,9 @@
 		8E64B68854B57CF40038C07D /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
 		903BA73065746F8059593306 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
 		90D7833D74AE9CB9746536CE /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F879369015787A57B62384C1 /* AboutView.swift */; };
+		92734566A3C2DE691DD45795 /* ScheduledTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D4C0775993C7180B14E24B /* ScheduledTask.swift */; };
 		948F4E6B2E1D33FDC895FA02 /* pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4C4F741DBD56F9C4C17A0174 /* pop.wav */; };
+		95DBB45D1C22347694D02563 /* NaturalDateParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FB3897E7BD71986FC13843D /* NaturalDateParserTests.swift */; };
 		A6188962D97B6430646F8BA6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */; };
 		AA8F91BCB15AC076FD9DB118 /* tube.wav in Resources */ = {isa = PBXBuildFile; fileRef = AD40B91BE6D69CE63BBF11CC /* tube.wav */; };
 		AAC4775787D9967B61E97ACF /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */; };
@@ -66,10 +70,12 @@
 		BB729B3E8046B64FBE0CB016 /* UpdaterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */; };
 		BC391A1D707873A245507449 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
 		BCB72BF78669CCE888703935 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
+		BD2E5228368A4F5C5DB26061 /* NaturalDateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1334E4232F4E61339C73F41 /* NaturalDateParser.swift */; };
 		CD575E14343E55CFA5891885 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
 		CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
 		D27F6F6256F88FDA46401552 /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */; };
 		D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 85754D73DEB6E570698C3CD6 /* meadow.wav */; };
+		DB92C196ABF47DD94D5C59BB /* NaturalDateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1334E4232F4E61339C73F41 /* NaturalDateParser.swift */; };
 		DC01A8EAD1D7221CB3085182 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462ED15C9D00B34967E04C53 /* Analytics.swift */; };
 		E3B1F1081E1611ADC8E10A69 /* SignalQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008557C7E0D6B65492385BAC /* SignalQuote.swift */; };
 		EFED4F987C3570E1D4B42406 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
@@ -77,6 +83,7 @@
 		F42B88AB80B775ABCB9C2084 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BD2156A0FBF41D9300662BAF /* Sparkle */; };
 		F5529D4FD3E89ECD701970B8 /* StatsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3A748EE9D12BCE0EECB0EC /* StatsWindowController.swift */; };
 		F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
+		FB5E8DF5E4F4AC63BC95419C /* RecurrenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BDB779114317E30DA71331 /* RecurrenceTests.swift */; };
 		FE6969C474390CFCC52DEFDF /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
 /* End PBXBuildFile section */
 
@@ -102,7 +109,9 @@
 		85754D73DEB6E570698C3CD6 /* meadow.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meadow.wav; sourceTree = "<group>"; };
 		88B94E448EA5FDD667DF3D0F /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		8C8D74719DA574C846852019 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		94BDB779114317E30DA71331 /* RecurrenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrenceTests.swift; sourceTree = "<group>"; };
 		9D5999FF8532367E6DBD5F60 /* Signal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Signal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9FB3897E7BD71986FC13843D /* NaturalDateParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaturalDateParserTests.swift; sourceTree = "<group>"; };
 		AD40B91BE6D69CE63BBF11CC /* tube.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = tube.wav; sourceTree = "<group>"; };
 		B0E5EC4A1EE4C90E59A17DA3 /* SignalAppStore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SignalAppStore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1389E0ACDE4C1E41AE3799A /* pencil.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pencil.wav; sourceTree = "<group>"; };
@@ -115,6 +124,9 @@
 		DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoItem.swift; sourceTree = "<group>"; };
 		E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalStore.swift; sourceTree = "<group>"; };
 		ECD1AE2C032080FBD21F3FD8 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		EF91C91E3950946883C33D73 /* SignalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SignalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1334E4232F4E61339C73F41 /* NaturalDateParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaturalDateParser.swift; sourceTree = "<group>"; };
+		F5D4C0775993C7180B14E24B /* ScheduledTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledTask.swift; sourceTree = "<group>"; };
 		F879369015787A57B62384C1 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyboardShortcuts+Names.swift"; sourceTree = "<group>"; };
 		F97E8E46E48B621084C6EF16 /* DynamicNotchKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DynamicNotchKit; path = LocalPackages/DynamicNotchKit; sourceTree = SOURCE_ROOT; };
@@ -188,6 +200,15 @@
 				703A620C14130D54DCE2B2A9 /* SignalServices.swift */,
 			);
 			path = Signal;
+			sourceTree = "<group>";
+		};
+		21C55A9A98B08AC32B200C6E /* SignalTests */ = {
+			isa = PBXGroup;
+			children = (
+				9FB3897E7BD71986FC13843D /* NaturalDateParserTests.swift */,
+				94BDB779114317E30DA71331 /* RecurrenceTests.swift */,
+			);
+			path = SignalTests;
 			sourceTree = "<group>";
 		};
 		3AE451D3B747E973F7498CCC /* Config */ = {
@@ -267,6 +288,7 @@
 		AE9CFCBD7D023D164FB3FE4D /* Schedule */ = {
 			isa = PBXGroup;
 			children = (
+				F1334E4232F4E61339C73F41 /* NaturalDateParser.swift */,
 				88B94E448EA5FDD667DF3D0F /* Scheduler.swift */,
 			);
 			path = Schedule;
@@ -276,6 +298,7 @@
 			isa = PBXGroup;
 			children = (
 				146D2AB23F5E793F6008D409 /* DayLog.swift */,
+				F5D4C0775993C7180B14E24B /* ScheduledTask.swift */,
 				DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */,
 			);
 			path = Models;
@@ -286,6 +309,7 @@
 			children = (
 				9D5999FF8532367E6DBD5F60 /* Signal.app */,
 				B0E5EC4A1EE4C90E59A17DA3 /* SignalAppStore.app */,
+				EF91C91E3950946883C33D73 /* SignalTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -296,6 +320,7 @@
 				3AE451D3B747E973F7498CCC /* Config */,
 				FE02D1BD585FFC3B5EEF05CA /* Packages */,
 				13DFB72E369D4207F5632672 /* Signal */,
+				21C55A9A98B08AC32B200C6E /* SignalTests */,
 				D2A9230E27E9F4AC1910E6A2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -364,6 +389,23 @@
 			productReference = 9D5999FF8532367E6DBD5F60 /* Signal.app */;
 			productType = "com.apple.product-type.application";
 		};
+		F68F0EA6DCE4C352C83B4855 /* SignalTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 594C73EA852FA4244D884858 /* Build configuration list for PBXNativeTarget "SignalTests" */;
+			buildPhases = (
+				83FCCC26E44635CD08A14CD8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SignalTests;
+			packageProductDependencies = (
+			);
+			productName = SignalTests;
+			productReference = EF91C91E3950946883C33D73 /* SignalTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -377,6 +419,9 @@
 						ProvisioningStyle = Automatic;
 					};
 					AC6A4C5D9DE6F0E0B4A0E04E = {
+						ProvisioningStyle = Automatic;
+					};
+					F68F0EA6DCE4C352C83B4855 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -403,6 +448,7 @@
 			targets = (
 				AC6A4C5D9DE6F0E0B4A0E04E /* Signal */,
 				83E258A6DB80B773A18DED07 /* SignalAppStore */,
+				F68F0EA6DCE4C352C83B4855 /* SignalTests */,
 			);
 		};
 /* End PBXProject section */
@@ -450,11 +496,13 @@
 				789D107BF7681C29EFDC9542 /* DayDetailView.swift in Sources */,
 				89CDCCB06B8FAEB5A9CD2F10 /* DayLog.swift in Sources */,
 				18DEC422943D9FEA5A7D6A4E /* KeyboardShortcuts+Names.swift in Sources */,
+				01D8F51F66071C34131CCC4E /* NaturalDateParser.swift in Sources */,
 				29ACE01CA7A07BE91ED9FFD7 /* NotchController.swift in Sources */,
 				5F004980DC460A2281F0F17F /* OnboardingView.swift in Sources */,
 				7C93202460ECD6EE211F74C6 /* OnboardingWindowController.swift in Sources */,
 				57939519C4740E3B15A17227 /* OverviewView.swift in Sources */,
 				381E6BE72F1CF0DAD4CA8FE8 /* PreferencesView.swift in Sources */,
+				92734566A3C2DE691DD45795 /* ScheduledTask.swift in Sources */,
 				EFED4F987C3570E1D4B42406 /* Scheduler.swift in Sources */,
 				75C7AFE4A25EBA6E968B278C /* SettingsStore.swift in Sources */,
 				11E840DDA3FC43E65E509E0A /* SignalApp.swift in Sources */,
@@ -471,6 +519,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		83FCCC26E44635CD08A14CD8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DB92C196ABF47DD94D5C59BB /* NaturalDateParser.swift in Sources */,
+				95DBB45D1C22347694D02563 /* NaturalDateParserTests.swift in Sources */,
+				FB5E8DF5E4F4AC63BC95419C /* RecurrenceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CCA9DD53B157AF4FD18F1326 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -482,11 +540,13 @@
 				ABD664FA0C04E048EB4E6841 /* DayDetailView.swift in Sources */,
 				F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */,
 				3ECF97CFDB2BF7587829A391 /* KeyboardShortcuts+Names.swift in Sources */,
+				BD2E5228368A4F5C5DB26061 /* NaturalDateParser.swift in Sources */,
 				3824FED4BA0E410A23AB96D4 /* NotchController.swift in Sources */,
 				37A76BD59AAE8DF9B946641B /* OnboardingView.swift in Sources */,
 				AAC4775787D9967B61E97ACF /* OnboardingWindowController.swift in Sources */,
 				83FBA7C5A7E4CB777AFBB5BC /* OverviewView.swift in Sources */,
 				83939F1D30F9B1A18AE76D65 /* PreferencesView.swift in Sources */,
+				79E5B8A8F8E754E8F4C80D47 /* ScheduledTask.swift in Sources */,
 				903BA73065746F8059593306 /* Scheduler.swift in Sources */,
 				38549BBAA9843F968099473A /* SettingsStore.swift in Sources */,
 				7FAF10A54C6C081CFFA1A256 /* SignalApp.swift in Sources */,
@@ -529,6 +589,21 @@
 				PRODUCT_NAME = Signal;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) APPSTORE";
+			};
+			name = Release;
+		};
+		28B1CF0A3EB03D5F7BEFEF52 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.thiagobrez.SignalTests;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
@@ -642,6 +717,21 @@
 			};
 			name = Release;
 		};
+		89CCEBEF7FEA95BECC56D72E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.thiagobrez.SignalTests;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
 		95A097D8573A7D7E9271C349 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -741,6 +831,15 @@
 			buildConfigurations = (
 				95A097D8573A7D7E9271C349 /* Debug */,
 				88E2E85CDDDA799F6B0B07E8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		594C73EA852FA4244D884858 /* Build configuration list for PBXNativeTarget "SignalTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				89CCEBEF7FEA95BECC56D72E /* Debug */,
+				28B1CF0A3EB03D5F7BEFEF52 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

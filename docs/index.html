@@ -611,6 +611,123 @@
         transform: scaleX(1);
       }
 
+      /* ---------- Plan-ahead typing (mirrors ScheduleTypingAnimation) ---------- */
+
+      .plan-stage {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 34px;
+      }
+      .plan-panel {
+        width: 300px;
+        max-width: 100%;
+        padding: 15px;
+        border-radius: 18px;
+        background: #000;
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+        text-align: left;
+      }
+      .plan-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .plan-ring {
+        width: 17px;
+        height: 17px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        flex-shrink: 0;
+      }
+      .plan-row.dim .plan-ring {
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+      .plan-body {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+        /* Fixed height (not min-height) so the row is the same size whether the
+           field is empty (just the caret) or holding text — otherwise the line
+           box grows when text appears and the whole page nudges down. */
+        height: 24px;
+        line-height: 24px;
+        display: flex;
+        align-items: center;
+        font-size: 14.5px;
+        font-weight: 500;
+        color: #fff;
+      }
+      .plan-edit {
+        display: inline-flex;
+        align-items: center;
+      }
+      .plan-panel.confirmed .plan-edit {
+        display: none;
+      }
+      .plan-text .hl {
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 22%, transparent);
+        border-radius: 5px;
+        padding: 1px 5px;
+      }
+      .plan-caret {
+        display: inline-block;
+        width: 2px;
+        height: 17px;
+        margin-left: 1px;
+        border-radius: 1px;
+        background: #fff;
+        animation: plan-blink 1.1s steps(1, end) infinite;
+      }
+      .plan-panel.highlight .plan-caret,
+      .plan-panel.confirmed .plan-caret {
+        display: none;
+      }
+      @keyframes plan-blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        50.01%,
+        100% {
+          opacity: 0.15;
+        }
+      }
+      .plan-confirm {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        color: var(--accent);
+      }
+      .plan-confirm svg {
+        flex-shrink: 0;
+      }
+      .plan-panel.confirmed .plan-confirm {
+        display: inline-flex;
+      }
+      .plan-return {
+        display: flex;
+        flex-shrink: 0;
+        color: var(--accent);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      }
+      .plan-panel.highlight .plan-return {
+        opacity: 1;
+      }
+      .plan-panel.confirmed .plan-return {
+        opacity: 0;
+      }
+      .plan-ph {
+        font-size: 14.5px;
+        font-weight: 500;
+        line-height: 24px;
+        color: rgba(255, 255, 255, 0.25);
+      }
+
       /* ---------- Task Stats window (mirrors StatsLoopAnimation) ---------- */
 
       .stats-stage {
@@ -929,9 +1046,13 @@
         .check-box .ring,
         .check-box .mark,
         .check-label::after,
+        .plan-return,
         .stats-donut .fill,
         .stats-bars .bar {
           transition: none;
+        }
+        .plan-caret {
+          animation: none;
         }
       }
     </style>
@@ -1208,7 +1329,73 @@
         </p>
       </section>
 
-      <!-- Task Stats (onboarding page 4) -->
+      <!-- Plan ahead (onboarding page 4) -->
+      <section class="reveal-section">
+        <div class="plan-stage reveal-hero">
+          <div
+            class="plan-panel"
+            id="plan-demo"
+            aria-label="Animation of typing a task ending in “tomorrow”, which highlights and gets scheduled to a future day"
+          >
+            <div class="plan-row" aria-hidden="true">
+              <span class="plan-ring"></span>
+              <span class="plan-body">
+                <span class="plan-edit"
+                  ><span class="plan-text"></span
+                  ><span class="plan-caret"></span
+                ></span>
+                <span class="plan-confirm">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.9"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="5" width="18" height="16" rx="2.5" />
+                    <path d="M3 9.5h18M8 3v3.5M16 3v3.5" />
+                    <circle cx="15.5" cy="15" r="3.4" />
+                    <path d="M15.5 13.4V15l1.1 1.1" />
+                  </svg>
+                  Scheduled for tomorrow
+                </span>
+              </span>
+              <span class="plan-return">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M9 10l-4 4 4 4" />
+                  <path d="M5 14h11a4 4 0 0 0 4-4V6" />
+                </svg>
+              </span>
+            </div>
+            <div class="plan-row dim" aria-hidden="true">
+              <span class="plan-ring"></span>
+              <span class="plan-ph">Prep for the week…</span>
+            </div>
+          </div>
+        </div>
+        <h2 class="reveal-text">Plan ahead, in plain words</h2>
+        <p class="body reveal-text">
+          Add a day to any task as you type — “tomorrow”, “monday”, “in 2
+          weeks”.<br />It shows up on its own when it's due.
+        </p>
+        <p class="small reveal-text">
+          Make it recurring with “every day” or “every Monday”.
+        </p>
+      </section>
+
+      <!-- Task Stats (onboarding page 5) -->
       <section class="reveal-section">
         <div class="stats-stage reveal-hero">
           <div
@@ -1326,7 +1513,7 @@
         </p>
       </section>
 
-      <!-- Schedule (onboarding page 5) -->
+      <!-- Schedule (onboarding page 6) -->
       <section class="reveal-section">
         <div class="glyph-hero reveal-hero" aria-hidden="true">
           <svg
@@ -1396,7 +1583,7 @@
         <p class="small reveal-text">Fine-tune it all in Preferences.</p>
       </section>
 
-      <!-- Preferences (onboarding page 6) -->
+      <!-- Preferences (onboarding page 7) -->
       <section class="reveal-section">
         <div class="glyph-hero reveal-hero" aria-hidden="true">
           <svg
@@ -1644,6 +1831,54 @@
           statsDemo.classList.remove("filled");
           cancelAnimationFrame(statsRaf);
           statsPct.textContent = "0%";
+        });
+      }
+
+      // Plan-ahead demo: a task types itself out, the trailing date word lights
+      // up green with the ↵ hint, Enter files it away as "Scheduled for
+      // tomorrow", then it clears and repeats. Matches ScheduleTypingAnimation
+      // in the app.
+      const planDemo = document.getElementById("plan-demo");
+      const planText = planDemo.querySelector(".plan-text");
+      const planBase = "Do the dishes";
+      const planPhrase = "tomorrow";
+      const planFull = planBase + " " + planPhrase;
+      const planHighlighted =
+        planBase + ' <span class="hl">' + planPhrase + "</span>";
+
+      if (reducedMotion) {
+        // No loop will run — show the highlighted end state so it isn't blank.
+        planText.innerHTML = planHighlighted;
+        planDemo.classList.add("highlight");
+      } else {
+        loopWhileVisible(planDemo, async (isCancelled) => {
+          while (!isCancelled()) {
+            planDemo.classList.remove("highlight", "confirmed");
+            planText.textContent = "";
+            await sleep(0.7);
+            if (isCancelled()) break;
+            let interrupted = false;
+            for (let i = 1; i <= planFull.length; i++) {
+              if (isCancelled()) {
+                interrupted = true;
+                break;
+              }
+              planText.textContent = planFull.slice(0, i);
+              await sleep(0.055);
+            }
+            if (interrupted || isCancelled()) break;
+            await sleep(0.35);
+            planText.innerHTML = planHighlighted;
+            planDemo.classList.add("highlight");
+            await sleep(1.4);
+            if (isCancelled()) break;
+            planDemo.classList.add("confirmed");
+            await sleep(1.6);
+            if (isCancelled()) break;
+            planDemo.classList.remove("highlight", "confirmed");
+            await sleep(0.7);
+          }
+          planDemo.classList.remove("highlight", "confirmed");
         });
       }
 
