@@ -530,18 +530,32 @@
 
       /* ---------- Tasks checklist (mirrors TasksChecklistAnimation) ---------- */
 
+      /* The three-tasks checklist mirrors the real Signal notch panel: a black
+         card with a header (date + count) and white task rows. */
       .checklist {
         width: 300px;
         max-width: 100%;
         margin: 0 auto 34px;
-        padding: 18px;
-        border-radius: 16px;
-        background: var(--card);
-        border: 1px solid var(--card-border);
+        padding: 16px;
+        border-radius: 18px;
+        background: #000;
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 12px;
         text-align: left;
+      }
+      .check-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2.5px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .check-count {
+        font-variant-numeric: tabular-nums;
       }
       .check-row {
         display: flex;
@@ -563,8 +577,7 @@
           transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
       }
       .check-box .ring {
-        border: 2px solid
-          color-mix(in srgb, var(--text-secondary) 40%, transparent);
+        border: 2px solid rgba(255, 255, 255, 0.35);
         border-radius: 50%;
       }
       .check-box .mark {
@@ -590,6 +603,7 @@
         position: relative;
         font-size: 15px;
         font-weight: 500;
+        color: #fff;
         transition: color 0.35s ease;
       }
       .check-label::after {
@@ -599,13 +613,13 @@
         top: 50%;
         width: 100%;
         height: 1.5px;
-        background: var(--text-secondary);
+        background: rgba(255, 255, 255, 0.5);
         transform: scaleX(0);
         transform-origin: left center;
         transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
       }
       .check-row.done .check-label {
-        color: var(--text-secondary);
+        color: rgba(255, 255, 255, 0.5);
       }
       .check-row.done .check-label::after {
         transform: scaleX(1);
@@ -726,6 +740,238 @@
         font-weight: 500;
         line-height: 24px;
         color: rgba(255, 255, 255, 0.25);
+      }
+
+      /* ---------- Schedule overview (mirrors ScheduleOverviewLoopAnimation) ---------- */
+
+      .ov-stage {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 34px;
+      }
+      .ov-panel {
+        width: 300px;
+        max-width: 100%;
+        padding: 14px;
+        border-radius: 18px;
+        background: #000;
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        text-align: left;
+      }
+      .ov-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .ov-title {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .ov-seg {
+        display: flex;
+        gap: 2px;
+        padding: 2px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .ov-seg-item {
+        font-size: 9px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.45);
+        padding: 3px 7px;
+        border-radius: 999px;
+        transition: color 0.3s ease, background 0.3s ease;
+      }
+      .ov-panel[data-mode="week"] .ov-seg-item[data-mode="week"],
+      .ov-panel[data-mode="month"] .ov-seg-item[data-mode="month"],
+      .ov-panel[data-mode="year"] .ov-seg-item[data-mode="year"] {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.15);
+      }
+      .ov-body {
+        position: relative;
+        height: 156px;
+      }
+      .ov-view {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+      }
+      .ov-panel[data-mode="week"] .ov-week,
+      .ov-panel[data-mode="month"] .ov-month,
+      .ov-panel[data-mode="year"] .ov-year {
+        opacity: 1;
+      }
+
+      /* Shared recurrence pill */
+      .ov-badge {
+        font-size: 8px;
+        font-weight: 600;
+        color: var(--accent);
+        padding: 1px 5px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--accent) 15%, transparent);
+        white-space: nowrap;
+      }
+
+      /* Week */
+      .ov-week {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ov-everyday {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 6px 8px;
+        margin-bottom: 2px;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+      }
+      .ov-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 3px 0;
+      }
+      .ov-daycol {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+        width: 48px;
+        flex-shrink: 0;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .ov-daycol.past {
+        color: rgba(255, 255, 255, 0.25);
+      }
+      .ov-wd {
+        width: 26px;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+      }
+      .ov-dnum {
+        font-size: 11px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .ov-ico {
+        display: flex;
+        flex-shrink: 0;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .ov-ico.rec {
+        color: var(--accent);
+      }
+      .ov-task {
+        font-size: 11px;
+        font-weight: 500;
+        color: #fff;
+      }
+      .ov-dash {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.15);
+      }
+
+      /* Month */
+      .ov-month {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .ov-mhead {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 3px;
+      }
+      .ov-mhead span {
+        font-size: 8px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.35);
+        text-align: center;
+      }
+      .ov-mgrid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+      }
+      .ov-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+      .ov-cnum {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 15px;
+        height: 15px;
+        font-size: 9px;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .ov-cnum.today {
+        color: #000;
+        font-weight: 700;
+        background: var(--accent);
+        border-radius: 50%;
+      }
+      .ov-dots {
+        display: flex;
+        gap: 1.5px;
+        height: 3px;
+      }
+      .ov-dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      /* Year */
+      .ov-year {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px 8px;
+      }
+      .ov-mini {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+      }
+      .ov-mname {
+        font-size: 9px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .ov-mname.current {
+        color: var(--accent);
+      }
+      .ov-mg {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1.5px;
+      }
+      .ov-mgdot {
+        width: 2.5px;
+        height: 2.5px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .ov-mgdot.on {
+        background: var(--accent);
       }
 
       /* ---------- Task Stats window (mirrors StatsLoopAnimation) ---------- */
@@ -1252,6 +1498,10 @@
           id="checklist"
           aria-label="Animation of three tasks being checked off"
         >
+          <div class="check-head" aria-hidden="true">
+            <span>TODAY</span>
+            <span class="check-count">0/3</span>
+          </div>
           <div class="check-row">
             <span class="check-box">
               <span class="ring"></span>
@@ -1265,7 +1515,7 @@
                   <path
                     d="M6 10.2l2.6 2.6L14 7"
                     fill="none"
-                    stroke="var(--bg)"
+                    stroke="#000"
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -1287,7 +1537,7 @@
                   <path
                     d="M6 10.2l2.6 2.6L14 7"
                     fill="none"
-                    stroke="var(--bg)"
+                    stroke="#000"
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -1309,7 +1559,7 @@
                   <path
                     d="M6 10.2l2.6 2.6L14 7"
                     fill="none"
-                    stroke="var(--bg)"
+                    stroke="#000"
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -1392,6 +1642,79 @@
         </p>
         <p class="small reveal-text">
           Make it recurring with “every day” or “every Monday”.
+        </p>
+      </section>
+
+      <!-- Schedule overview (onboarding page 6) -->
+      <section class="reveal-section">
+        <div class="ov-stage reveal-hero">
+          <div
+            class="ov-panel"
+            id="ov-demo"
+            data-mode="week"
+            aria-label="Animation of the schedule overview cycling through week, month, and year views of scheduled and recurring tasks"
+          >
+            <div class="ov-head" aria-hidden="true">
+              <span class="ov-title">SCHEDULED</span>
+              <div class="ov-seg">
+                <span class="ov-seg-item" data-mode="week">Week</span>
+                <span class="ov-seg-item" data-mode="month">Month</span>
+                <span class="ov-seg-item" data-mode="year">Year</span>
+              </div>
+            </div>
+            <div class="ov-body" aria-hidden="true">
+              <!-- Week -->
+              <div class="ov-view ov-week">
+                <div class="ov-everyday">
+                  <span class="ov-ico rec">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+                  </span>
+                  <span class="ov-task">Water plants</span>
+                  <span class="ov-badge">Every day</span>
+                </div>
+                <div class="ov-row">
+                  <span class="ov-daycol past"><span class="ov-wd">MON</span><span class="ov-dnum">13</span></span>
+                  <span class="ov-dash">—</span>
+                </div>
+                <div class="ov-row">
+                  <span class="ov-daycol"><span class="ov-wd">WED</span><span class="ov-dnum">15</span></span>
+                  <span class="ov-ico rec">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+                  </span>
+                  <span class="ov-task">Review PRs</span>
+                  <span class="ov-badge">Every Wed</span>
+                </div>
+                <div class="ov-row">
+                  <span class="ov-daycol"><span class="ov-wd">FRI</span><span class="ov-dnum">17</span></span>
+                  <span class="ov-ico">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5" /><path d="M3 9.5h18M8 3v3.5M16 3v3.5" /></svg>
+                  </span>
+                  <span class="ov-task">Call dentist</span>
+                </div>
+                <div class="ov-row">
+                  <span class="ov-daycol"><span class="ov-wd">SAT</span><span class="ov-dnum">18</span></span>
+                  <span class="ov-dash">—</span>
+                </div>
+              </div>
+              <!-- Month (grid filled by JS) -->
+              <div class="ov-view ov-month">
+                <div class="ov-mhead">
+                  <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                </div>
+                <div class="ov-mgrid"></div>
+              </div>
+              <!-- Year (grid filled by JS) -->
+              <div class="ov-view ov-year"></div>
+            </div>
+          </div>
+        </div>
+        <h2 class="reveal-text">Your whole schedule, at a glance</h2>
+        <p class="body reveal-text">
+          Long-press your hotkey to open a bigger calendar of every scheduled
+          and recurring task.
+        </p>
+        <p class="small reveal-text">
+          Browse by week, month, or year — and edit or delete any of them.
         </p>
       </section>
 
@@ -1768,23 +2091,98 @@
       // Tasks demo: 0.9s → tick tasks one by one 0.8s apart → hold 2.2s → reset.
       // Matches TasksChecklistAnimation.runLoop() in the app.
       const checkRows = document.querySelectorAll("#checklist .check-row");
+      const checkCount = document.querySelector("#checklist .check-count");
       loopWhileVisible(
         document.getElementById("checklist"),
         async (isCancelled) => {
           while (!isCancelled()) {
             checkRows.forEach((row) => row.classList.remove("done"));
+            if (checkCount) checkCount.textContent = "0/3";
             await sleep(0.9);
+            let done = 0;
             for (const row of checkRows) {
               if (isCancelled()) break;
               row.classList.add("done");
+              done += 1;
+              if (checkCount) checkCount.textContent = done + "/3";
               await sleep(0.8);
             }
             if (isCancelled()) break;
             await sleep(1.75);
           }
           checkRows.forEach((row) => row.classList.remove("done"));
+          if (checkCount) checkCount.textContent = "0/3";
         }
       );
+
+      // Schedule overview demo: build the month + year grids once, then cycle
+      // the panel through Week → Month → Year. Matches
+      // ScheduleOverviewLoopAnimation in the app.
+      const ovDemo = document.getElementById("ov-demo");
+      if (ovDemo) {
+        // Month grid: 2 leading blanks, days 1–31, padded to 35 cells.
+        const monthGrid = ovDemo.querySelector(".ov-mgrid");
+        const monthDots = { 3: 1, 8: 1, 10: 1, 15: 2, 17: 1, 22: 1, 24: 2, 29: 1, 31: 1 };
+        const monthToday = 15;
+        const monthSlots = [null, null];
+        for (let d = 1; d <= 31; d++) monthSlots.push(d);
+        while (monthSlots.length < 35) monthSlots.push(null);
+        monthSlots.forEach((day) => {
+          const cell = document.createElement("div");
+          cell.className = "ov-cell";
+          const num = document.createElement("div");
+          num.className = "ov-cnum" + (day === monthToday ? " today" : "");
+          num.textContent = day == null ? "" : String(day);
+          cell.appendChild(num);
+          const dotWrap = document.createElement("div");
+          dotWrap.className = "ov-dots";
+          const count = day == null ? 0 : monthDots[day] || 0;
+          for (let k = 0; k < count; k++) {
+            const dot = document.createElement("span");
+            dot.className = "ov-dot";
+            dotWrap.appendChild(dot);
+          }
+          cell.appendChild(dotWrap);
+          monthGrid.appendChild(cell);
+        });
+
+        // Year grid: twelve mini-months, days with tasks tinted green.
+        const yearGrid = ovDemo.querySelector(".ov-year");
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const yearCurrent = 6;
+        const yearHasTasks = new Set([2, 5, 6, 7, 9, 10, 11]);
+        monthNames.forEach((name, mi) => {
+          const mini = document.createElement("div");
+          mini.className = "ov-mini";
+          const label = document.createElement("div");
+          label.className = "ov-mname" + (mi === yearCurrent ? " current" : "");
+          label.textContent = name;
+          mini.appendChild(label);
+          const grid = document.createElement("div");
+          grid.className = "ov-mg";
+          for (let d = 0; d < 28; d++) {
+            const dot = document.createElement("span");
+            dot.className = "ov-mgdot";
+            if (yearHasTasks.has(mi) && (d % 5 === 2 || d % 7 === 4)) dot.classList.add("on");
+            grid.appendChild(dot);
+          }
+          mini.appendChild(grid);
+          yearGrid.appendChild(mini);
+        });
+
+        const ovModes = ["week", "month", "year"];
+        let ovIndex = 0;
+        if (!reducedMotion) {
+          loopWhileVisible(ovDemo, async (isCancelled) => {
+            while (!isCancelled()) {
+              await sleep(2.4);
+              if (isCancelled()) break;
+              ovIndex = (ovIndex + 1) % ovModes.length;
+              ovDemo.dataset.mode = ovModes[ovIndex];
+            }
+          });
+        }
+      }
 
       // Task Stats demo: the completion ring fills to 70% (number counting up)
       // while the weekday bars rise, holds, then resets. Matches

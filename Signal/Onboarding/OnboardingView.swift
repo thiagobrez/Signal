@@ -18,7 +18,7 @@ struct OnboardingView: View {
     /// Drives the direction of the slide transition between pages.
     @State private var forward = true
 
-    private let pageCount = 8
+    private let pageCount = 9
     private var isLastPage: Bool { page == pageCount - 1 }
 
     var body: some View {
@@ -50,8 +50,9 @@ struct OnboardingView: View {
         case 2: HotkeyPage()
         case 3: TasksPage()
         case 4: PlanAheadPage()
-        case 5: StatsPage()
-        case 6: SchedulePage()
+        case 5: ScheduleOverviewPage()
+        case 6: StatsPage()
+        case 7: SchedulePage()
         default: PreferencesPage()
         }
     }
@@ -476,31 +477,51 @@ private struct TasksChecklistAnimation: View {
     private let tasks = ["Ship the onboarding", "Reply to that email", "Plan tomorrow"]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 11) {
-            ForEach(Array(tasks.enumerated()), id: \.offset) { index, text in
-                row(text: text, done: index < doneCount)
+        // The real Signal notch panel: a black card with a header (date + count)
+        // over white task rows — matching the other dark mocks on this tour.
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("TODAY")
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(2.5)
+                Spacer()
+                Text("\(doneCount)/\(tasks.count)")
+                    .font(.system(size: 10, weight: .semibold))
+                    .tracking(2.5)
+                    .monospacedDigit()
+            }
+            .foregroundStyle(.white.opacity(0.4))
+
+            VStack(alignment: .leading, spacing: 11) {
+                ForEach(Array(tasks.enumerated()), id: \.offset) { index, text in
+                    row(text: text, done: index < doneCount)
+                }
             }
         }
-        .padding(14)
-        .frame(width: 240)
+        .padding(16)
+        .frame(width: 260)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.primary.opacity(0.05))
+            RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.black)
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.white.opacity(0.08), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.25), radius: 14, y: 8)
         .task { await runLoop() }
     }
 
     private func row(text: String, done: Bool) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             checkbox(done: done)
             Text(text)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(done ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(done ? Color.white.opacity(0.5) : Color.white)
                 .fixedSize()
                 .overlay(alignment: .leading) {
                     // Strikethrough that draws in from the left.
                     Rectangle()
-                        .fill(.secondary)
+                        .fill(.white.opacity(0.5))
                         .frame(height: 1.2)
                         .scaleEffect(x: done ? 1 : 0, anchor: .leading)
                 }
@@ -511,16 +532,16 @@ private struct TasksChecklistAnimation: View {
     private func checkbox(done: Bool) -> some View {
         ZStack {
             Circle()
-                .strokeBorder(Color.secondary.opacity(0.4), lineWidth: 1.5)
+                .strokeBorder(Color.white.opacity(0.35), lineWidth: 1.5)
                 .opacity(done ? 0 : 1)
                 .scaleEffect(done ? 0.5 : 1)
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 16))
+                .font(.system(size: 17))
                 .foregroundStyle(.green)
                 .opacity(done ? 1 : 0)
                 .scaleEffect(done ? 1 : 0.4)
         }
-        .frame(width: 16, height: 16)
+        .frame(width: 17, height: 17)
     }
 
     @MainActor
@@ -689,6 +710,255 @@ private struct ScheduleTypingAnimation: View {
             }
             try? await Task.sleep(for: .seconds(0.7))
         }
+    }
+}
+
+private struct ScheduleOverviewPage: View {
+    var body: some View {
+        PageScaffold(title: "Your whole schedule, at a glance") {
+            ScheduleOverviewLoopAnimation()
+        } content: {
+            VStack(spacing: 12) {
+                PageText("Long-press your hotkey to open a bigger calendar of every scheduled and recurring task.")
+                PageText("Browse by week, month, or year — and edit or delete any of them.", secondary: true)
+            }
+        }
+    }
+}
+
+/// A looping mock of the schedule overview: the black calendar panel cycles
+/// through its Week, Month, and Year modes, echoing the real view opened by
+/// long-pressing the hotkey.
+private struct ScheduleOverviewLoopAnimation: View {
+    @State private var mode = 0
+    private let modes = ["Week", "Month", "Year"]
+
+    var body: some View {
+        VStack(spacing: 11) {
+            header
+
+            Group {
+                switch mode {
+                case 0: WeekMini()
+                case 1: MonthMini()
+                default: YearMini()
+                }
+            }
+            .frame(width: 268, height: 156, alignment: .top)
+            .transition(.opacity)
+            .id(mode)
+        }
+        .padding(14)
+        .frame(width: 296)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.black)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.white.opacity(0.08), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.25), radius: 14, y: 8)
+        .task { await runLoop() }
+    }
+
+    private var header: some View {
+        HStack {
+            Text("SCHEDULED")
+                .font(.system(size: 9, weight: .bold))
+                .tracking(2)
+                .foregroundStyle(.white.opacity(0.4))
+            Spacer()
+            HStack(spacing: 2) {
+                ForEach(Array(modes.enumerated()), id: \.offset) { index, label in
+                    Text(label)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(mode == index ? .white : .white.opacity(0.45))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background {
+                            if mode == index {
+                                Capsule().fill(.white.opacity(0.15))
+                            }
+                        }
+                }
+            }
+            .padding(2)
+            .background(Capsule().fill(.white.opacity(0.05)))
+        }
+    }
+
+    @MainActor
+    private func runLoop() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(2.4))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeInOut(duration: 0.4)) { mode = (mode + 1) % 3 }
+        }
+    }
+}
+
+/// A small green "Every day" / "Every Wed" recurrence pill.
+private struct RecurBadge: View {
+    let text: String
+    var body: some View {
+        Text(text)
+            .font(.system(size: 8, weight: .semibold))
+            .foregroundStyle(.green)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .background(Capsule().fill(.green.opacity(0.15)))
+    }
+}
+
+/// The week layout: an "Every day" strip above Monday–Sunday rows.
+private struct WeekMini: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 7) {
+                Image(systemName: "repeat")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.green)
+                Text("Water plants")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white)
+                RecurBadge(text: "Every day")
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(.green.opacity(0.08))
+            )
+            .padding(.bottom, 2)
+
+            row("MON", "13", past: true)
+            row("WED", "15", task: "Review PRs", icon: "repeat", badge: "Every Wed")
+            row("FRI", "17", task: "Call dentist", icon: "calendar")
+            row("SAT", "18")
+        }
+    }
+
+    private func row(
+        _ weekday: String,
+        _ number: String,
+        task: String? = nil,
+        icon: String = "",
+        badge: String? = nil,
+        past: Bool = false
+    ) -> some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 5) {
+                Text(weekday)
+                    .font(.system(size: 9, weight: .bold))
+                    .tracking(1.5)
+                    .frame(width: 26, alignment: .leading)
+                Text(number)
+                    .font(.system(size: 11, weight: .semibold))
+                    .monospacedDigit()
+            }
+            .foregroundStyle(.white.opacity(past ? 0.25 : 0.5))
+            .frame(width: 48, alignment: .leading)
+
+            if let task {
+                Image(systemName: icon)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(icon == "repeat" ? Color.green : Color.white.opacity(0.5))
+                Text(task)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white)
+                if let badge { RecurBadge(text: badge) }
+            } else {
+                Text("—")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.15))
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 3)
+    }
+}
+
+/// The month grid: a Monday-first calendar with occurrence dots and today circled.
+private struct MonthMini: View {
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 3), count: 7)
+    private let weekdays = ["M", "T", "W", "T", "F", "S", "S"]
+    private let today = 15
+    private let dots: [Int: Int] = [3: 1, 8: 1, 10: 1, 15: 2, 17: 1, 22: 1, 24: 2, 29: 1, 31: 1]
+
+    private var slots: [Int?] {
+        var result: [Int?] = Array(repeating: nil, count: 2)
+        result += (1 ... 31).map { Optional($0) }
+        while result.count < 35 { result.append(nil) }
+        return result
+    }
+
+    var body: some View {
+        VStack(spacing: 5) {
+            HStack(spacing: 3) {
+                ForEach(Array(weekdays.enumerated()), id: \.offset) { _, day in
+                    Text(day)
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.35))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+
+            LazyVGrid(columns: columns, spacing: 4) {
+                ForEach(Array(slots.enumerated()), id: \.offset) { _, slot in
+                    VStack(spacing: 2) {
+                        Text(slot.map(String.init) ?? " ")
+                            .font(.system(size: 9, weight: slot == today ? .bold : .medium))
+                            .monospacedDigit()
+                            .foregroundStyle(slot == today ? .black : .white.opacity(0.85))
+                            .frame(width: 15, height: 15)
+                            .background {
+                                if slot == today { Circle().fill(.green) }
+                            }
+                        HStack(spacing: 1.5) {
+                            ForEach(0 ..< (slot.flatMap { dots[$0] } ?? 0), id: \.self) { _ in
+                                Circle().fill(.green).frame(width: 3, height: 3)
+                            }
+                        }
+                        .frame(height: 3)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// The year grid: twelve mini-months, days with tasks tinted green.
+private struct YearMini: View {
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
+    private let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    private let current = 6
+    private let hasTasks: Set<Int> = [2, 5, 6, 7, 9, 10, 11]
+    private let dayColumns = Array(repeating: GridItem(.flexible(), spacing: 1.5), count: 7)
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 10) {
+            ForEach(Array(months.enumerated()), id: \.offset) { index, month in
+                VStack(spacing: 3) {
+                    Text(month)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(index == current ? .green : .white.opacity(0.7))
+
+                    LazyVGrid(columns: dayColumns, spacing: 1.5) {
+                        ForEach(0 ..< 28, id: \.self) { day in
+                            Circle()
+                                .fill(dotColor(day: day, active: hasTasks.contains(index)))
+                                .frame(width: 2.5, height: 2.5)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func dotColor(day: Int, active: Bool) -> Color {
+        guard active else { return .white.opacity(0.12) }
+        return (day % 5 == 2 || day % 7 == 4) ? .green : .white.opacity(0.15)
     }
 }
 
