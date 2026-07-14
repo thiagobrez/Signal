@@ -137,6 +137,10 @@ private struct MenuBarContent: View {
         }
 
         // `present()` rather than `toggle()`: a menu click should always show.
+        Button("Scheduled Tasks…") {
+            SignalServices.shared.controller.presentOverview()
+        }
+
         Button("Task Stats…") {
             SignalServices.shared.stats.present()
         }

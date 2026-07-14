@@ -86,15 +86,25 @@ targets:
         INFOPLIST_FILE: Signal/Info-AppStore.plist
         # $(inherited) keeps XcodeGen's DEBUG condition in Debug builds.
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) APPSTORE"
-  # Pure-logic unit tests (date parser + recurrence math). The files under
-  # test are compiled straight into the bundle — no app host — so running
-  # tests never launches the app or touches its SwiftData store.
+  # Pure-logic unit tests (date parser, recurrence math, schedule CRUD). The
+  # files under test are compiled straight into the bundle — no app host — so
+  # running tests never launches the app or touches its SwiftData store
+  # (repository tests use their own in-memory container).
   SignalTests:
     type: bundle.unit-test
     platform: macOS
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
     sources:
       - path: SignalTests
       - path: Signal/Schedule/NaturalDateParser.swift
+      - path: Signal/Schedule/ScheduleEdit.swift
+      - path: Signal/Schedule/ScheduleGrid.swift
+      - path: Signal/Models/ScheduledTask.swift
+      - path: Signal/Models/DayLog.swift
+      - path: Signal/Models/TodoItem.swift
+      - path: Signal/Store/ScheduleRepository.swift
 
 # Shared schemes so `xcodebuild -scheme <name>` works in CI (schemes only
 # auto-generate when the project is opened in Xcode's UI).

@@ -9,10 +9,20 @@ final class SignalServices {
 
     let container: ModelContainer
     let store: SignalStore
+    let scheduleRepository: ScheduleRepository
     let controller: NotchController
     let scheduler: Scheduler
     let onboarding: OnboardingWindowController
     let stats: StatsWindowController
+
+    /// Pending long-press timer for the toggle hotkey; nil once it fires or
+    /// the key is released.
+    private var holdWorkItem: DispatchWorkItem?
+    /// True between the long-press firing and the key release, so the
+    /// trailing key-up doesn't also toggle the small panel.
+    private var longPressFired = false
+    /// How long ⌘⇧T must be held to open the schedule overview instead.
+    private static let longPressThreshold: TimeInterval = 0.45
 
     private init() {
         SettingsStore.registerDefaults()
@@ -24,7 +34,8 @@ final class SignalServices {
         }
 
         store = SignalStore(context: container.mainContext)
-        controller = NotchController(store: store)
+        scheduleRepository = ScheduleRepository(context: container.mainContext)
+        controller = NotchController(store: store, scheduleRepository: scheduleRepository)
         scheduler = Scheduler(controller: controller)
         onboarding = OnboardingWindowController()
         stats = StatsWindowController(container: container)
@@ -34,8 +45,33 @@ final class SignalServices {
     func start() {
         migrateToggleSignalShortcutIfNeeded()
 
-        KeyboardShortcuts.onKeyUp(for: .toggleSignal) { [controller] in
-            controller.toggle()
+        // The toggle hotkey does double duty: a short press toggles the task
+        // panel (on release, as before), while holding it past the threshold
+        // opens the schedule overview immediately — the release is then
+        // swallowed so it doesn't also toggle the panel.
+        KeyboardShortcuts.onKeyDown(for: .toggleSignal) { [weak self] in
+            guard let self else { return }
+            // Carbon can deliver repeated key-down events while held; only the
+            // first one arms the timer.
+            guard holdWorkItem == nil, !longPressFired else { return }
+            let work = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                holdWorkItem = nil
+                longPressFired = true
+                controller.toggleOverview()
+            }
+            holdWorkItem = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.longPressThreshold, execute: work)
+        }
+        KeyboardShortcuts.onKeyUp(for: .toggleSignal) { [weak self] in
+            guard let self else { return }
+            if let work = holdWorkItem {
+                work.cancel()
+                holdWorkItem = nil
+                controller.toggle()
+            } else {
+                longPressFired = false
+            }
         }
 
         // Opening stats first thing on a new day must still create today's
