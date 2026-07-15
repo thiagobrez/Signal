@@ -3,24 +3,26 @@
     <channel>
         <title>Signal</title>
         <item>
-            <title>1.2.0</title>
-            <pubDate>Thu, 09 Jul 2026 18:15:52 +0000</pubDate>
+            <title>1.3.0</title>
+            <pubDate>Wed, 15 Jul 2026 11:28:19 +0000</pubDate>
             <link>https://thiagobrez.github.io/Signal/</link>
-            <sparkle:version>61</sparkle:version>
-            <sparkle:shortVersionString>1.2.0</sparkle:shortVersionString>
+            <sparkle:version>70</sparkle:version>
+            <sparkle:shortVersionString>1.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <description><![CDATA[<h3>Minor Changes</h3>
 <ul>
-<li>599d50f: Prompt for App Store review after completing the day for the first time</li>
-<li>756064b: Add Task Stats view with a new hotkey to view statistics</li>
+<li>a1805fb: Add What&#39;s New window after installing a new update</li>
+<li>a6ad0d3: Add natural language scheduling of tasks</li>
+<li>1a452d7: Long press hotkey to open a new UI to view all scheduled tasks</li>
 </ul>
 <h3>Patch Changes</h3>
 <ul>
-<li>e621a6d: Fix Preferences window not coming to foreground when opening</li>
+<li>92c3e90: Show shortcuts in menu bar items</li>
+<li>7d56c8a: Fix automatic updates failing to install</li>
 </ul>
 
 ]]></description>
-            <enclosure url="https://github.com/thiagobrez/Signal/releases/download/v1.2.0/Signal-1.2.0.dmg" length="4138357" type="application/octet-stream" sparkle:edSignature="K+0UwS+K/TreIhKB1yjMOGMkoOWKr2tFwkwdY0TfDPytXr2DAkbcYjnEj2W7Ne7OlEc0N/SYqE6L2FwVnN3fCQ=="/>
+            <enclosure url="https://github.com/thiagobrez/Signal/releases/download/v1.3.0/Signal-1.3.0.dmg" length="4496811" type="application/octet-stream" sparkle:edSignature="h0EvOog/r4fotPQQnrgwQtvaiItgSrY7V9a4jFhUkXso31eWkg2z5E1tKelGAUURRcSL0UIF4HED+hE+3o81AA=="/>
         </item>
     </channel>
 </rss>
