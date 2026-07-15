@@ -13,6 +13,7 @@ final class SignalServices {
     let controller: NotchController
     let scheduler: Scheduler
     let onboarding: OnboardingWindowController
+    let whatsNew: WhatsNewWindowController
     let stats: StatsWindowController
 
     /// Pending long-press timer for the toggle hotkey; nil once it fires or
@@ -38,6 +39,7 @@ final class SignalServices {
         controller = NotchController(store: store, scheduleRepository: scheduleRepository)
         scheduler = Scheduler(controller: controller)
         onboarding = OnboardingWindowController()
+        whatsNew = WhatsNewWindowController()
         stats = StatsWindowController(container: container)
     }
 
@@ -87,17 +89,39 @@ final class SignalServices {
 
         // First launch: show onboarding instead of the notch so the two don't
         // collide. When it finishes, drop the user into the app just like a
-        // normal open-on-launch. Afterwards, resume that behavior directly.
+        // normal open-on-launch. First launch after an update: show What's New
+        // instead, then resume the open-on-launch behavior when it closes.
+        let currentVersion = WhatsNewWindowController.currentVersion
         if !SettingsStore.hasSeenOnboarding {
             onboarding.present { [controller, scheduler] in
+                // Finishing onboarding credits the user with the current
+                // version, so a fresh install never sees old release notes.
+                SettingsStore.lastSeenWhatsNewVersion = currentVersion
                 scheduler.markPromptedToday()
                 SoundPlayer.play(SettingsStore.openSound)
                 controller.presentInteractive(source: .launch)
             }
-        } else if SettingsStore.openOnLaunch {
-            scheduler.markPromptedToday()
-            SoundPlayer.play(SettingsStore.openSound)
-            controller.presentInteractive(source: .launch)
+        } else if SettingsStore.showWhatsNewAfterUpdates,
+                  let lastSeen = SettingsStore.lastSeenWhatsNewVersion,
+                  lastSeen != currentVersion,
+                  let releases = WhatsNewWindowController.releasesSince(lastSeen),
+                  !releases.isEmpty {
+            whatsNew.present(releases: releases) { [controller, scheduler] in
+                guard SettingsStore.openOnLaunch else { return }
+                scheduler.markPromptedToday()
+                SoundPlayer.play(SettingsStore.openSound)
+                controller.presentInteractive(source: .launch)
+            }
+        } else {
+            // Covers: up to date; a pre-What's-New install with no marker yet
+            // (seed silently rather than showing a wall of old notes); a
+            // downgrade; or a missing/unparseable bundled changelog.
+            SettingsStore.lastSeenWhatsNewVersion = currentVersion
+            if SettingsStore.openOnLaunch {
+                scheduler.markPromptedToday()
+                SoundPlayer.play(SettingsStore.openSound)
+                controller.presentInteractive(source: .launch)
+            }
         }
     }
 

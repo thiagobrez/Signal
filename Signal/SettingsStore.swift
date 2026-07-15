@@ -5,6 +5,8 @@ import Foundation
 enum SettingsStore {
     enum Key {
         static let hasSeenOnboarding = "hasSeenOnboarding"
+        static let lastSeenWhatsNewVersion = "lastSeenWhatsNewVersion"
+        static let showWhatsNewAfterUpdates = "showWhatsNewAfterUpdates"
         static let hasRequestedReview = "hasRequestedReview"
         static let didMigrateToggleSignalShortcut = "didMigrateToggleSignalShortcut"
         static let carryOverIncomplete = "carryOverIncomplete"
@@ -25,6 +27,10 @@ enum SettingsStore {
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
             Key.hasSeenOnboarding: false,
+            // lastSeenWhatsNewVersion is deliberately unregistered: nil means
+            // "fresh install or pre-What's-New build", which must be told
+            // apart from any real version.
+            Key.showWhatsNewAfterUpdates: true,
             Key.hasRequestedReview: false,
             Key.didMigrateToggleSignalShortcut: false,
             Key.carryOverIncomplete: true,
@@ -51,6 +57,18 @@ enum SettingsStore {
         get { d.bool(forKey: Key.hasSeenOnboarding) }
         set { d.set(newValue, forKey: Key.hasSeenOnboarding) }
     }
+
+    /// Read/write: the marketing version whose release notes the user has seen
+    /// (or been credited with). Nil until seeded — after onboarding on fresh
+    /// installs, or silently on the first launch of a pre-existing install.
+    static var lastSeenWhatsNewVersion: String? {
+        get { d.string(forKey: Key.lastSeenWhatsNewVersion) }
+        set { d.set(newValue, forKey: Key.lastSeenWhatsNewVersion) }
+    }
+
+    /// Whether the What's New window auto-shows after an update. The checkbox
+    /// in that window writes this via `@AppStorage`.
+    static var showWhatsNewAfterUpdates: Bool { d.bool(forKey: Key.showWhatsNewAfterUpdates) }
 
     /// Read/write: flipped the first time the App Store build asks for a
     /// rating after a completed day, so the ask only ever happens once.

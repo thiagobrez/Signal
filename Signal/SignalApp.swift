@@ -145,6 +145,10 @@ private struct MenuBarContent: View {
             SignalServices.shared.stats.present()
         }
 
+        Button("What's New…") {
+            SignalServices.shared.whatsNew.presentLatest()
+        }
+
         Divider()
 
         // Not `SettingsLink`: as an accessory (`LSUIElement`) app we're never

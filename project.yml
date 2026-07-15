@@ -50,6 +50,11 @@ targetTemplates:
           # automatically, but the *other* variant's plist would be bundled
           # as a stray resource without this.
           - "Info*.plist"
+      # The changesets-maintained changelog ships in the bundle so the
+      # What's New window can show release notes offline. `buildPhase` is
+      # explicit because XcodeGen leaves .md files out of all phases.
+      - path: CHANGELOG.md
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ski.brezin.signal
@@ -99,6 +104,7 @@ targets:
     sources:
       - path: SignalTests
       - path: Signal/Schedule/NaturalDateParser.swift
+      - path: Signal/WhatsNew/ChangelogParser.swift
       - path: Signal/Schedule/ScheduleEdit.swift
       - path: Signal/Schedule/ScheduleGrid.swift
       - path: Signal/Models/ScheduledTask.swift
