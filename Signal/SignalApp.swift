@@ -1,3 +1,4 @@
+import KeyboardShortcuts
 import SwiftUI
 
 @main
@@ -107,6 +108,22 @@ extension NSImage {
     }()
 }
 
+/// Applies `.keyboardShortcut` only when a shortcut exists, so a menu item whose
+/// hotkey the user has cleared simply shows no key equivalent.
+private struct OptionalShortcut: ViewModifier {
+    let shortcut: KeyboardShortcut?
+
+    init(_ shortcut: KeyboardShortcut?) { self.shortcut = shortcut }
+
+    func body(content: Content) -> some View {
+        if let shortcut {
+            content.keyboardShortcut(shortcut)
+        } else {
+            content
+        }
+    }
+}
+
 private struct MenuBarContent: View {
     @Environment(\.openSettings) private var openSettings
 
@@ -118,6 +135,30 @@ private struct MenuBarContent: View {
     private static let writeReviewURL =
         URL(string: "https://apps.apple.com/app/id6784999549?action=write-review")!
     #endif
+
+    /// The user's currently-assigned hotkey as a SwiftUI shortcut, so it renders
+    /// right-aligned in the menu just like Preferences (⌘,) and Quit (⌘Q). Read
+    /// live from the store each time the menu opens, so it reflects a re-recorded
+    /// or cleared shortcut. This only affects the menu's display and, at most, the
+    /// key equivalent while the menu is open — the real global hotkey is handled
+    /// by `SignalServices`, which is unaffected.
+    private static func shortcut(_ name: KeyboardShortcuts.Name) -> KeyboardShortcut? {
+        guard
+            let shortcut = KeyboardShortcuts.getShortcut(for: name),
+            let keyChar = shortcut.description.last
+        else { return nil }
+
+        var modifiers: EventModifiers = []
+        if shortcut.modifiers.contains(.command) { modifiers.insert(.command) }
+        if shortcut.modifiers.contains(.shift) { modifiers.insert(.shift) }
+        if shortcut.modifiers.contains(.option) { modifiers.insert(.option) }
+        if shortcut.modifiers.contains(.control) { modifiers.insert(.control) }
+
+        return KeyboardShortcut(
+            KeyEquivalent(Character(keyChar.lowercased())),
+            modifiers: modifiers
+        )
+    }
 
     var body: some View {
         #if !APPSTORE
@@ -135,15 +176,21 @@ private struct MenuBarContent: View {
         Button("Show / Hide Signal") {
             SignalServices.shared.controller.toggle()
         }
+        .modifier(OptionalShortcut(Self.shortcut(.toggleSignal)))
 
         // `present()` rather than `toggle()`: a menu click should always show.
-        Button("Scheduled Tasks…") {
+        // Shares the toggle hotkey — a *long press* opens the overview — so we
+        // show the same key equivalent with a "Hold" hint, since the native
+        // shortcut column can't convey the long press on its own.
+        Button("Scheduled Tasks (Hold)…") {
             SignalServices.shared.controller.presentOverview()
         }
+        .modifier(OptionalShortcut(Self.shortcut(.toggleSignal)))
 
         Button("Task Stats…") {
             SignalServices.shared.stats.present()
         }
+        .modifier(OptionalShortcut(Self.shortcut(.toggleStats)))
 
         Button("What's New…") {
             SignalServices.shared.whatsNew.presentLatest()
