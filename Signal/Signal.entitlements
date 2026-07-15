@@ -8,5 +8,15 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<!-- Sparkle: a sandboxed app must whitelist a mach-lookup to Sparkle's
+	     Installer XPC service (SUEnableInstallerLauncherService in Info.plist)
+	     or the install-on-quit step is blocked by the sandbox and fails with
+	     "An error occurred while running the updater." The name is the host
+	     bundle id + "-spki". Downloads happen in-process (network.client), so
+	     the downloader service ("-spks") is not needed. -->
+	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+	<array>
+		<string>ski.brezin.signal-spki</string>
+	</array>
 </dict>
 </plist>
