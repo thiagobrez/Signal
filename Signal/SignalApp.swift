@@ -161,6 +161,13 @@ private struct MenuBarContent: View {
     }
 
     var body: some View {
+        #if DEBUG
+        if DemoMode.isEnabled {
+            Text("Demo Mode Active")  // renders as a disabled menu item
+            Divider()
+        }
+        #endif
+
         #if !APPSTORE
         // Non-intrusive nudge for users who never quit the app: the update
         // is already downloaded, this installs it and relaunches.

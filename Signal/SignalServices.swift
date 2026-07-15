@@ -29,7 +29,18 @@ final class SignalServices {
         SettingsStore.registerDefaults()
 
         do {
+            #if DEBUG
+            if DemoMode.isEnabled {
+                container = try ModelContainer(
+                    for: DayLog.self, TodoItem.self, ScheduledTask.self,
+                    configurations: ModelConfiguration(url: DemoMode.storeURL)
+                )
+            } else {
+                container = try ModelContainer(for: DayLog.self, TodoItem.self, ScheduledTask.self)
+            }
+            #else
             container = try ModelContainer(for: DayLog.self, TodoItem.self, ScheduledTask.self)
+            #endif
         } catch {
             fatalError("Failed to create SwiftData ModelContainer: \(error)")
         }

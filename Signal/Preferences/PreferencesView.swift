@@ -53,6 +53,17 @@ struct PreferencesView: View {
                 Picker("Until", selection: $glanceEnd) { hourOptions }
                     .disabled(!glancesEnabled)
             }
+
+            #if DEBUG
+            Section("Developer") {
+                Toggle("Use demo database", isOn: demoMode)
+                Text(DemoMode.isEnabled
+                     ? "Demo mode is active — showing the demo database, not your data."
+                     : "Switches to an empty throwaway database and relaunches Signal.")
+                    .font(.caption)
+                    .foregroundStyle(DemoMode.isEnabled ? .orange : .secondary)
+            }
+            #endif
         }
         .formStyle(.grouped)
         .frame(width: 440)
@@ -109,6 +120,12 @@ struct PreferencesView: View {
             dailyPromptMinute = comps.minute ?? 0
         }
     }
+
+    #if DEBUG
+    private var demoMode: Binding<Bool> {
+        Binding(get: { DemoMode.isEnabled }, set: { DemoMode.setEnabled($0) })
+    }
+    #endif
 
     private func setLaunchAtLogin(_ enabled: Bool) {
         do {
