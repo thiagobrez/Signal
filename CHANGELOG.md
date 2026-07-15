@@ -1,5 +1,18 @@
 # signal
 
+## 1.3.0
+
+### Minor Changes
+
+- a1805fb: Add What's New window after installing a new update
+- a6ad0d3: Add natural language scheduling of tasks
+- 1a452d7: Long press hotkey to open a new UI to view all scheduled tasks
+
+### Patch Changes
+
+- 92c3e90: Show shortcuts in menu bar items
+- 7d56c8a: Fix automatic updates failing to install
+
 ## 1.2.0
 
 ### Minor Changes
