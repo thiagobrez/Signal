@@ -18,6 +18,14 @@ struct SignalNotchView: View {
     /// Rows mid-scheduling: the "Scheduled for…" label shown during the brief
     /// confirmation beat before the row leaves today.
     @State private var scheduledConfirmation: [PersistentIdentifier: String] = [:]
+    /// The task currently being dragged to a new slot: it follows the cursor
+    /// while the rows it passes shuffle out of its way.
+    @State private var draggingID: PersistentIdentifier?
+    /// How far the dragged row sits from the slot it currently occupies.
+    @State private var dragTranslation: CGFloat = 0
+    /// Slots the dragged row has already been moved by, so the live offset can
+    /// be measured against its new home rather than where the drag started.
+    @State private var dragSlotShift = 0
 
     #if APPSTORE
     @Environment(\.requestReview) private var requestReview
@@ -60,25 +68,49 @@ struct SignalNotchView: View {
         placeholderPool.shuffled()
     }
 
+    /// How many rows the card shows before the list starts scrolling.
+    private static let maxVisibleRows = 10
+    private static let rowSpacing: CGFloat = 10
+
+    /// Fixed height of the scrolling viewport: ten rows plus the gaps between.
+    private var listCapHeight: CGFloat {
+        CGFloat(Self.maxVisibleRows) * TodoRow.rowHeight
+            + CGFloat(Self.maxVisibleRows - 1) * Self.rowSpacing
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: Self.rowSpacing) {
             header
 
-            ForEach(Array(store.items.enumerated()), id: \.element.persistentModelID) { pair in
-                TodoRow(
-                    item: pair.element,
-                    index: pair.offset,
-                    store: store,
-                    placeholder: placeholders[pair.offset % placeholders.count],
-                    confirmationLabel: scheduledConfirmation[pair.element.persistentModelID],
-                    focused: $focused,
-                    onSubmit: { parse in submit(pair.element, at: pair.offset, parse: parse) },
-                    onComplete: { focusNextEditable(after: pair.offset) },
-                    onEscape: { controller.hide() },
-                    onDelete: { deleteTask(pair.element) },
-                    onTab: { advanceOrAdd(from: pair.offset) },
-                    onBacktab: { focusPrevious(from: pair.offset) }
-                )
+            // The card stays intrinsically sized (and grows smoothly) while the
+            // list is short; past `maxVisibleRows` the rows scroll inside a
+            // fixed viewport so the card never outgrows the screen.
+            if store.items.count > Self.maxVisibleRows {
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: Self.rowSpacing) {
+                            taskRows
+                        }
+                    }
+                    .frame(height: listCapHeight)
+                    // The viewport has to cover the grip gutter too, otherwise
+                    // it clips the grips away.
+                    .padding(.leading, -TodoRow.handleGutterWidth)
+                    // Keep the focused row visible — covers both adding a row
+                    // beyond the fold (focus lands on the new row) and
+                    // reopening with the caret on a row that's scrolled away.
+                    .onChange(of: focused) { _, newValue in
+                        guard let newValue, store.items.indices.contains(newValue) else { return }
+                        withAnimation(.snappy(duration: 0.2)) {
+                            proxy.scrollTo(store.items[newValue].persistentModelID)
+                        }
+                    }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: Self.rowSpacing) {
+                    taskRows
+                }
+                .padding(.leading, -TodoRow.handleGutterWidth)
             }
 
             if controller.mode == .interactive {
@@ -112,9 +144,85 @@ struct SignalNotchView: View {
         }
         .onChange(of: controller.presentationRequest) { _, _ in
             placeholders = SignalNotchView.randomPlaceholders()
+            endDrag()
         }
         .onChange(of: controller.focusRequest) { _, _ in focusInitial() }
         .onAppear { focusInitial() }
+    }
+
+    /// One row per task. Rendered directly in the card while the list is
+    /// short, or inside the capped ScrollView once it grows past
+    /// `maxVisibleRows`.
+    private var taskRows: some View {
+        ForEach(Array(store.items.enumerated()), id: \.element.persistentModelID) { pair in
+            let isDragging = draggingID == pair.element.persistentModelID
+            TodoRow(
+                item: pair.element,
+                index: pair.offset,
+                store: store,
+                placeholder: placeholders[pair.offset % placeholders.count],
+                confirmationLabel: scheduledConfirmation[pair.element.persistentModelID],
+                focused: $focused,
+                isDragging: isDragging,
+                onSubmit: { parse in submit(pair.element, at: pair.offset, parse: parse) },
+                onComplete: { focusNextEditable(after: pair.offset) },
+                onEscape: { controller.hide() },
+                onDelete: { deleteTask(pair.element) },
+                onTab: { advanceOrAdd(from: pair.offset) },
+                onBacktab: { focusPrevious(from: pair.offset) },
+                onDragChanged: { translation in drag(pair.element, by: translation) },
+                onDragEnded: endDrag
+            )
+            // The dragged row follows the cursor and rides above its
+            // neighbours as they shuffle out of the way.
+            .offset(y: isDragging ? dragTranslation : 0)
+            .zIndex(isDragging ? 1 : 0)
+        }
+    }
+
+    /// Vertical distance from one row to the next.
+    private static var rowStride: CGFloat { TodoRow.rowHeight + rowSpacing }
+
+    /// Tracks the cursor during a reorder: the row is offset to follow the
+    /// drag, and each time it has travelled half a slot it swaps with the
+    /// neighbour it's passing, so the list reorders live under the cursor.
+    private func drag(_ item: TodoItem, by translation: CGFloat) {
+        if draggingID != item.persistentModelID {
+            draggingID = item.persistentModelID
+            dragSlotShift = 0
+            // Indices are about to shift, so the focused index no longer maps
+            // cleanly — same reasoning as delete.
+            focused = nil
+        }
+
+        var offset = translation - CGFloat(dragSlotShift) * Self.rowStride
+        while abs(offset) > Self.rowStride / 2 {
+            guard let from = store.items.firstIndex(where: { $0.persistentModelID == item.persistentModelID })
+            else { break }
+            let to = offset > 0 ? from + 1 : from - 1
+            guard store.items.indices.contains(to) else {
+                // Already at an end: hold the row at the boundary rather than
+                // letting it drift off the list.
+                offset = offset > 0 ? Self.rowStride / 2 : -Self.rowStride / 2
+                break
+            }
+            withAnimation(.snappy(duration: 0.2)) {
+                store.moveTask(from: from, to: to)
+            }
+            dragSlotShift += offset > 0 ? 1 : -1
+            offset = translation - CGFloat(dragSlotShift) * Self.rowStride
+        }
+        dragTranslation = offset
+    }
+
+    /// Drops the row into the slot it's hovering: the moves already happened
+    /// live, so this only has to settle the row back onto the grid.
+    private func endDrag() {
+        withAnimation(.snappy(duration: 0.2)) {
+            dragTranslation = 0
+        }
+        draggingID = nil
+        dragSlotShift = 0
     }
 
     private var header: some View {
@@ -131,8 +239,7 @@ struct SignalNotchView: View {
         .foregroundStyle(.white.opacity(0.4))
     }
 
-    /// The "add a task" affordance, plus a quiet nudge once the list grows past
-    /// the three Signal is built around.
+    /// The "add a task" affordance.
     @ViewBuilder
     private var footer: some View {
         if store.canAddTask {
@@ -148,14 +255,6 @@ struct SignalNotchView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-        }
-
-        // Kept last so the nudge always sits at the very bottom of the card.
-        if store.items.count > SignalStore.defaultTaskCount {
-            Text("Focus on the Signal. Filter the noise.")
-                .font(.system(size: 10))
-                .foregroundStyle(.white.opacity(0.3))
-                .transition(.opacity)
         }
     }
 
@@ -476,12 +575,17 @@ private struct TodoRow: View {
     /// is frozen (no field, no checkbox) until it leaves today.
     let confirmationLabel: String?
     @Binding var focused: Int?
+    /// Whether this row is the one being dragged to a new slot.
+    let isDragging: Bool
     let onSubmit: (ScheduleParse?) -> Void
     let onComplete: () -> Void
     let onEscape: () -> Void
     let onDelete: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
+    /// Cumulative vertical distance dragged from where the grip was grabbed.
+    let onDragChanged: (CGFloat) -> Void
+    let onDragEnded: () -> Void
 
     @State private var hovering = false
     /// Live parse of the field's trailing date phrase — tints the ↵ hint green
@@ -492,13 +596,47 @@ private struct TodoRow: View {
     /// field is swapped for a `Text` on completion. The vertical jump *within*
     /// the field on focus is handled by `VerticallyCenteredTextFieldCell`.
     private static let textRowHeight: CGFloat = 20
+    /// Fixed height for the whole row, so the capped scroll viewport can be
+    /// sized exactly (`maxVisibleRows` rows plus spacing).
+    static let rowHeight: CGFloat = 22
+    /// Shared box for every completion control, medal or plain, so the task
+    /// text starts at the same x on all rows — the bare symbol's natural width
+    /// differs from the medal's composed one.
+    private static let checkboxSize: CGFloat = 20
+    /// Width of the strip on the row's leading edge that hosts the drag grip.
+    /// It's real layout — the list is shifted left by the same amount so the
+    /// task text still lines up with the header — because an overlay hanging
+    /// outside the row would be clipped away by the scrolling viewport.
+    static let handleGutterWidth: CGFloat = 16
 
     private var isEmpty: Bool {
         item.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    /// The top three slots are the "signal" — they wear a podium medal.
+    private var isSignalSlot: Bool {
+        index < SignalStore.defaultTaskCount
+    }
+
+    /// Completing a row reveals what it earned, exactly as the plain rows
+    /// reveal their check: the top three show their podium number instead.
+    private var completionSymbol: String {
+        guard item.isCompleted else { return "circle" }
+        return isSignalSlot ? "\(index + 1).circle.fill" : "checkmark.circle.fill"
+    }
+
+    private var completionColor: Color {
+        if isSignalSlot {
+            return item.isCompleted ? medalColor : medalColor.opacity(medalRestOpacity)
+        }
+        return item.isCompleted ? .green : .white.opacity(isEmpty ? 0.2 : 0.45)
+    }
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 0) {
+            dragHandle
+
+            HStack(spacing: 12) {
             Button {
                 let wasCompleted = item.isCompleted
                 store.toggleComplete(item)
@@ -506,10 +644,14 @@ private struct TodoRow: View {
                 // un-checking, and not when an empty slot refuses to complete.
                 if !wasCompleted, item.isCompleted { onComplete() }
             } label: {
-                Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                Image(systemName: completionSymbol)
                     .font(.system(size: 18))
-                    .foregroundStyle(item.isCompleted ? Color.green : Color.white.opacity(isEmpty ? 0.2 : 0.45))
+                    .foregroundStyle(completionColor)
                     .contentTransition(.symbolEffect(.replace))
+                    .frame(width: Self.checkboxSize, height: Self.checkboxSize)
+                    // Also covers a reorder moving the row onto, off, or along
+                    // the podium — the symbol swaps rather than snapping.
+                    .animation(.snappy(duration: 0.2), value: completionSymbol)
             }
             .buttonStyle(.plain)
             .disabled(confirmationLabel != nil || (!item.isCompleted && isEmpty))
@@ -568,12 +710,64 @@ private struct TodoRow: View {
                 }
             }
             .frame(width: 16, height: 16)
+            }
         }
+        .frame(height: Self.rowHeight)
+        .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .animation(.snappy(duration: 0.2), value: item.isCompleted)
         .animation(.snappy(duration: 0.2), value: confirmationLabel)
-        .animation(.easeInOut(duration: 0.15), value: hovering)
+        // Hover deliberately has no animation: the grip and the delete button
+        // are pointer affordances, so they have to land the instant the row is
+        // under the cursor rather than fading in behind it.
     }
+
+    /// Grip in the leading gutter, shown on hover; dragging it reorders the
+    /// list. The view itself is always mounted and hit-testable — only its
+    /// colour changes — so neither the pointer leaving the row nor the state
+    /// change can tear down an in-flight gesture.
+    private var dragHandle: some View {
+        Image(systemName: "line.3.horizontal")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.white.opacity(handleOpacity))
+            .frame(width: Self.handleGutterWidth, height: Self.rowHeight)
+            .contentShape(Rectangle())
+            // Global space: the row moves as it's dragged, so a translation
+            // measured locally would feed back into its own measurement.
+            .gesture(
+                DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                    .onChanged { onDragChanged($0.translation.height) }
+                    .onEnded { _ in onDragEnded() }
+            )
+            .disabled(confirmationLabel != nil)
+            .help("Drag to reorder")
+    }
+
+    private var handleOpacity: Double {
+        if isDragging { return 0.7 }
+        return hovering && confirmationLabel == nil ? 0.35 : 0
+    }
+
+    /// Podium colours for the top three slots. Saturated enough to carry the
+    /// medal read against the plain white rows on a black card.
+    private static let medalColors: [Color] = [
+        Color(red: 1.00, green: 0.80, blue: 0.22),  // gold
+        // Cool enough to read as silver rather than as the plain white ring
+        // the untiered rows already use.
+        Color(red: 0.76, green: 0.86, blue: 1.00),  // silver
+        Color(red: 0.96, green: 0.56, blue: 0.24),  // bronze
+    ]
+
+    private var medalColor: Color {
+        Self.medalColors[min(index, Self.medalColors.count - 1)]
+    }
+
+    /// Held back at rest so the podium reads as "these three matter" without
+    /// competing with the task text; an unfilled slot dims further still.
+    private var medalRestOpacity: Double {
+        isEmpty ? 0.45 : 0.85
+    }
+
 }
 
 /// A borderless single-line text field backed by AppKit. SwiftUI's `TextField`

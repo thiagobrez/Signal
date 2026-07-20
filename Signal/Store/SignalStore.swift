@@ -12,8 +12,6 @@ final class SignalStore {
     static let defaultTaskCount = 3
     /// Floor a day can be trimmed to via deletion — there's always one task.
     static let minTaskCount = 1
-    /// Upper bound on tasks per day, so the list can't outgrow the notch panel.
-    static let maxTaskCount = 6
 
     /// Today's log and its tasks: at least `defaultTaskCount`, more if the user
     /// added some (or that many incomplete tasks carried over from a prior day).
@@ -59,10 +57,10 @@ final class SignalStore {
         !items.isEmpty && completedCount == items.count
     }
 
-    /// A new empty task can be added while there's room and no slot is still
-    /// blank — so the user fills what they have before stacking on more.
+    /// A new empty task can be added while no slot is still blank — so the
+    /// user fills what they have before stacking on more.
     var canAddTask: Bool {
-        items.count < Self.maxTaskCount && items.allSatisfy { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        items.allSatisfy { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     }
 
     /// A task can be removed as long as it wouldn't drop the day below its floor.
@@ -118,6 +116,20 @@ final class SignalStore {
         items = remaining
     }
 
+    /// Moves a task to a new slot and re-packs `order` so it stays a
+    /// contiguous 0-based sequence (the invariant `addTask` relies on).
+    func moveTask(from source: Int, to destination: Int) {
+        guard source != destination,
+              items.indices.contains(source), items.indices.contains(destination) else { return }
+        var reordered = items
+        reordered.insert(reordered.remove(at: source), at: destination)
+        for (index, todo) in reordered.enumerated() {
+            todo.order = index
+        }
+        save()
+        items = reordered
+    }
+
     func save() {
         try? context.save()
     }
@@ -142,9 +154,7 @@ final class SignalStore {
     /// Fills today with any scheduled tasks that have come due. Idempotent —
     /// delivered one-time tasks fail the `deliveredAt == nil` predicate and
     /// recurring tasks advance `dueDate` past today — so it's safe on every
-    /// open. Blank slots are claimed first, then the day grows up to its cap;
-    /// when full, one-time tasks stay pending for the next open and recurring
-    /// tasks skip the occurrence.
+    /// open. Blank slots are claimed first, then the day grows to fit.
     private func materializePending(into log: DayLog, on date: Date) {
         let descriptor = FetchDescriptor<ScheduledTask>(
             predicate: #Predicate { $0.dueDate <= date && $0.deliveredAt == nil },
@@ -168,18 +178,10 @@ final class SignalStore {
                     !$0.isCompleted && $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 }) {
                     blank.text = task.text
-                } else if log.items.count < Self.maxTaskCount {
+                } else {
                     let item = TodoItem(text: task.text, isCompleted: false, order: log.items.count)
                     item.day = log
                     context.insert(item)
-                } else {
-                    // Day is full: recurring skips this occurrence; one-time
-                    // stays pending and is retried on the next open.
-                    if task.isRecurring {
-                        task.dueDate = task.nextOccurrence(after: date)
-                        changed = true
-                    }
-                    continue
                 }
             }
 
@@ -209,7 +211,7 @@ final class SignalStore {
 
         // Start with the default number of slots, but grow to fit every carried
         // task so nothing is dropped when a prior day had more than three.
-        let slotCount = min(Self.maxTaskCount, max(Self.defaultTaskCount, carried.count))
+        let slotCount = max(Self.defaultTaskCount, carried.count)
         for index in 0 ..< slotCount {
             let text = index < carried.count ? carried[index] : ""
             let item = TodoItem(text: text, isCompleted: false, order: index)

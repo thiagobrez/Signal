@@ -62,7 +62,8 @@ struct ScheduleWeekView: View {
         let isHighlighted = model.highlightedDay == day
 
         return HStack(alignment: .top, spacing: 12) {
-            // Single compact line so all seven rows fit the card without scrolling.
+            // Single compact line to keep the week rows dense (days with many
+            // tasks grow taller and the week scrolls).
             // The weekday label is fixed-width so the day numbers line up in a
             // column regardless of "WED" being wider than "TUE".
             HStack(alignment: .firstTextBaseline, spacing: 5) {
