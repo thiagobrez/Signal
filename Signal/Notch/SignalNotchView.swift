@@ -26,6 +26,9 @@ struct SignalNotchView: View {
     /// Slots the dragged row has already been moved by, so the live offset can
     /// be measured against its new home rather than where the drag started.
     @State private var dragSlotShift = 0
+    /// How much scroll content hangs below the viewport — drives the chevron
+    /// hinting at tasks hidden past the fold.
+    @State private var bottomOverflow: CGFloat = 0
 
     #if APPSTORE
     @Environment(\.requestReview) private var requestReview
@@ -72,49 +75,138 @@ struct SignalNotchView: View {
     private static let maxVisibleRows = 10
     private static let rowSpacing: CGFloat = 10
 
-    /// Fixed height of the scrolling viewport: ten rows plus the gaps between.
+    /// Pinned so the list's natural height can be computed exactly rather than
+    /// measured — the list is one container at all sizes, and its height is
+    /// what grows, so the arithmetic has to match the layout to the point.
+    private static let footerHeight: CGFloat = TodoRow.rowHeight
+
+    /// The list's natural height: every row, plus the add button beneath them.
+    private var listContentHeight: CGFloat {
+        let count = store.items.count
+        guard count > 0 else { return 0 }
+        var height = CGFloat(count) * TodoRow.rowHeight
+            + CGFloat(count - 1) * Self.rowSpacing
+        if controller.mode == .interactive {
+            height += Self.rowSpacing + Self.footerHeight
+        }
+        return height
+    }
+
+    /// Where growth stops and scrolling takes over: ten rows, the gaps between
+    /// them, and the add button under the last one.
     private var listCapHeight: CGFloat {
-        CGFloat(Self.maxVisibleRows) * TodoRow.rowHeight
+        var height = CGFloat(Self.maxVisibleRows) * TodoRow.rowHeight
             + CGFloat(Self.maxVisibleRows - 1) * Self.rowSpacing
+        if controller.mode == .interactive {
+            height += Self.rowSpacing + Self.footerHeight
+        }
+        return height
+    }
+
+    private var listHeight: CGFloat { min(listContentHeight, listCapHeight) }
+
+    /// Whether the list is tall enough to actually scroll. When it isn't,
+    /// scrolling is disabled and never touched — a stray `scrollTo` on a list
+    /// that fits leaves the clip view at a fractional offset (~0.1pt), which
+    /// pushes every hosted NSTextField to a fractional window Y. SwiftUI snaps
+    /// its own views (the checkboxes) to the pixel grid but not the hosted
+    /// fields, so the text then sits a fraction of a pixel off its checkbox —
+    /// the shimmer that showed up when arrowing through a short list.
+    private var listOverflows: Bool { listContentHeight > listCapHeight + 0.5 }
+
+    /// Scroll target for keeping the add button in view on the last row.
+    private static let footerID = "add-task-footer"
+
+    /// The scroll offset, derived from the tracked overflow and the pinned
+    /// geometry rather than measured (coordinate-space queries don't work in
+    /// this panel — see ScrollOverflowReporter).
+    private var scrollOrigin: CGFloat {
+        listContentHeight - listHeight - bottomOverflow
+    }
+
+    /// Whether a row sits fully inside the viewport right now. The ±1pt slack
+    /// absorbs the fractional offsets SwiftUI's scrolling rests at.
+    private func rowIsVisible(_ index: Int) -> Bool {
+        let top = CGFloat(index) * Self.rowStride
+        let bottom = top + TodoRow.rowHeight
+        return top >= scrollOrigin - 1 && bottom <= scrollOrigin + listHeight + 1
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Self.rowSpacing) {
             header
 
-            // The card stays intrinsically sized (and grows smoothly) while the
-            // list is short; past `maxVisibleRows` the rows scroll inside a
-            // fixed viewport so the card never outgrows the screen.
-            if store.items.count > Self.maxVisibleRows {
-                ScrollViewReader { proxy in
-                    ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: Self.rowSpacing) {
-                            taskRows
+            // One container at every size. The list is always a ScrollView and
+            // only its *height* changes — growing with the rows until it hits
+            // the cap, then scrolling. Branching on the row count instead would
+            // swap one container for another as the tenth task is added, which
+            // tears the rows down and rebuilds them: a visible fade, and the
+            // field being typed into loses first responder mid-edit.
+            //
+            // Scrolling stays entirely on SwiftUI's side: the ScrollView
+            // re-asserts its own remembered offset on every render, so any
+            // offset written from AppKit is reverted (or worse, fought
+            // frame-by-frame). The AppKit tracker below only *reads*.
+            ScrollViewReader { proxy in
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: Self.rowSpacing) {
+                        taskRows
+
+                        // The add button lives in the flow, after the last
+                        // row, so it's reached by scrolling to the bottom.
+                        if controller.mode == .interactive {
+                            footer
+                                // The scroll content is shifted left to cover
+                                // the grip gutter; the footer has no grip, so
+                                // push it back into alignment.
+                                .padding(.leading, TodoRow.handleGutterWidth)
+                                .frame(height: Self.footerHeight)
+                                .id(Self.footerID)
                         }
                     }
-                    .frame(height: listCapHeight)
-                    // The viewport has to cover the grip gutter too, otherwise
-                    // it clips the grips away.
-                    .padding(.leading, -TodoRow.handleGutterWidth)
-                    // Keep the focused row visible — covers both adding a row
-                    // beyond the fold (focus lands on the new row) and
-                    // reopening with the caret on a row that's scrolled away.
-                    .onChange(of: focused) { _, newValue in
-                        guard let newValue, store.items.indices.contains(newValue) else { return }
+                    .background(ScrollOverflowReporter { bottomOverflow = $0 })
+                }
+                .frame(height: listHeight)
+                // The viewport has to cover the grip gutter too, otherwise
+                // it clips the grips away.
+                .padding(.leading, -TodoRow.handleGutterWidth)
+                // A list that fits never scrolls — see `listOverflows`. This
+                // pins the clip view at offset 0 so hosted fields stay on the
+                // pixel grid.
+                .scrollDisabled(!listOverflows)
+                .overlay(alignment: .bottom) { overflowChevron }
+                // Keep the focused row visible — covers both adding a row
+                // beyond the fold (focus lands on the new row) and
+                // reopening with the caret on a row that's scrolled away.
+                // Only ever scroll when the list actually overflows and the
+                // target isn't already visible: any scrollTo on a fitting or
+                // already-visible row nudges the offset by a fraction of a
+                // point, which shows up as the list twitching on every
+                // keypress and knocks the text off the pixel grid.
+                .onChange(of: focused) { _, newValue in
+                    guard listOverflows,
+                          let newValue, store.items.indices.contains(newValue) else { return }
+                    if newValue == store.items.count - 1 {
+                        // On the last row, go all the way down so the add
+                        // button below it stays in reach. Re-fire after the
+                        // layout settles: on open the panel's slide-in is
+                        // still moving the offset, and on add the new row
+                        // hasn't grown the content yet when this runs.
+                        // scrollTo is idempotent, so the repeats are no-ops
+                        // whenever the earlier ones already landed.
+                        for delay: TimeInterval in [0, 0.15, 0.45, 0.8] {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                                withAnimation(.snappy(duration: 0.2)) {
+                                    proxy.scrollTo(Self.footerID, anchor: .bottom)
+                                }
+                            }
+                        }
+                    } else if !rowIsVisible(newValue) {
                         withAnimation(.snappy(duration: 0.2)) {
                             proxy.scrollTo(store.items[newValue].persistentModelID)
                         }
                     }
                 }
-            } else {
-                VStack(alignment: .leading, spacing: Self.rowSpacing) {
-                    taskRows
-                }
-                .padding(.leading, -TodoRow.handleGutterWidth)
-            }
-
-            if controller.mode == .interactive {
-                footer
             }
         }
         .padding(16)
@@ -150,9 +242,7 @@ struct SignalNotchView: View {
         .onAppear { focusInitial() }
     }
 
-    /// One row per task. Rendered directly in the card while the list is
-    /// short, or inside the capped ScrollView once it grows past
-    /// `maxVisibleRows`.
+    /// One row per task, inside the list container at every size.
     private var taskRows: some View {
         ForEach(Array(store.items.enumerated()), id: \.element.persistentModelID) { pair in
             let isDragging = draggingID == pair.element.persistentModelID
@@ -170,6 +260,7 @@ struct SignalNotchView: View {
                 onDelete: { deleteTask(pair.element) },
                 onTab: { advanceOrAdd(from: pair.offset) },
                 onBacktab: { focusPrevious(from: pair.offset) },
+                onEmptyBackspace: { backspaceDelete(pair.element, at: pair.offset) },
                 onDragChanged: { translation in drag(pair.element, by: translation) },
                 onDragEnded: endDrag
             )
@@ -240,22 +331,35 @@ struct SignalNotchView: View {
     }
 
     /// The "add a task" affordance.
-    @ViewBuilder
     private var footer: some View {
-        if store.canAddTask {
-            Button(action: addTask) {
-                HStack(spacing: 12) {
-                    Image(systemName: "plus.circle")
-                        .font(.system(size: 18))
-                    Text("Add a task")
-                        .font(.system(size: 15, weight: .medium))
-                    Spacer()
-                }
-                .foregroundStyle(.white.opacity(0.3))
-                .contentShape(Rectangle())
+        Button(action: addTask) {
+            HStack(spacing: 12) {
+                Image(systemName: "plus.circle")
+                    .font(.system(size: 18))
+                Text("Add a task")
+                    .font(.system(size: 15, weight: .medium))
+                Spacer()
             }
-            .buttonStyle(.plain)
+            .foregroundStyle(.white.opacity(0.3))
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+    }
+
+    /// Subtle hint that more tasks are hidden below; fades out at the bottom.
+    private var overflowChevron: some View {
+        Image(systemName: "chevron.down")
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(.white.opacity(0.3))
+            // Re-center within the visible card: the viewport is widened
+            // leftwards by the grip gutter, which would skew the midpoint.
+            .padding(.leading, TodoRow.handleGutterWidth / 2)
+            .padding(.bottom, 2)
+            // Small dead-zone so the hint doesn't flicker while resting
+            // within a hair of the bottom.
+            .opacity(bottomOverflow > 4 ? 1 : 0)
+            .animation(.easeInOut(duration: 0.15), value: bottomOverflow > 4)
+            .allowsHitTesting(false)
     }
 
     private var todayLabel: String {
@@ -264,6 +368,8 @@ struct SignalNotchView: View {
         return formatter.string(from: Date())
     }
 
+    /// Opening drops the caret on the last slot — that's where capturing the
+    /// next thing continues, and it brings the add button into view with it.
     private func focusInitial() {
         guard controller.mode == .interactive else {
             focused = nil
@@ -271,10 +377,8 @@ struct SignalNotchView: View {
         }
         // Defer so focus lands after the panel becomes key.
         DispatchQueue.main.async {
-            let firstEmpty = store.items.firstIndex {
-                $0.text.trimmingCharacters(in: .whitespaces).isEmpty
-            }
-            focused = firstEmpty ?? 0
+            guard !store.items.isEmpty else { return }
+            focused = store.items.count - 1
         }
     }
 
@@ -315,6 +419,21 @@ struct SignalNotchView: View {
     private func deleteTask(_ item: TodoItem) {
         focused = nil
         store.deleteTask(item)
+    }
+
+    /// Backspace in an empty field: remove the row and put the caret at the
+    /// end of the row above (or the new first row when it was on top). Deferred
+    /// a tick because this fires from inside the field's own key handling —
+    /// deleting the row would tear the NSTextField down mid-event — and a
+    /// second tick so the rows re-render with shifted indices before the
+    /// index-based focus binding fires.
+    private func backspaceDelete(_ item: TodoItem, at index: Int) {
+        guard store.canDeleteTask else { return }
+        focused = nil
+        DispatchQueue.main.async {
+            store.deleteTask(item)
+            DispatchQueue.main.async { focused = max(index - 1, 0) }
+        }
     }
 
     private func advanceOrDismiss(from index: Int) {
@@ -583,6 +702,8 @@ private struct TodoRow: View {
     let onDelete: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
+    /// Backspace pressed while the field is already empty.
+    let onEmptyBackspace: () -> Void
     /// Cumulative vertical distance dragged from where the grip was grabbed.
     let onDragChanged: (CGFloat) -> Void
     let onDragEnded: () -> Void
@@ -682,7 +803,8 @@ private struct TodoRow: View {
                         onParseChange: { parse = $0 },
                         onEscape: onEscape,
                         onTab: onTab,
-                        onBacktab: onBacktab
+                        onBacktab: onBacktab,
+                        onEmptyBackspace: onEmptyBackspace
                     )
                 }
             }
@@ -770,6 +892,77 @@ private struct TodoRow: View {
 
 }
 
+/// Reports how much of the enclosing ScrollView's content hangs below its
+/// viewport. Sits invisibly in the scroll content and watches the backing
+/// `NSClipView` directly — the notch panel's hosting setup makes SwiftUI
+/// coordinate-space queries (`.global`, `.named`) report zero frames, so
+/// GeometryReader-based offset tracking doesn't work here.
+///
+/// Strictly read-only. Writing scroll offsets from this side loses: the
+/// SwiftUI ScrollView re-asserts its own remembered offset on every render,
+/// and the clip view additionally quantizes origins to device pixels, so an
+/// AppKit-set offset either gets reverted or starts a set/realign loop.
+private struct ScrollOverflowReporter: NSViewRepresentable {
+    let onChange: (CGFloat) -> Void
+
+    func makeNSView(context: Context) -> TrackerView {
+        let view = TrackerView()
+        view.onChange = onChange
+        return view
+    }
+
+    func updateNSView(_ view: TrackerView, context: Context) {
+        view.onChange = onChange
+        // Row count changes resize the document view without moving the clip
+        // view's bounds, so re-report on every SwiftUI update as well — and
+        // defer, because the new row isn't laid out yet at this point.
+        DispatchQueue.main.async { view.report() }
+    }
+
+    final class TrackerView: NSView {
+        var onChange: ((CGFloat) -> Void)?
+        private var observers: [NSObjectProtocol] = []
+        private weak var clipView: NSClipView?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            attach()
+        }
+
+        private func attach() {
+            var candidate: NSView? = superview
+            while candidate != nil, !(candidate is NSClipView) { candidate = candidate?.superview }
+            guard let clip = candidate as? NSClipView, clip !== clipView else { return }
+            observers.forEach { NotificationCenter.default.removeObserver($0) }
+            observers.removeAll()
+            clipView = clip
+            clip.postsBoundsChangedNotifications = true
+            observers.append(NotificationCenter.default.addObserver(
+                forName: NSView.boundsDidChangeNotification, object: clip, queue: .main
+            ) { [weak self] _ in self?.report() })
+            if let doc = clip.documentView {
+                doc.postsFrameChangedNotifications = true
+                observers.append(NotificationCenter.default.addObserver(
+                    forName: NSView.frameDidChangeNotification, object: doc, queue: .main
+                ) { [weak self] _ in self?.report() })
+            }
+            DispatchQueue.main.async { self.report() }
+        }
+
+        func report() {
+            guard let clip = clipView, let doc = clip.documentView else { return }
+            let overflow = doc.isFlipped
+                ? doc.frame.height - clip.bounds.maxY
+                : clip.bounds.minY
+            onChange?(overflow)
+        }
+
+        deinit {
+            observers.forEach { NotificationCenter.default.removeObserver($0) }
+        }
+    }
+}
+
 /// A borderless single-line text field backed by AppKit. SwiftUI's `TextField`
 /// nudges its text up a pixel when it becomes first responder because the cell
 /// vertically centers text in display mode but the field editor draws it from a
@@ -789,6 +982,8 @@ private struct PlainTextField: NSViewRepresentable {
     let onEscape: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
+    /// Backspace pressed while the field is already empty.
+    let onEmptyBackspace: () -> Void
 
     private static let font = NSFont.systemFont(ofSize: 15, weight: .medium)
 
@@ -826,10 +1021,22 @@ private struct PlainTextField: NSViewRepresentable {
         // Drive AppKit's first responder from SwiftUI's focus state.
         if focusedIndex == index, field.window != nil, field.currentEditor() == nil {
             field.window?.makeFirstResponder(field)
-            // Taking first responder selects the whole string by default; collapse
-            // the selection to the end so focusing just drops the caret after the
-            // existing text instead of teeing it up to be overwritten.
             if let editor = field.currentEditor() {
+                // On the first edit session AppKit sizes the shared field
+                // editor to the font's natural line height (~19.98pt) rather
+                // than the cell's centered draw rect (19pt) — until a later
+                // relayout corrects it. That mismatch draws the editing text a
+                // fraction above where the unfocused text sits, so the row
+                // visibly jumps on focus during arrow navigation (it self-heals
+                // once anything forces a relayout, e.g. adding a task). Pin the
+                // editor to the exact rect the text is drawn in so the two
+                // always line up.
+                if let cell = field.cell {
+                    editor.frame = cell.drawingRect(forBounds: field.bounds)
+                }
+                // Taking first responder selects the whole string by default;
+                // collapse to the end so focusing just drops the caret after
+                // the existing text instead of teeing it up to be overwritten.
                 let end = (field.stringValue as NSString).length
                 editor.selectedRange = NSRange(location: end, length: 0)
             }
@@ -904,6 +1111,22 @@ private struct PlainTextField: NSViewRepresentable {
             case #selector(NSResponder.insertBacktab(_:)):
                 parent.onBacktab()
                 return true
+            // Arrows walk the list like Tab/Shift-Tab — Down on the last
+            // filled row spills into a fresh task.
+            case #selector(NSResponder.moveUp(_:)):
+                parent.onBacktab()
+                return true
+            case #selector(NSResponder.moveDown(_:)):
+                parent.onTab()
+                return true
+            case #selector(NSResponder.deleteBackward(_:)):
+                // Backspace on an already-empty task deletes the slot; with
+                // text present (even at caret 0) AppKit handles it normally.
+                if control.stringValue.isEmpty {
+                    parent.onEmptyBackspace()
+                    return true
+                }
+                return false
             default:
                 return false
             }

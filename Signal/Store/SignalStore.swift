@@ -57,12 +57,6 @@ final class SignalStore {
         !items.isEmpty && completedCount == items.count
     }
 
-    /// A new empty task can be added while no slot is still blank — so the
-    /// user fills what they have before stacking on more.
-    var canAddTask: Bool {
-        items.allSatisfy { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-    }
-
     /// A task can be removed as long as it wouldn't drop the day below its floor.
     var canDeleteTask: Bool {
         items.count > Self.minTaskCount
@@ -90,10 +84,10 @@ final class SignalStore {
     }
 
     /// Appends a fresh empty slot to today and returns its index, so the caller
-    /// can move focus to it. No-op (returns nil) when `canAddTask` is false.
+    /// can move focus to it.
     @discardableResult
     func addTask() -> Int? {
-        guard canAddTask, let today else { return nil }
+        guard let today else { return nil }
         let item = TodoItem(text: "", isCompleted: false, order: items.count)
         item.day = today
         context.insert(item)
