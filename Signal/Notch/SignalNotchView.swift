@@ -254,13 +254,15 @@ struct SignalNotchView: View {
                 confirmationLabel: scheduledConfirmation[pair.element.persistentModelID],
                 focused: $focused,
                 isDragging: isDragging,
-                onSubmit: { parse in submit(pair.element, at: pair.offset, parse: parse) },
-                onComplete: { focusNextEditable(after: pair.offset) },
+                onSubmit: idle { parse in submit(pair.element, at: pair.offset, parse: parse) },
+                onToggle: idle { toggleComplete(pair.element, at: pair.offset) },
+                // Escape isn't a row interaction — dismissing has to stay
+                // available even mid-celebration.
                 onEscape: { controller.hide() },
-                onDelete: { deleteTask(pair.element) },
-                onTab: { advanceOrAdd(from: pair.offset) },
-                onBacktab: { focusPrevious(from: pair.offset) },
-                onEmptyBackspace: { backspaceDelete(pair.element, at: pair.offset) },
+                onDelete: idle { deleteTask(pair.element) },
+                onTab: idle { advanceOrAdd(from: pair.offset) },
+                onBacktab: idle { focusPrevious(from: pair.offset) },
+                onEmptyBackspace: idle { backspaceDelete(pair.element, at: pair.offset) },
                 onDragChanged: { translation in drag(pair.element, by: translation) },
                 onDragEnded: endDrag
             )
@@ -269,6 +271,19 @@ struct SignalNotchView: View {
             .offset(y: isDragging ? dragTranslation : 0)
             .zIndex(isDragging ? 1 : 0)
         }
+    }
+
+    /// Wraps a row interaction so it does nothing while the celebration is on
+    /// screen. The grass overlay already swallows the mouse; the rows behind it
+    /// keep first responder though, so the keyboard has to be held back too —
+    /// otherwise arrows, Tab and Enter go on editing the blurred list nobody
+    /// can see.
+    private func idle(_ action: @escaping () -> Void) -> () -> Void {
+        { if !celebrating { action() } }
+    }
+
+    private func idle<T>(_ action: @escaping (T) -> Void) -> (T) -> Void {
+        { value in if !celebrating { action(value) } }
     }
 
     /// Vertical distance from one row to the next.
@@ -436,28 +451,19 @@ struct SignalNotchView: View {
         }
     }
 
-    private func advanceOrDismiss(from index: Int) {
-        if index < store.items.count - 1 {
-            focused = index + 1
-        } else {
-            store.save()
-            controller.hide()
-        }
-    }
-
     /// Enter: when the task ends in a date phrase, schedule it away; otherwise
-    /// confirm it and advance exactly as before.
+    /// check the focused task off, exactly as clicking its circle would.
     private func submit(_ item: TodoItem, at index: Int, parse: ScheduleParse?) {
         if let parse {
             scheduleTask(item, at: index, parse: parse)
         } else {
-            advanceOrDismiss(from: index)
+            toggleComplete(item, at: index)
         }
     }
 
     /// Hold the row for a beat showing where the task went, then move it out of
-    /// today and put the caret back to work — into the row that slid up, or
-    /// dismiss when the scheduled row was the last one (mirroring Enter).
+    /// today and put the caret back to work — into the row that slid up, or the
+    /// new last row when the scheduled one was at the bottom. The UI stays open.
     private func scheduleTask(_ item: TodoItem, at index: Int, parse: ScheduleParse) {
         focused = nil
         scheduledConfirmation[item.persistentModelID] = parse.confirmationLabel
@@ -465,12 +471,10 @@ struct SignalNotchView: View {
             try? await Task.sleep(for: .seconds(0.9))
             scheduledConfirmation[item.persistentModelID] = nil
             store.schedule(item, parse: parse)
-            if index < store.items.count {
-                // Defer so focus lands after the rows re-render.
-                DispatchQueue.main.async { focused = index }
-            } else {
-                controller.hide()
-            }
+            let last = store.items.count - 1
+            guard last >= 0 else { return }
+            // Defer so focus lands after the rows re-render.
+            DispatchQueue.main.async { focused = min(index, last) }
         }
     }
 
@@ -489,24 +493,25 @@ struct SignalNotchView: View {
         if index > 0 { focused = index - 1 }
     }
 
-    /// After a task is checked off, move focus to the next still-editable slot —
-    /// searching forward and wrapping — so the user can keep capturing the next
-    /// thing without reaching for the mouse. If every slot is done (the day is
-    /// complete) focus is dropped so nothing fights the celebration.
-    private func focusNextEditable(after index: Int) {
-        // Defer so focus lands after the checked row collapses to a `Text` and
-        // resigns first responder.
+    /// The single toggle path, shared by Enter and the row's circle so both move
+    /// focus the same way. Checking a task off steps down one row — completed
+    /// rows are focusable too (they show a highlight instead of a caret), so
+    /// nothing is skipped and nothing wraps. Checking off the last row, or
+    /// un-checking any row, keeps focus where it is: Enter there undoes what was
+    /// just done, and an un-checked row gets its caret straight back.
+    private func toggleComplete(_ item: TodoItem, at index: Int) {
+        let wasCompleted = item.isCompleted
+        store.toggleComplete(item)
+        // An empty slot refuses to complete — leave the caret alone.
+        guard item.isCompleted != wasCompleted else { return }
+        // Defer so focus lands after the row swaps between field and `Text` and
+        // the old one has resigned first responder.
         DispatchQueue.main.async {
-            let count = store.items.count
-            guard count > 0 else { return }
-            for offset in 1 ... count {
-                let i = (index + offset) % count
-                if !store.items[i].isCompleted {
-                    focused = i
-                    return
-                }
+            if item.isCompleted, index < store.items.count - 1 {
+                focused = index + 1
+            } else {
+                focused = index
             }
-            focused = nil
         }
     }
 }
@@ -697,7 +702,9 @@ private struct TodoRow: View {
     /// Whether this row is the one being dragged to a new slot.
     let isDragging: Bool
     let onSubmit: (ScheduleParse?) -> Void
-    let onComplete: () -> Void
+    /// Check the task off, or un-check it — the parent owns both the store
+    /// mutation and where focus lands afterwards.
+    let onToggle: () -> Void
     let onEscape: () -> Void
     let onDelete: () -> Void
     let onTab: () -> Void
@@ -734,6 +741,12 @@ private struct TodoRow: View {
         item.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    /// Whether this row wears the focus wash — only completed rows, which have
+    /// no caret of their own to show where the keyboard is.
+    private var isHighlighted: Bool {
+        focused == index && item.isCompleted && confirmationLabel == nil
+    }
+
     /// The top three slots are the "signal" — they wear a podium medal.
     private var isSignalSlot: Bool {
         index < SignalStore.defaultTaskCount
@@ -758,13 +771,7 @@ private struct TodoRow: View {
             dragHandle
 
             HStack(spacing: 12) {
-            Button {
-                let wasCompleted = item.isCompleted
-                store.toggleComplete(item)
-                // Only advance on the actual completion transition — not when
-                // un-checking, and not when an empty slot refuses to complete.
-                if !wasCompleted, item.isCompleted { onComplete() }
-            } label: {
+            Button(action: onToggle) {
                 Image(systemName: completionSymbol)
                     .font(.system(size: 18))
                     .foregroundStyle(completionColor)
@@ -793,6 +800,20 @@ private struct TodoRow: View {
                         .strikethrough(true, color: .white.opacity(0.6))
                         .foregroundStyle(.white.opacity(0.5))
                         .font(.system(size: 15, weight: .medium))
+                        // A completed row has no field to hold first responder,
+                        // so this invisible responder stands in for it — the
+                        // row stays part of keyboard navigation and Enter can
+                        // un-complete it.
+                        .background {
+                            RowKeyCatcher(
+                                index: index,
+                                focusedIndex: $focused,
+                                onSubmit: { onSubmit(nil) },
+                                onEscape: onEscape,
+                                onTab: onTab,
+                                onBacktab: onBacktab
+                            )
+                        }
                 } else {
                     PlainTextField(
                         text: $item.text,
@@ -825,7 +846,7 @@ private struct TodoRow: View {
                     }
                     .buttonStyle(.plain)
                     .help("Delete task")
-                } else if focused == index, !item.isCompleted, confirmationLabel == nil {
+                } else if focused == index, confirmationLabel == nil {
                     Image(systemName: "return")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(parse != nil ? Color.green : Color.white.opacity(0.35))
@@ -833,6 +854,15 @@ private struct TodoRow: View {
             }
             .frame(width: 16, height: 16)
             }
+            // A completed row shows no caret, so focus is carried by a faint
+            // wash behind the row instead. The negative padding lets it breathe
+            // past the content without taking any layout of its own.
+            .background {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(.white.opacity(isHighlighted ? 0.06 : 0))
+                    .padding(.horizontal, -6)
+            }
+            .animation(.snappy(duration: 0.15), value: isHighlighted)
         }
         .frame(height: Self.rowHeight)
         .contentShape(Rectangle())
@@ -963,6 +993,82 @@ private struct ScrollOverflowReporter: NSViewRepresentable {
     }
 }
 
+/// An invisible responder that stands in for the text field on a completed row.
+/// Completing a task swaps its field for a `Text` (a live NSTextField can't draw
+/// the strikethrough), which would otherwise drop the row out of the responder
+/// chain: focus couldn't land on it, so arrows and Tab skipped it and Enter had
+/// no way to un-complete it. This takes first responder on exactly the same
+/// terms the field does and maps the same keys onto the same callbacks.
+private struct RowKeyCatcher: NSViewRepresentable {
+    let index: Int
+    @Binding var focusedIndex: Int?
+    let onSubmit: () -> Void
+    let onEscape: () -> Void
+    let onTab: () -> Void
+    let onBacktab: () -> Void
+
+    func makeNSView(context: Context) -> CatcherView {
+        let view = CatcherView()
+        apply(to: view)
+        return view
+    }
+
+    func updateNSView(_ view: CatcherView, context: Context) {
+        apply(to: view)
+        view.focusIfWanted()
+    }
+
+    private func apply(to view: CatcherView) {
+        view.wantsFocus = focusedIndex == index
+        view.onSubmit = onSubmit
+        view.onEscape = onEscape
+        view.onTab = onTab
+        view.onBacktab = onBacktab
+    }
+
+    final class CatcherView: NSView {
+        var wantsFocus = false
+        var onSubmit: (() -> Void)?
+        var onEscape: (() -> Void)?
+        var onTab: (() -> Void)?
+        var onBacktab: (() -> Void)?
+
+        override var acceptsFirstResponder: Bool { true }
+
+        // The row is built the moment the task is completed, before it's in a
+        // window — so claim focus here too, not only from `updateNSView`.
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            focusIfWanted()
+        }
+
+        func focusIfWanted() {
+            guard wantsFocus, let window, window.firstResponder !== self else { return }
+            window.makeFirstResponder(self)
+        }
+
+        override func keyDown(with event: NSEvent) {
+            switch Int(event.keyCode) {
+            case 36, 76:  // Return, keypad Enter
+                onSubmit?()
+            case 53:  // Escape
+                onEscape?()
+            case 48:  // Tab
+                event.modifierFlags.contains(.shift) ? onBacktab?() : onTab?()
+            case 125:  // Down
+                onTab?()
+            case 126:  // Up
+                onBacktab?()
+            default:
+                // Swallowed rather than passed up: a completed row has nothing
+                // to type into, and forwarding would just beep. Backspace
+                // included — deleting a finished task stays on its × button.
+                break
+            }
+        }
+    }
+}
+
 /// A borderless single-line text field backed by AppKit. SwiftUI's `TextField`
 /// nudges its text up a pixel when it becomes first responder because the cell
 /// vertically centers text in display mode but the field editor draws it from a
@@ -987,8 +1093,8 @@ private struct PlainTextField: NSViewRepresentable {
 
     private static let font = NSFont.systemFont(ofSize: 15, weight: .medium)
 
-    func makeNSView(context: Context) -> NSTextField {
-        let field = NSTextField()
+    func makeNSView(context: Context) -> FocusableTextField {
+        let field = FocusableTextField()
         let cell = VerticallyCenteredTextFieldCell(textCell: "")
         cell.isEditable = true
         cell.isSelectable = true
@@ -1008,7 +1114,7 @@ private struct PlainTextField: NSViewRepresentable {
         return field
     }
 
-    func updateNSView(_ field: NSTextField, context: Context) {
+    func updateNSView(_ field: FocusableTextField, context: Context) {
         context.coordinator.parent = self
         if field.stringValue != text { field.stringValue = text }
         field.placeholderAttributedString = NSAttributedString(
@@ -1019,31 +1125,45 @@ private struct PlainTextField: NSViewRepresentable {
             ]
         )
         // Drive AppKit's first responder from SwiftUI's focus state.
-        if focusedIndex == index, field.window != nil, field.currentEditor() == nil {
-            field.window?.makeFirstResponder(field)
-            if let editor = field.currentEditor() {
-                // On the first edit session AppKit sizes the shared field
-                // editor to the font's natural line height (~19.98pt) rather
-                // than the cell's centered draw rect (19pt) — until a later
-                // relayout corrects it. That mismatch draws the editing text a
-                // fraction above where the unfocused text sits, so the row
-                // visibly jumps on focus during arrow navigation (it self-heals
-                // once anything forces a relayout, e.g. adding a task). Pin the
-                // editor to the exact rect the text is drawn in so the two
-                // always line up.
-                if let cell = field.cell {
-                    editor.frame = cell.drawingRect(forBounds: field.bounds)
-                }
-                // Taking first responder selects the whole string by default;
-                // collapse to the end so focusing just drops the caret after
-                // the existing text instead of teeing it up to be overwritten.
-                let end = (field.stringValue as NSString).length
-                editor.selectedRange = NSRange(location: end, length: 0)
-            }
-        }
+        field.wantsFocus = focusedIndex == index
+        field.focusIfWanted()
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    /// Claims first responder whenever SwiftUI says this row has focus. The
+    /// window hook matters when the field is *created* already focused — which
+    /// is what un-completing a task does, replacing the row's `Text` with a
+    /// fresh field: at `updateNSView` time it isn't in a window yet, so without
+    /// this the row would render focused while nothing held the keyboard.
+    final class FocusableTextField: NSTextField {
+        var wantsFocus = false
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            focusIfWanted()
+        }
+
+        func focusIfWanted() {
+            guard wantsFocus, let window, currentEditor() == nil else { return }
+            window.makeFirstResponder(self)
+            guard let editor = currentEditor() else { return }
+            // On the first edit session AppKit sizes the shared field editor to
+            // the font's natural line height (~19.98pt) rather than the cell's
+            // centered draw rect (19pt) — until a later relayout corrects it.
+            // That mismatch draws the editing text a fraction above where the
+            // unfocused text sits, so the row visibly jumps on focus during
+            // arrow navigation (it self-heals once anything forces a relayout,
+            // e.g. adding a task). Pin the editor to the exact rect the text is
+            // drawn in so the two always line up.
+            if let cell { editor.frame = cell.drawingRect(forBounds: bounds) }
+            // Taking first responder selects the whole string by default;
+            // collapse to the end so focusing just drops the caret after the
+            // existing text instead of teeing it up to be overwritten.
+            let end = (stringValue as NSString).length
+            editor.selectedRange = NSRange(location: end, length: 0)
+        }
+    }
 
     final class Coordinator: NSObject, NSTextFieldDelegate {
         var parent: PlainTextField
