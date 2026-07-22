@@ -30,6 +30,8 @@ final class NotchController {
     private var overviewNotch: DynamicNotch<ScheduleOverviewView, EmptyView, EmptyView>?
     private var glanceHideTask: Task<Void, Never>?
     private var clickMonitor: Any?
+    /// The tail of the show/hide chain — see `enqueue`.
+    private var transition: Task<Void, Never>?
 
     init(store: SignalStore, scheduleRepository: ScheduleRepository) {
         self.store = store
@@ -59,10 +61,16 @@ final class NotchController {
 
         let notch = ensureNotch()
         let screen = presentationScreen
+        let dismissOverview = isOverviewVisible
         isVisible = true
-        Task {
-            await hideOverviewAsync()
+        isOverviewVisible = false
+        enqueue { [weak self] in
+            guard let self else { return }
+            if dismissOverview { await collapseOverview() }
             await notch.expand(on: screen)
+            // A second press may have arrived mid-animation and already asked
+            // for this to close again — don't steal focus on the way out.
+            guard isVisible else { return }
             activateForInput(self.notch?.windowController?.window)
             installClickMonitor()
         }
@@ -75,22 +83,34 @@ final class NotchController {
 
         let notch = ensureNotch()
         let screen = presentationScreen
+        let dismissOverview = isOverviewVisible
         isVisible = true
-        Task {
-            await hideOverviewAsync()
+        isOverviewVisible = false
+        enqueue { [weak self] in
+            guard let self else { return }
+            if dismissOverview { await collapseOverview() }
             await notch.expand(on: screen)
         }
 
         glanceHideTask?.cancel()
-        glanceHideTask = Task {
+        glanceHideTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(duration))
+            // A glance is a peek, so hovering it holds it open — but wait that
+            // out *here*, before claiming the transition queue, so a hovered
+            // glance can never stall a hotkey press queued behind it.
+            while notch.isHovering, !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
             guard !Task.isCancelled else { return }
-            await hideAsync()
+            self?.hide()
         }
     }
 
     func hide() {
-        Task { await hideAsync() }
+        glanceHideTask?.cancel()
+        guard isVisible else { return }
+        isVisible = false
+        enqueue { [weak self] in await self?.collapsePanel() }
     }
 
     // MARK: - Schedule overview
@@ -109,18 +129,24 @@ final class NotchController {
 
         let overview = ensureOverviewNotch()
         let screen = presentationScreen
+        let dismissPanel = isVisible
         isOverviewVisible = true
-        Task {
+        isVisible = false
+        enqueue { [weak self] in
+            guard let self else { return }
             // Let the small panel finish shrinking before the big card expands.
-            await hideAsync()
+            if dismissPanel { await collapsePanel() }
             await overview.expand(on: screen)
+            guard isOverviewVisible else { return }
             activateForInput(overviewNotch?.windowController?.window)
             installClickMonitor()
         }
     }
 
     func hideOverview() {
-        Task { await hideOverviewAsync() }
+        guard isOverviewVisible else { return }
+        isOverviewVisible = false
+        enqueue { [weak self] in await self?.collapseOverview() }
     }
 
     // MARK: - Internals
@@ -165,20 +191,33 @@ final class NotchController {
         focusRequest &+= 1
     }
 
-    private func hideAsync() async {
-        glanceHideTask?.cancel()
-        guard isVisible else { return }
-        if !isOverviewVisible { removeClickMonitor() }
-        store.save()
-        isVisible = false
-        await notch?.hide()
+    /// Runs show/hide work strictly in order. `isVisible` / `isOverviewVisible`
+    /// are updated synchronously by the callers above, so `toggle()` always sees
+    /// the latest intent, while the animations themselves never overlap. Two
+    /// quick hotkey presses used to interleave here and leave those flags
+    /// disagreeing with what was actually on screen, which swallowed the next
+    /// press entirely.
+    private func enqueue(_ operation: @escaping @MainActor () async -> Void) {
+        let previous = transition
+        transition = Task { @MainActor in
+            await previous?.value
+            await operation()
+        }
     }
 
-    private func hideOverviewAsync() async {
-        guard isOverviewVisible else { return }
+    /// `force: true` — an explicit dismissal (hotkey, Escape, click-away) must
+    /// close even while the pointer rests on the panel, which is the common case
+    /// since it sits right under the notch. Without it DynamicNotchKit's
+    /// `.keepVisible` hover behavior defers the close until the mouse moves away.
+    private func collapsePanel() async {
+        if !isOverviewVisible { removeClickMonitor() }
+        store.save()
+        await notch?.hide(force: true)
+    }
+
+    private func collapseOverview() async {
         if !isVisible { removeClickMonitor() }
-        isOverviewVisible = false
-        await overviewNotch?.hide()
+        await overviewNotch?.hide(force: true)
     }
 
     /// Dismiss whichever surface is up when the user clicks anywhere outside it.

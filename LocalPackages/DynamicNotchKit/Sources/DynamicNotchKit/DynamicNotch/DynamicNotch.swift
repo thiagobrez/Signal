@@ -156,7 +156,12 @@ public final class DynamicNotch<Expanded, CompactLeading, CompactTrailing>: Obse
     /// - Parameter hovering: a boolean indicating whether the mouse is hovering over the notch.
     func updateHoverState(_ hovering: Bool) {
         // Ensure that we only update when the state changes
-        guard state != .hidden, hovering != isHovering else { return }
+        guard hovering != isHovering else { return }
+        // Hover *exits* are always honored, even once hidden: dropping them
+        // leaves `isHovering` stuck true (the window can be torn down before
+        // SwiftUI delivers the exit), which would block every future
+        // `.keepVisible` hide until the pointer re-entered and left again.
+        guard state != .hidden || !hovering else { return }
 
         isHovering = hovering
 
@@ -272,25 +277,35 @@ extension DynamicNotch {
         try? await Task.sleep(for: .seconds(0.4))
     }
 
+    /// Hides the popup.
+    /// - Parameter force: when `true`, closes immediately even if the pointer is
+    ///   hovering and ``DynamicNotchHoverBehavior/keepVisible`` is set. Use this
+    ///   for explicit dismissals (hotkey, Escape, close button) — the user asked
+    ///   for it, so hovering shouldn't defer it indefinitely. Timed auto-hides
+    ///   should leave this `false` so hovering still keeps the window up.
     public func hide() async {
+        await hide(force: false)
+    }
+
+    public func hide(force: Bool) async {
         await withCheckedContinuation { continuation in
-            _hide {
+            _hide(force: force) {
                 continuation.resume()
             }
         }
     }
 
     /// Hides the popup, with a completion handler when the animation is completed.
-    func _hide(completion: (() -> ())? = nil) {
+    func _hide(force: Bool = false, completion: (() -> ())? = nil) {
         guard state != .hidden else {
             completion?()
             return
         }
 
-        if hoverBehavior.contains(.keepVisible), isHovering {
+        if !force, hoverBehavior.contains(.keepVisible), isHovering {
             Task {
                 try? await Task.sleep(for: .seconds(0.1))
-                _hide(completion: completion)
+                _hide(force: force, completion: completion)
             }
             return
         }
