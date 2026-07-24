@@ -1,5 +1,17 @@
 # signal
 
+## 1.4.0
+
+### Minor Changes
+
+- 930b209: Improvements to the task writing experience: arrow navigation, backspace to delete, enter to toggle
+- 9e747a3: Remove max limit of tasks, style the first three differently, and add ability to reorder
+
+### Patch Changes
+
+- aaf95cf: Fix open sound not triggering on automatic opens
+- 9790982: Allow to close Signal UI if mouse is hovering
+
 ## 1.3.0
 
 ### Minor Changes
