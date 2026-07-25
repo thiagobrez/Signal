@@ -128,16 +128,30 @@ jobs:
           mkdir -p "$(dirname "$ASC_KEY_PATH")"
           echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$ASC_KEY_PATH"
 
+      # Signed manually against the Developer ID cert imported above, which
+      # overrides the project's CODE_SIGN_STYLE: Automatic (kept because it is
+      # the right default for local development). Automatic signing would make
+      # Xcode mint a *Mac Development* certificate before archiving even though
+      # nothing shipped is development-signed — and that fails outright once the
+      # Apple Developer account hits its certificate cap. Manual signing needs
+      # no provisioning round-trip at all: none of Signal's entitlements
+      # (sandbox, user-selected files, network client, Sparkle's mach-lookup)
+      # require a provisioning profile under Developer ID.
+      #
+      # DEVELOPMENT_TEAM must be repeated here even though Signing.local.xcconfig
+      # already sets it: that xcconfig reaches the app targets only (project.yml
+      # configFiles), while these command-line settings also apply to the SPM
+      # dependencies' resource bundles, which then fail to sign without a team.
       - name: Archive (direct / Sparkle)
         run: |
           xcodebuild -project Signal.xcodeproj -scheme Signal -configuration Release \
             -destination "generic/platform=macOS" \
             -archivePath "$ARCHIVE_PATH_DIRECT" \
             CURRENT_PROJECT_VERSION="${{ steps.ver.outputs.build }}" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
       - name: Archive (App Store)
@@ -153,17 +167,16 @@ jobs:
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             archive
 
+      # Manual signing here too, to match the archive: with automatic signing
+      # the export re-provisions and puts the certificate cap back in the path
+      # of every release. See the archive step above.
       - name: Export (Developer ID)
         run: |
           sed "s/__TEAM_ID__/$APPLE_TEAM_ID/" .github/export-options/developer-id.plist > /tmp/eo-devid.plist
           xcodebuild -exportArchive \
             -archivePath "$ARCHIVE_PATH_DIRECT" \
             -exportOptionsPlist /tmp/eo-devid.plist \
-            -exportPath /tmp/build/export-devid \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+            -exportPath /tmp/build/export-devid
 
       - name: Create DMG
         run: |

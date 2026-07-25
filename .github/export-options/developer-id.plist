@@ -8,8 +8,16 @@
 	<string>developer-id</string>
 	<key>destination</key>
 	<string>export</string>
+	<!-- Manual, matching the archive step: automatic signing would have Xcode
+	     provision against the Apple Developer account on every release, which
+	     fails once the account hits its certificate cap. The identity below is
+	     the Developer ID cert CI imports from DEVELOPER_ID_APPLICATION_P12_BASE64.
+	     No provisioningProfiles entry is needed — none of Signal's entitlements
+	     require a profile under Developer ID. -->
 	<key>signingStyle</key>
-	<string>automatic</string>
+	<string>manual</string>
+	<key>signingCertificate</key>
+	<string>Developer ID Application</string>
 	<key>teamID</key>
 	<string>__TEAM_ID__</string>
 </dict>
