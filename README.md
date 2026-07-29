@@ -44,4 +44,4 @@ notch, slides down when you need it, and stays out of the way when you don't.
 - **Summon it from anywhere** — press your hotkey (`⌃⌥S` by default) to bring it up and put it away from any app. Change it anytime in Preferences.
 - **Three tasks. That's the Signal.** — each day, pick the three things that actually matter and get them done.
 
-Visit **[thiagobrez.github.io/Signal](https://thiagobrez.github.io/Signal/)** to learn more.
+Visit **[signal.brezin.ski](https://signal.brezin.ski)** to learn more.
