@@ -77,6 +77,7 @@
 		83FBA7C5A7E4CB777AFBB5BC /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C92EDF42D1B31D0626721A9 /* OverviewView.swift */; };
 		874A3953B4FFC03A8DDCE1DA /* WhatsNewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712741D49CAABCCA8B00060A /* WhatsNewWindowController.swift */; };
 		89CDCCB06B8FAEB5A9CD2F10 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
+		8C0EB6A671BFFCAEED6811FF /* RowTextLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CEC63AC8768122470BEC80 /* RowTextLayout.swift */; };
 		8D4B15FD1F3E5B9F1BB7D632 /* ChangelogParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BC6F0678AECBFC37827B77 /* ChangelogParser.swift */; };
 		8E64B68854B57CF40038C07D /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
 		903BA73065746F8059593306 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
@@ -104,6 +105,7 @@
 		B7997F943D8AC9782B707E31 /* ScheduleRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9429655D342968F0EC345753 /* ScheduleRepository.swift */; };
 		B81B699C68126F4F4360A4E5 /* UpdaterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */; };
 		B9C0B8AFDE6757214E7F8AA5 /* ChangelogParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BC6F0678AECBFC37827B77 /* ChangelogParser.swift */; };
+		BB43276A219A505D510E0F65 /* RowTextLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CEC63AC8768122470BEC80 /* RowTextLayout.swift */; };
 		BB729B3E8046B64FBE0CB016 /* UpdaterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */; };
 		BC391A1D707873A245507449 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
 		BCB72BF78669CCE888703935 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
@@ -113,6 +115,8 @@
 		C156990EC8F38B16F00F6763 /* ScheduleGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4AD39F0AC1A1C42B516384 /* ScheduleGrid.swift */; };
 		C33BFF022C8AF7A90D148410 /* ScheduleOverviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F87A8B662C2B58337D3A3C4 /* ScheduleOverviewModel.swift */; };
 		C63DDBDB7289231FAC04FCF7 /* ScheduleOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F3110D5B10DEF5CDA09D4A /* ScheduleOverviewView.swift */; };
+		C7A7FC0628F81CAA9851D7D1 /* RowTextLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA025EC0BD713A80AC99FFF /* RowTextLayoutTests.swift */; };
+		CC3C5C706E03687EB1DAB319 /* RowTextLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CEC63AC8768122470BEC80 /* RowTextLayout.swift */; };
 		CD575E14343E55CFA5891885 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
 		CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
 		D10C73E070497C6E8DF1C8ED /* ScheduleOverviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F87A8B662C2B58337D3A3C4 /* ScheduleOverviewModel.swift */; };
@@ -150,8 +154,10 @@
 		263D9753D0E4121ED9CE392D /* WhatsNewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewView.swift; sourceTree = "<group>"; };
 		2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2BCD4C9217020A4A5A1BAC52 /* ScheduleWeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleWeekView.swift; sourceTree = "<group>"; };
+		2CA025EC0BD713A80AC99FFF /* RowTextLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowTextLayoutTests.swift; sourceTree = "<group>"; };
 		40154A5F7EB8B58FED0136B3 /* ScheduledTaskRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledTaskRow.swift; sourceTree = "<group>"; };
 		44151AC7BEE2C1F3D2D439DC /* ScheduleRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleRepositoryTests.swift; sourceTree = "<group>"; };
+		44CEC63AC8768122470BEC80 /* RowTextLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowTextLayout.swift; sourceTree = "<group>"; };
 		462ED15C9D00B34967E04C53 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		46D4CD682FA36C8295604786 /* DemoMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMode.swift; sourceTree = "<group>"; };
 		4BEE04F460DF2C6714921163 /* ScheduleMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleMonthView.swift; sourceTree = "<group>"; };
@@ -281,6 +287,7 @@
 				9FB3897E7BD71986FC13843D /* NaturalDateParserTests.swift */,
 				E86AEA7A48082457D72A211D /* NotchRowLayoutTests.swift */,
 				94BDB779114317E30DA71331 /* RecurrenceTests.swift */,
+				2CA025EC0BD713A80AC99FFF /* RowTextLayoutTests.swift */,
 				0AB31E35474C55324DF18347 /* ScheduleEditTests.swift */,
 				DA3EB99F6E1EE86D2A4F04A9 /* ScheduleGridTests.swift */,
 				44151AC7BEE2C1F3D2D439DC /* ScheduleRepositoryTests.swift */,
@@ -350,6 +357,7 @@
 			children = (
 				4E7748712533E7651295201A /* NotchController.swift */,
 				169FF8FD53312CBD71185C1B /* NotchRowLayout.swift */,
+				44CEC63AC8768122470BEC80 /* RowTextLayout.swift */,
 				1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */,
 			);
 			path = Notch;
@@ -615,6 +623,7 @@
 				AFEB4E3D7C241EDC5E664230 /* OverviewEntry.swift in Sources */,
 				57939519C4740E3B15A17227 /* OverviewView.swift in Sources */,
 				381E6BE72F1CF0DAD4CA8FE8 /* PreferencesView.swift in Sources */,
+				CC3C5C706E03687EB1DAB319 /* RowTextLayout.swift in Sources */,
 				38F13E69B1661131172BEC74 /* ScheduleEdit.swift in Sources */,
 				B31E22A7FD95D35FC958B439 /* ScheduleEditPopover.swift in Sources */,
 				0C83F2F8D37CEA1E5944EB52 /* ScheduleGrid.swift in Sources */,
@@ -656,6 +665,8 @@
 				DEE3E1C49F4C7DC871405CB2 /* NotchRowLayout.swift in Sources */,
 				BE5B6DB2D2B11A6528643835 /* NotchRowLayoutTests.swift in Sources */,
 				FB5E8DF5E4F4AC63BC95419C /* RecurrenceTests.swift in Sources */,
+				8C0EB6A671BFFCAEED6811FF /* RowTextLayout.swift in Sources */,
+				C7A7FC0628F81CAA9851D7D1 /* RowTextLayoutTests.swift in Sources */,
 				D8927B22E4A9059D80B1AD31 /* ScheduleEdit.swift in Sources */,
 				DFED7E224D5D085E54E06DCD /* ScheduleEditTests.swift in Sources */,
 				3EA912B3368E41F3E6C15FD6 /* ScheduleGrid.swift in Sources */,
@@ -688,6 +699,7 @@
 				1952CB422C1F7DA7A8869078 /* OverviewEntry.swift in Sources */,
 				83FBA7C5A7E4CB777AFBB5BC /* OverviewView.swift in Sources */,
 				83939F1D30F9B1A18AE76D65 /* PreferencesView.swift in Sources */,
+				BB43276A219A505D510E0F65 /* RowTextLayout.swift in Sources */,
 				72FF73ADB9978E4C4D189B8E /* ScheduleEdit.swift in Sources */,
 				60C4845C9F5B71FB10388DCB /* ScheduleEditPopover.swift in Sources */,
 				C156990EC8F38B16F00F6763 /* ScheduleGrid.swift in Sources */,
