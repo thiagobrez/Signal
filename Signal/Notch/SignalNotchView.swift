@@ -23,9 +23,16 @@ struct SignalNotchView: View {
     @State private var draggingID: PersistentIdentifier?
     /// How far the dragged row sits from the slot it currently occupies.
     @State private var dragTranslation: CGFloat = 0
-    /// Slots the dragged row has already been moved by, so the live offset can
-    /// be measured against its new home rather than where the drag started.
-    @State private var dragSlotShift = 0
+    /// How far the dragged row has already been moved by the swaps it earned,
+    /// so the live offset is measured against its new home rather than where
+    /// the drag started. In points rather than slots: rows wrap, so no two
+    /// slots are necessarily the same height.
+    @State private var dragShift: CGFloat = 0
+    /// Each row's measured height, keyed by task. Rows grow with their text
+    /// (see `PlainTextField`), so the list's arithmetic — its height, what's
+    /// on screen, how far a drag has to travel — is driven by what the rows
+    /// actually measured rather than by one fixed row height.
+    @State private var rowHeights: [PersistentIdentifier: CGFloat] = [:]
     /// How much scroll content hangs below the viewport — drives the chevron
     /// hinting at tasks hidden past the fold.
     @State private var bottomOverflow: CGFloat = 0
@@ -80,20 +87,29 @@ struct SignalNotchView: View {
     /// what grows, so the arithmetic has to match the layout to the point.
     private static let footerHeight: CGFloat = TodoRow.rowHeight
 
+    /// The rows as the list sees them: every row's measured height in order,
+    /// falling back to the single-line height for a row that hasn't reported
+    /// one yet (the frame before it's first laid out).
+    private var rowLayout: NotchRowLayout {
+        NotchRowLayout(
+            heights: store.items.map { rowHeights[$0.persistentModelID] ?? TodoRow.rowHeight },
+            spacing: Self.rowSpacing
+        )
+    }
+
     /// The list's natural height: every row, plus the add button beneath them.
     private var listContentHeight: CGFloat {
-        let count = store.items.count
-        guard count > 0 else { return 0 }
-        var height = CGFloat(count) * TodoRow.rowHeight
-            + CGFloat(count - 1) * Self.rowSpacing
+        guard !store.items.isEmpty else { return 0 }
+        var height = rowLayout.contentHeight
         if controller.mode == .interactive {
             height += Self.rowSpacing + Self.footerHeight
         }
         return height
     }
 
-    /// Where growth stops and scrolling takes over: ten rows, the gaps between
-    /// them, and the add button under the last one.
+    /// Where growth stops and scrolling takes over: ten single-line rows' worth
+    /// of list, the gaps between them, and the add button under the last one.
+    /// A wrapped row spends more of that budget than a short one does.
     private var listCapHeight: CGFloat {
         var height = CGFloat(Self.maxVisibleRows) * TodoRow.rowHeight
             + CGFloat(Self.maxVisibleRows - 1) * Self.rowSpacing
@@ -124,12 +140,9 @@ struct SignalNotchView: View {
         listContentHeight - listHeight - bottomOverflow
     }
 
-    /// Whether a row sits fully inside the viewport right now. The ±1pt slack
-    /// absorbs the fractional offsets SwiftUI's scrolling rests at.
+    /// Whether a row sits fully inside the viewport right now.
     private func rowIsVisible(_ index: Int) -> Bool {
-        let top = CGFloat(index) * Self.rowStride
-        let bottom = top + TodoRow.rowHeight
-        return top >= scrollOrigin - 1 && bottom <= scrollOrigin + listHeight + 1
+        rowLayout.isVisible(index, scrollOrigin: scrollOrigin, viewportHeight: listHeight)
     }
 
     var body: some View {
@@ -266,6 +279,12 @@ struct SignalNotchView: View {
                 onDragChanged: { translation in drag(pair.element, by: translation) },
                 onDragEnded: endDrag
             )
+            // Rows grow with their text, so the list learns each one's height
+            // from the row itself. Measured before the drag offset is applied,
+            // so a row in flight still reports the height of its slot.
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+                rowHeights[pair.element.persistentModelID] = height
+            }
             // The dragged row follows the cursor and rides above its
             // neighbours as they shuffle out of the way.
             .offset(y: isDragging ? dragTranslation : 0)
@@ -286,37 +305,40 @@ struct SignalNotchView: View {
         { value in if !celebrating { action(value) } }
     }
 
-    /// Vertical distance from one row to the next.
-    private static var rowStride: CGFloat { TodoRow.rowHeight + rowSpacing }
-
     /// Tracks the cursor during a reorder: the row is offset to follow the
-    /// drag, and each time it has travelled half a slot it swaps with the
-    /// neighbour it's passing, so the list reorders live under the cursor.
+    /// drag, and each time it has travelled more than half of the neighbour
+    /// it's passing, the two swap — so the list reorders live under the
+    /// cursor. Each swap is measured against that neighbour's own height: a
+    /// wrapped row takes further to pass than a single-line one.
     private func drag(_ item: TodoItem, by translation: CGFloat) {
         if draggingID != item.persistentModelID {
             draggingID = item.persistentModelID
-            dragSlotShift = 0
+            dragShift = 0
             // Indices are about to shift, so the focused index no longer maps
             // cleanly — same reasoning as delete.
             focused = nil
         }
 
-        var offset = translation - CGFloat(dragSlotShift) * Self.rowStride
-        while abs(offset) > Self.rowStride / 2 {
-            guard let from = store.items.firstIndex(where: { $0.persistentModelID == item.persistentModelID })
-            else { break }
-            let to = offset > 0 ? from + 1 : from - 1
-            guard store.items.indices.contains(to) else {
-                // Already at an end: hold the row at the boundary rather than
-                // letting it drift off the list.
-                offset = offset > 0 ? Self.rowStride / 2 : -Self.rowStride / 2
+        var offset = translation - dragShift
+        while let from = store.items.firstIndex(where: { $0.persistentModelID == item.persistentModelID }) {
+            guard let step = rowLayout.swapStep(from: from, offset: offset) else {
+                let neighbour = offset > 0 ? from + 1 : from - 1
+                if !store.items.indices.contains(neighbour) {
+                    // Already at an end: hold the row at the boundary rather
+                    // than letting it drift off the list.
+                    let limit = rowLayout.boundaryLimit(at: from)
+                    offset = max(-limit, min(limit, offset))
+                }
                 break
             }
             withAnimation(.snappy(duration: 0.2)) {
-                store.moveTask(from: from, to: to)
+                store.moveTask(from: from, to: step.to)
             }
-            dragSlotShift += offset > 0 ? 1 : -1
-            offset = translation - CGFloat(dragSlotShift) * Self.rowStride
+            // The row now sits a whole neighbour further along, so the offset
+            // that's left is what it overshot that new home by.
+            let travelled = offset > 0 ? step.distance : -step.distance
+            dragShift += travelled
+            offset -= travelled
         }
         dragTranslation = offset
     }
@@ -328,7 +350,7 @@ struct SignalNotchView: View {
             dragTranslation = 0
         }
         draggingID = nil
-        dragSlotShift = 0
+        dragShift = 0
     }
 
     private var header: some View {
@@ -720,12 +742,15 @@ private struct TodoRow: View {
     /// when Enter would schedule instead of just advancing.
     @State private var parse: ScheduleParse?
 
-    /// Fixed height for the text area so the row never shifts vertically when the
-    /// field is swapped for a `Text` on completion. The vertical jump *within*
-    /// the field on focus is handled by `VerticallyCenteredTextFieldCell`.
-    private static let textRowHeight: CGFloat = 20
-    /// Fixed height for the whole row, so the capped scroll viewport can be
-    /// sized exactly (`maxVisibleRows` rows plus spacing).
+    /// Minimum height for the text area, so a one-line row never shifts
+    /// vertically when the field is swapped for a `Text` on completion. Long
+    /// text wraps and the area grows past this. The vertical jump *within* the
+    /// field on focus is handled by `VerticallyCenteredTextFieldCell`.
+    static let textRowHeight: CGFloat = 20
+    /// Minimum height for the whole row — what a single-line row measures, and
+    /// the unit the scroll cap is expressed in (`maxVisibleRows` of these plus
+    /// spacing). Rows with wrapped text are taller and report their real
+    /// height back to the list.
     static let rowHeight: CGFloat = 22
     /// Shared box for every completion control, medal or plain, so the task
     /// text starts at the same x on all rows — the bare symbol's natural width
@@ -767,10 +792,13 @@ private struct TodoRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
+        // Top-aligned: a wrapped row grows downwards, so the checkbox, the ↵
+        // hint and the grip stay level with the task's *first* line rather
+        // than drifting to the middle of the block of text.
+        HStack(alignment: .top, spacing: 0) {
             dragHandle
 
-            HStack(spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
             Button(action: onToggle) {
                 Image(systemName: completionSymbol)
                     .font(.system(size: 18))
@@ -800,6 +828,10 @@ private struct TodoRow: View {
                         .strikethrough(true, color: .white.opacity(0.6))
                         .foregroundStyle(.white.opacity(0.5))
                         .font(.system(size: 15, weight: .medium))
+                        // Completed rows wrap exactly as editable ones do, so
+                        // checking a long task off doesn't reflow the list.
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                         // A completed row has no field to hold first responder,
                         // so this invisible responder stands in for it — the
                         // row stays part of keyboard navigation and Enter can
@@ -829,7 +861,7 @@ private struct TodoRow: View {
                     )
                 }
             }
-            .frame(height: Self.textRowHeight)
+            .frame(minHeight: Self.textRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
 
             // Trailing gutter, always reserved so the text width never jumps:
@@ -852,7 +884,9 @@ private struct TodoRow: View {
                         .foregroundStyle(parse != nil ? Color.green : Color.white.opacity(0.35))
                 }
             }
-            .frame(width: 16, height: 16)
+            // As tall as one line of text, so the hint sits beside the first
+            // line of a wrapped row rather than centred against the block.
+            .frame(width: 16, height: Self.textRowHeight)
             }
             // A completed row shows no caret, so focus is carried by a faint
             // wash behind the row instead. The negative padding lets it breathe
@@ -863,8 +897,12 @@ private struct TodoRow: View {
                     .padding(.horizontal, -6)
             }
             .animation(.snappy(duration: 0.15), value: isHighlighted)
+            // Makes the content as tall as the grip beside it, so top-aligning
+            // the two leaves a single-line row looking exactly as centred as
+            // it did when every row was pinned to `rowHeight`.
+            .padding(.vertical, (Self.rowHeight - Self.textRowHeight) / 2)
         }
-        .frame(height: Self.rowHeight)
+        .frame(minHeight: Self.rowHeight)
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .animation(.snappy(duration: 0.2), value: item.isCompleted)
@@ -1069,11 +1107,20 @@ private struct RowKeyCatcher: NSViewRepresentable {
     }
 }
 
-/// A borderless single-line text field backed by AppKit. SwiftUI's `TextField`
-/// nudges its text up a pixel when it becomes first responder because the cell
-/// vertically centers text in display mode but the field editor draws it from a
-/// different origin while editing. `VerticallyCenteredTextFieldCell` forces both
-/// modes to center identically, so the text stays put on focus.
+/// A borderless, word-wrapping text field backed by AppKit. SwiftUI's
+/// `TextField` nudges its text up a pixel when it becomes first responder
+/// because the cell vertically centers text in display mode but the field
+/// editor draws it from a different origin while editing.
+/// `VerticallyCenteredTextFieldCell` forces both modes to center identically,
+/// so the text stays put on focus.
+///
+/// The cell wraps rather than scrolls: a scrollable single-line cell slides its
+/// content sideways to keep the caret in view, which on focus (the caret lands
+/// at the end) dragged the leading edge of a long task out of alignment with
+/// the rows above and below it — issue #9. Wrapping keeps every row's text
+/// starting at the same x and lets the row grow downwards instead.
+/// `TodoItem.text` stays one logical line: the extra lines are layout only, and
+/// the Coordinator swallows every key and paste that would insert a real break.
 private struct PlainTextField: NSViewRepresentable {
     @Binding var text: String
     let placeholder: String
@@ -1100,11 +1147,19 @@ private struct PlainTextField: NSViewRepresentable {
         cell.isSelectable = true
         cell.isBordered = false
         cell.drawsBackground = false
-        cell.usesSingleLineMode = true
-        cell.lineBreakMode = .byTruncatingTail
-        cell.wraps = false
-        cell.isScrollable = true
+        // Wrap onto extra lines instead of scrolling sideways — see the type's
+        // doc comment. `truncatesLastVisibleLine` off so the tail of a long
+        // task is never swapped for an ellipsis: the row grows to fit it.
+        cell.usesSingleLineMode = false
+        cell.wraps = true
+        cell.isScrollable = false
+        cell.lineBreakMode = .byWordWrapping
+        cell.truncatesLastVisibleLine = false
         field.cell = cell
+        field.maximumNumberOfLines = 0
+        // The row's width is the panel's, not the text's: let the field be
+        // squeezed to it and wrap, rather than pushing the row wider.
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         field.focusRingType = .none
         field.font = Self.font
         field.textColor = .white
@@ -1124,9 +1179,44 @@ private struct PlainTextField: NSViewRepresentable {
                 .font: Self.font,
             ]
         )
+        // Wrapping is measured against the width the row actually got.
+        field.preferredMaxLayoutWidth = field.bounds.width
+        field.invalidateIntrinsicContentSize()
         // Drive AppKit's first responder from SwiftUI's focus state.
         field.wantsFocus = focusedIndex == index
         field.focusIfWanted()
+    }
+
+    /// The height the text needs once wrapped into `width`. SwiftUI asks for
+    /// this before the field has been laid out, so it's measured on a spare
+    /// cell configured exactly like the real one rather than on the field.
+    private static let measuringCell: NSTextFieldCell = {
+        let cell = NSTextFieldCell(textCell: "")
+        cell.font = font
+        cell.usesSingleLineMode = false
+        cell.wraps = true
+        cell.isScrollable = false
+        cell.lineBreakMode = .byWordWrapping
+        return cell
+    }()
+
+    /// Rounded up so the row height lands on whole points: a fractional height
+    /// puts the hosted field at a fractional window Y, where the text shimmers
+    /// off the pixel grid (same reasoning as `listOverflows`).
+    static func wrappedHeight(of string: String, width: CGFloat) -> CGFloat {
+        measuringCell.stringValue = string
+        let bounds = NSRect(x: 0, y: 0, width: width, height: .greatestFiniteMagnitude)
+        return ceil(measuringCell.cellSize(forBounds: bounds).height)
+    }
+
+    /// Report the wrapped height to SwiftUI so the row — and the card behind
+    /// it — grow with the text. The placeholder is measured when the field is
+    /// empty so an empty row is never shorter than the text it's inviting.
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: FocusableTextField, context: Context) -> CGSize? {
+        guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
+        let content = text.isEmpty ? placeholder : text
+        let height = Self.wrappedHeight(of: content, width: width)
+        return CGSize(width: width, height: max(height, TodoRow.textRowHeight))
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -1138,6 +1228,22 @@ private struct PlainTextField: NSViewRepresentable {
     /// this the row would render focused while nothing held the keyboard.
     final class FocusableTextField: NSTextField {
         var wantsFocus = false
+
+        /// Keep the field editor in step with the field as the row grows. The
+        /// editor is sized once when editing begins, so a field that gains a
+        /// second line mid-edit would go on editing inside the old one-line
+        /// rect — the new line drawn clipped, or not at all, until the row was
+        /// left and re-entered.
+        override func setFrameSize(_ newSize: NSSize) {
+            super.setFrameSize(newSize)
+            guard let editor = currentEditor(), let cell else { return }
+            // The editor is hosted inside AppKit's focus clip view; that has to
+            // grow too, or it clips the editor back to its original height.
+            if let clip = editor.superview, clip !== self {
+                clip.frame = bounds
+            }
+            editor.frame = cell.drawingRect(forBounds: bounds)
+        }
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
@@ -1172,8 +1278,29 @@ private struct PlainTextField: NSViewRepresentable {
 
         func controlTextDidChange(_ note: Notification) {
             guard let field = note.object as? NSTextField else { return }
-            parent.text = field.stringValue
+            // A task is one logical line even though it may be drawn on
+            // several: a pasted paragraph collapses to spaces rather than
+            // smuggling real breaks into the model.
+            let flattened = Self.flattened(field.stringValue)
+            if flattened != field.stringValue {
+                field.stringValue = flattened
+                if let editor = field.currentEditor() {
+                    let end = (flattened as NSString).length
+                    editor.selectedRange = NSRange(location: end, length: 0)
+                }
+            }
+            parent.text = flattened
+            // The row may have just gained (or lost) a line.
+            field.invalidateIntrinsicContentSize()
             refreshParse(for: field)
+        }
+
+        /// Every kind of line break — CRLF, CR, LF, and the Unicode line and
+        /// paragraph separators — folded into single spaces.
+        private static func flattened(_ string: String) -> String {
+            guard string.contains(where: \.isNewline) else { return string }
+            let joined = string.replacingOccurrences(of: "\r\n", with: " ")
+            return String(joined.map { $0.isNewline ? " " : $0 })
         }
 
         func controlTextDidBeginEditing(_ note: Notification) {
@@ -1231,6 +1358,14 @@ private struct PlainTextField: NSViewRepresentable {
             case #selector(NSResponder.insertBacktab(_:)):
                 parent.onBacktab()
                 return true
+            // Option-Return, Control-Return and the line-break key all ask the
+            // field editor for a hard break. The row wraps on its own, and the
+            // task is one logical line, so these do nothing at all — Return
+            // itself still submits (`insertNewline:` → the field's action).
+            case #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)),
+                 #selector(NSResponder.insertLineBreak(_:)),
+                 #selector(NSResponder.insertParagraphSeparator(_:)):
+                return true
             // Arrows walk the list like Tab/Shift-Tab — Down on the last
             // filled row spills into a fresh task.
             case #selector(NSResponder.moveUp(_:)):
@@ -1261,7 +1396,11 @@ private final class VerticallyCenteredTextFieldCell: NSTextFieldCell {
         let textHeight = cellSize(forBounds: rect).height
         guard textHeight < rect.height else { return rect }
         var r = rect
-        r.origin.y += (rect.height - textHeight) / 2
+        // Snapped to the half-point grid: with rows now sized from measured
+        // text the leftover space is often odd, and an arbitrary fractional
+        // origin puts the text off the pixel grid — the shimmer described on
+        // `listOverflows`, but within the row.
+        r.origin.y += floor((rect.height - textHeight)) / 2
         r.size.height = textHeight
         return r
     }
