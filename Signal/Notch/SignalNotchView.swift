@@ -33,6 +33,12 @@ struct SignalNotchView: View {
     /// on screen, how far a drag has to travel — is driven by what the rows
     /// actually measured rather than by one fixed row height.
     @State private var rowHeights: [PersistentIdentifier: CGFloat] = [:]
+    /// Which edge of a row the keyboard is arriving at, so focus lands at the
+    /// end of the line it entered on: the last line when it came up from the
+    /// row below, the first when it came down from the row above. On a
+    /// single-line row the two are the same character — the end of the text —
+    /// so short rows keep landing exactly where they always did.
+    @State private var rowEntry: RowEntry = .fromBelow
     /// How much scroll content hangs below the viewport — drives the chevron
     /// hinting at tasks hidden past the fold.
     @State private var bottomOverflow: CGFloat = 0
@@ -275,6 +281,21 @@ struct SignalNotchView: View {
                 onDelete: idle { deleteTask(pair.element) },
                 onTab: idle { advanceOrAdd(from: pair.offset) },
                 onBacktab: idle { focusPrevious(from: pair.offset) },
+                // Same moves as Tab and Shift-Tab, but the arrows say which
+                // edge of the next row the caret should land on — they're
+                // walking through the text, not jumping between fields.
+                onMoveDown: idle {
+                    rowEntry = .fromAbove
+                    advanceOrAdd(from: pair.offset)
+                },
+                onMoveUp: idle {
+                    rowEntry = .fromBelow
+                    focusPrevious(from: pair.offset)
+                },
+                rowEntry: rowEntry,
+                // The arrows' choice of edge is spent the moment it's used, so
+                // the next click, Tab or new task lands at the end as always.
+                onFocusLanded: { if rowEntry != .fromBelow { rowEntry = .fromBelow } },
                 onEmptyBackspace: idle { backspaceDelete(pair.element, at: pair.offset) },
                 onDragChanged: { translation in drag(pair.element, by: translation) },
                 onDragEnded: endDrag
@@ -731,6 +752,14 @@ private struct TodoRow: View {
     let onDelete: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
+    /// The arrow-key versions of the two above: same move, but they tell the
+    /// list which edge of the next row the caret should land on.
+    let onMoveDown: () -> Void
+    let onMoveUp: () -> Void
+    /// Which edge of this row focus is arriving at.
+    let rowEntry: RowEntry
+    /// Called once this row has taken focus, so the entry edge resets.
+    let onFocusLanded: () -> Void
     /// Backspace pressed while the field is already empty.
     let onEmptyBackspace: () -> Void
     /// Cumulative vertical distance dragged from where the grip was grabbed.
@@ -859,6 +888,10 @@ private struct TodoRow: View {
                         onEscape: onEscape,
                         onTab: onTab,
                         onBacktab: onBacktab,
+                        onMoveDown: onMoveDown,
+                        onMoveUp: onMoveUp,
+                        rowEntry: rowEntry,
+                        onFocusLanded: onFocusLanded,
                         onEmptyBackspace: onEmptyBackspace
                     )
                 }
@@ -1151,6 +1184,14 @@ private struct TaskTextEditor: NSViewRepresentable {
     let onEscape: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
+    /// The arrow-key versions of the two above, used once the caret has run out
+    /// of lines to walk in this row.
+    let onMoveDown: () -> Void
+    let onMoveUp: () -> Void
+    /// Which edge of the row focus is arriving at, and the acknowledgement that
+    /// it has been used.
+    let rowEntry: RowEntry
+    let onFocusLanded: () -> Void
     /// Backspace pressed while the row is already empty.
     let onEmptyBackspace: () -> Void
 
@@ -1187,7 +1228,13 @@ private struct TaskTextEditor: NSViewRepresentable {
         // positions the placeholder.
         textView.textContainerInset = Self.textInset
         textView.textContainer?.lineFragmentPadding = 0
-        textView.textContainer?.widthTracksTextView = true
+        // The container's width is set explicitly from the viewport (see
+        // `RowScrollView.layout`) rather than tracked off the text view. A
+        // tracked container is zero-width until SwiftUI first lays the row
+        // out, and a zero-width container doesn't wrap: anything that forces
+        // layout before then — placing the caret, scrolling to it — strings the
+        // whole task onto one endless line, and nothing brings the wrap back.
+        textView.textContainer?.widthTracksTextView = false
         textView.textContainer?.heightTracksTextView = false
         textView.textContainer?.containerSize = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
         textView.isHorizontallyResizable = false
@@ -1219,7 +1266,12 @@ private struct TaskTextEditor: NSViewRepresentable {
         textView.placeholder = placeholder
         // Drive AppKit's first responder from SwiftUI's focus state.
         textView.wantsFocus = focusedIndex == index
-        textView.focusIfWanted()
+        textView.entersOnFirstLine = rowEntry == .fromAbove
+        if textView.focusIfWanted() {
+            // Deferred: this runs inside a SwiftUI view update.
+            let onFocusLanded = self.onFocusLanded
+            DispatchQueue.main.async(execute: onFocusLanded)
+        }
     }
 
     /// Measures wrapped text the way the row draws it — same font, same
@@ -1299,13 +1351,26 @@ private struct TaskTextEditor: NSViewRepresentable {
 
         override func layout() {
             super.layout()
+            let viewport = contentView.bounds.size
+            // The text wraps into the width the row actually got. Set before
+            // anything can ask the layout manager a question, and only once the
+            // row has a width — a zero-width container doesn't wrap at all.
+            if viewport.width > 0 {
+                let inset = rowTextView.textContainerInset.width
+                let width = max(viewport.width - inset * 2, 1)
+                if rowTextView.textContainer?.containerSize.width != width {
+                    rowTextView.textContainer?.containerSize =
+                        NSSize(width: width, height: CGFloat.greatestFiniteMagnitude)
+                }
+            }
             // The text view fills the viewport even when the task is one short
             // line, so a click anywhere in the row lands in the text rather
             // than falling through to the card behind it.
-            let viewport = contentView.bounds.height
-            rowTextView.minSize = NSSize(width: 0, height: viewport)
-            if rowTextView.frame.height < viewport {
-                rowTextView.setFrameSize(NSSize(width: rowTextView.frame.width, height: viewport))
+            rowTextView.minSize = NSSize(width: 0, height: viewport.height)
+            if rowTextView.frame.width != viewport.width || rowTextView.frame.height < viewport.height {
+                rowTextView.setFrameSize(
+                    NSSize(width: viewport.width, height: max(rowTextView.frame.height, viewport.height))
+                )
             }
         }
 
@@ -1324,6 +1389,9 @@ private struct TaskTextEditor: NSViewRepresentable {
     /// draws the placeholder itself — a text view has none of its own.
     final class RowTextView: NSTextView {
         var wantsFocus = false
+        /// Whether focus is arriving from the row above, in which case the
+        /// caret lands on this row's first line rather than after all of it.
+        var entersOnFirstLine = false
         /// Told when the keyboard arrives or leaves, so the row can take the
         /// focused index and drop its date highlight on the way out.
         var onFocusChange: ((Bool) -> Void)?
@@ -1341,14 +1409,45 @@ private struct TaskTextEditor: NSViewRepresentable {
             focusIfWanted()
         }
 
-        func focusIfWanted() {
-            guard wantsFocus, let window, window.firstResponder !== self else { return }
+        /// Returns whether it actually claimed the keyboard just now.
+        @discardableResult
+        func focusIfWanted() -> Bool {
+            guard wantsFocus, let window, window.firstResponder !== self else { return false }
             window.makeFirstResponder(self)
-            // Focusing drops the caret after the existing text rather than
-            // teeing the task up to be overwritten, and scrolls a row that's
-            // hit its cap down to where the caret landed.
-            setSelectedRange(NSRange(location: (string as NSString).length, length: 0))
+            // Focusing drops the caret at the end of the line it arrived on
+            // rather than teeing the task up to be overwritten, and scrolls a
+            // row that's hit its cap to wherever that landed.
+            setSelectedRange(NSRange(location: caretLocationOnEntry(), length: 0))
             scrollRangeToVisible(selectedRange())
+            return true
+        }
+
+        /// The end of the text, or — when the caret came down from the row
+        /// above — the end of the row's first visual line. On a single-line row
+        /// those are the same character.
+        private func caretLocationOnEntry() -> Int {
+            let end = (string as NSString).length
+            guard entersOnFirstLine, end > 0,
+                  let layout = layoutManager, let container = textContainer,
+                  // Never ask the layout manager anything before the row has a
+                  // width to wrap into — see `makeNSView`.
+                  container.containerSize.width > 1 else { return end }
+            layout.ensureLayout(for: container)
+            guard layout.numberOfGlyphs > 0 else { return end }
+            var fragment = NSRange(location: 0, length: 0)
+            _ = layout.lineFragmentRect(forGlyphAt: 0, effectiveRange: &fragment)
+            let characters = layout.characterRange(forGlyphRange: fragment, actualGlyphRange: nil)
+            var location = min(NSMaxRange(characters), end)
+            // A caret sitting exactly on a soft wrap can belong to either side
+            // of it; step back one character so it's unambiguously on the line
+            // it was meant to land on.
+            if location > 0, location < end {
+                let glyph = layout.glyphIndexForCharacter(at: location)
+                let landed = layout.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil).minY
+                let first = layout.lineFragmentRect(forGlyphAt: 0, effectiveRange: nil).minY
+                if landed > first + RowTextLayout.CaretLine.tolerance { location -= 1 }
+            }
+            return location
         }
 
         override func becomeFirstResponder() -> Bool {
@@ -1420,6 +1519,10 @@ private struct TaskTextEditor: NSViewRepresentable {
                 // The highlight is an editing affordance: an unfocused row goes
                 // back to plain white, exactly as it read before it was touched.
                 clearHighlight(in: textView)
+                // And a row that was scrolled to follow the caret rewinds to
+                // the top, so an idle list reads as every task's opening words
+                // rather than wherever each was last being edited.
+                textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
             }
         }
 
@@ -1532,11 +1635,11 @@ private struct TaskTextEditor: NSViewRepresentable {
             // the text view, which walks the caret and scrolls the row to it.
             case #selector(NSResponder.moveUp(_:)):
                 guard caretLine(in: textView)?.isOnFirstLine ?? true else { return false }
-                parent.onBacktab()
+                parent.onMoveUp()
                 return true
             case #selector(NSResponder.moveDown(_:)):
                 guard caretLine(in: textView)?.isOnLastLine ?? true else { return false }
-                parent.onTab()
+                parent.onMoveDown()
                 return true
             case #selector(NSResponder.deleteBackward(_:)):
                 // Backspace on an already-empty task deletes the slot; with

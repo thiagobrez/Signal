@@ -11,6 +11,19 @@ import CoreGraphics
 ///
 /// Both rules are arithmetic over numbers AppKit hands us, so they live here —
 /// no AppKit, no SwiftUI — where they can be unit-tested.
+/// Which edge of a row the keyboard arrives at. Focus lands at the end of the
+/// line it entered on, so the arrows walk a wrapped row's lines in both
+/// directions instead of skipping past them on the way down. A single-line row
+/// has only one line, so both cases land at the end of its text — exactly where
+/// focus has always landed.
+enum RowEntry {
+    /// Arrived from the row above (Down): land on this row's first line.
+    case fromAbove
+    /// Arrived from the row below, or from nothing in particular — a click, a
+    /// new task, Tab: land at the end of the text.
+    case fromBelow
+}
+
 enum RowTextLayout {
     /// How many wrapped lines a row shows before it stops growing and starts
     /// scrolling. Three is enough to read a long task at a glance without a
