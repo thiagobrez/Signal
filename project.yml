@@ -107,6 +107,8 @@ targets:
       - path: Signal/WhatsNew/ChangelogParser.swift
       - path: Signal/Schedule/ScheduleEdit.swift
       - path: Signal/Schedule/ScheduleGrid.swift
+      - path: Signal/Notch/NotchRowLayout.swift
+      - path: Signal/Notch/RowTextLayout.swift
       - path: Signal/Models/ScheduledTask.swift
       - path: Signal/Models/DayLog.swift
       - path: Signal/Models/TodoItem.swift

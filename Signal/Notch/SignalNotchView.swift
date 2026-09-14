@@ -23,9 +23,22 @@ struct SignalNotchView: View {
     @State private var draggingID: PersistentIdentifier?
     /// How far the dragged row sits from the slot it currently occupies.
     @State private var dragTranslation: CGFloat = 0
-    /// Slots the dragged row has already been moved by, so the live offset can
-    /// be measured against its new home rather than where the drag started.
-    @State private var dragSlotShift = 0
+    /// How far the dragged row has already been moved by the swaps it earned,
+    /// so the live offset is measured against its new home rather than where
+    /// the drag started. In points rather than slots: rows wrap, so no two
+    /// slots are necessarily the same height.
+    @State private var dragShift: CGFloat = 0
+    /// Each row's measured height, keyed by task. Rows grow with their text
+    /// (see `TaskTextEditor`), so the list's arithmetic — its height, what's
+    /// on screen, how far a drag has to travel — is driven by what the rows
+    /// actually measured rather than by one fixed row height.
+    @State private var rowHeights: [PersistentIdentifier: CGFloat] = [:]
+    /// Which edge of a row the keyboard is arriving at, so focus lands at the
+    /// end of the line it entered on: the last line when it came up from the
+    /// row below, the first when it came down from the row above. On a
+    /// single-line row the two are the same character — the end of the text —
+    /// so short rows keep landing exactly where they always did.
+    @State private var rowEntry: RowEntry = .fromBelow
     /// How much scroll content hangs below the viewport — drives the chevron
     /// hinting at tasks hidden past the fold.
     @State private var bottomOverflow: CGFloat = 0
@@ -80,20 +93,29 @@ struct SignalNotchView: View {
     /// what grows, so the arithmetic has to match the layout to the point.
     private static let footerHeight: CGFloat = TodoRow.rowHeight
 
+    /// The rows as the list sees them: every row's measured height in order,
+    /// falling back to the single-line height for a row that hasn't reported
+    /// one yet (the frame before it's first laid out).
+    private var rowLayout: NotchRowLayout {
+        NotchRowLayout(
+            heights: store.items.map { rowHeights[$0.persistentModelID] ?? TodoRow.rowHeight },
+            spacing: Self.rowSpacing
+        )
+    }
+
     /// The list's natural height: every row, plus the add button beneath them.
     private var listContentHeight: CGFloat {
-        let count = store.items.count
-        guard count > 0 else { return 0 }
-        var height = CGFloat(count) * TodoRow.rowHeight
-            + CGFloat(count - 1) * Self.rowSpacing
+        guard !store.items.isEmpty else { return 0 }
+        var height = rowLayout.contentHeight
         if controller.mode == .interactive {
             height += Self.rowSpacing + Self.footerHeight
         }
         return height
     }
 
-    /// Where growth stops and scrolling takes over: ten rows, the gaps between
-    /// them, and the add button under the last one.
+    /// Where growth stops and scrolling takes over: ten single-line rows' worth
+    /// of list, the gaps between them, and the add button under the last one.
+    /// A wrapped row spends more of that budget than a short one does.
     private var listCapHeight: CGFloat {
         var height = CGFloat(Self.maxVisibleRows) * TodoRow.rowHeight
             + CGFloat(Self.maxVisibleRows - 1) * Self.rowSpacing
@@ -108,9 +130,9 @@ struct SignalNotchView: View {
     /// Whether the list is tall enough to actually scroll. When it isn't,
     /// scrolling is disabled and never touched — a stray `scrollTo` on a list
     /// that fits leaves the clip view at a fractional offset (~0.1pt), which
-    /// pushes every hosted NSTextField to a fractional window Y. SwiftUI snaps
+    /// pushes every hosted text view to a fractional window Y. SwiftUI snaps
     /// its own views (the checkboxes) to the pixel grid but not the hosted
-    /// fields, so the text then sits a fraction of a pixel off its checkbox —
+    /// ones, so the text then sits a fraction of a pixel off its checkbox —
     /// the shimmer that showed up when arrowing through a short list.
     private var listOverflows: Bool { listContentHeight > listCapHeight + 0.5 }
 
@@ -124,12 +146,9 @@ struct SignalNotchView: View {
         listContentHeight - listHeight - bottomOverflow
     }
 
-    /// Whether a row sits fully inside the viewport right now. The ±1pt slack
-    /// absorbs the fractional offsets SwiftUI's scrolling rests at.
+    /// Whether a row sits fully inside the viewport right now.
     private func rowIsVisible(_ index: Int) -> Bool {
-        let top = CGFloat(index) * Self.rowStride
-        let bottom = top + TodoRow.rowHeight
-        return top >= scrollOrigin - 1 && bottom <= scrollOrigin + listHeight + 1
+        rowLayout.isVisible(index, scrollOrigin: scrollOrigin, viewportHeight: listHeight)
     }
 
     var body: some View {
@@ -262,10 +281,31 @@ struct SignalNotchView: View {
                 onDelete: idle { deleteTask(pair.element) },
                 onTab: idle { advanceOrAdd(from: pair.offset) },
                 onBacktab: idle { focusPrevious(from: pair.offset) },
+                // Same moves as Tab and Shift-Tab, but the arrows say which
+                // edge of the next row the caret should land on — they're
+                // walking through the text, not jumping between fields.
+                onMoveDown: idle {
+                    rowEntry = .fromAbove
+                    advanceOrAdd(from: pair.offset)
+                },
+                onMoveUp: idle {
+                    rowEntry = .fromBelow
+                    focusPrevious(from: pair.offset)
+                },
+                rowEntry: rowEntry,
+                // The arrows' choice of edge is spent the moment it's used, so
+                // the next click, Tab or new task lands at the end as always.
+                onFocusLanded: { if rowEntry != .fromBelow { rowEntry = .fromBelow } },
                 onEmptyBackspace: idle { backspaceDelete(pair.element, at: pair.offset) },
                 onDragChanged: { translation in drag(pair.element, by: translation) },
                 onDragEnded: endDrag
             )
+            // Rows grow with their text, so the list learns each one's height
+            // from the row itself. Measured before the drag offset is applied,
+            // so a row in flight still reports the height of its slot.
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+                rowHeights[pair.element.persistentModelID] = height
+            }
             // The dragged row follows the cursor and rides above its
             // neighbours as they shuffle out of the way.
             .offset(y: isDragging ? dragTranslation : 0)
@@ -286,37 +326,40 @@ struct SignalNotchView: View {
         { value in if !celebrating { action(value) } }
     }
 
-    /// Vertical distance from one row to the next.
-    private static var rowStride: CGFloat { TodoRow.rowHeight + rowSpacing }
-
     /// Tracks the cursor during a reorder: the row is offset to follow the
-    /// drag, and each time it has travelled half a slot it swaps with the
-    /// neighbour it's passing, so the list reorders live under the cursor.
+    /// drag, and each time it has travelled more than half of the neighbour
+    /// it's passing, the two swap — so the list reorders live under the
+    /// cursor. Each swap is measured against that neighbour's own height: a
+    /// wrapped row takes further to pass than a single-line one.
     private func drag(_ item: TodoItem, by translation: CGFloat) {
         if draggingID != item.persistentModelID {
             draggingID = item.persistentModelID
-            dragSlotShift = 0
+            dragShift = 0
             // Indices are about to shift, so the focused index no longer maps
             // cleanly — same reasoning as delete.
             focused = nil
         }
 
-        var offset = translation - CGFloat(dragSlotShift) * Self.rowStride
-        while abs(offset) > Self.rowStride / 2 {
-            guard let from = store.items.firstIndex(where: { $0.persistentModelID == item.persistentModelID })
-            else { break }
-            let to = offset > 0 ? from + 1 : from - 1
-            guard store.items.indices.contains(to) else {
-                // Already at an end: hold the row at the boundary rather than
-                // letting it drift off the list.
-                offset = offset > 0 ? Self.rowStride / 2 : -Self.rowStride / 2
+        var offset = translation - dragShift
+        while let from = store.items.firstIndex(where: { $0.persistentModelID == item.persistentModelID }) {
+            guard let step = rowLayout.swapStep(from: from, offset: offset) else {
+                let neighbour = offset > 0 ? from + 1 : from - 1
+                if !store.items.indices.contains(neighbour) {
+                    // Already at an end: hold the row at the boundary rather
+                    // than letting it drift off the list.
+                    let limit = rowLayout.boundaryLimit(at: from)
+                    offset = max(-limit, min(limit, offset))
+                }
                 break
             }
             withAnimation(.snappy(duration: 0.2)) {
-                store.moveTask(from: from, to: to)
+                store.moveTask(from: from, to: step.to)
             }
-            dragSlotShift += offset > 0 ? 1 : -1
-            offset = translation - CGFloat(dragSlotShift) * Self.rowStride
+            // The row now sits a whole neighbour further along, so the offset
+            // that's left is what it overshot that new home by.
+            let travelled = offset > 0 ? step.distance : -step.distance
+            dragShift += travelled
+            offset -= travelled
         }
         dragTranslation = offset
     }
@@ -328,7 +371,7 @@ struct SignalNotchView: View {
             dragTranslation = 0
         }
         draggingID = nil
-        dragSlotShift = 0
+        dragShift = 0
     }
 
     private var header: some View {
@@ -709,6 +752,14 @@ private struct TodoRow: View {
     let onDelete: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
+    /// The arrow-key versions of the two above: same move, but they tell the
+    /// list which edge of the next row the caret should land on.
+    let onMoveDown: () -> Void
+    let onMoveUp: () -> Void
+    /// Which edge of this row focus is arriving at.
+    let rowEntry: RowEntry
+    /// Called once this row has taken focus, so the entry edge resets.
+    let onFocusLanded: () -> Void
     /// Backspace pressed while the field is already empty.
     let onEmptyBackspace: () -> Void
     /// Cumulative vertical distance dragged from where the grip was grabbed.
@@ -720,12 +771,15 @@ private struct TodoRow: View {
     /// when Enter would schedule instead of just advancing.
     @State private var parse: ScheduleParse?
 
-    /// Fixed height for the text area so the row never shifts vertically when the
-    /// field is swapped for a `Text` on completion. The vertical jump *within*
-    /// the field on focus is handled by `VerticallyCenteredTextFieldCell`.
-    private static let textRowHeight: CGFloat = 20
-    /// Fixed height for the whole row, so the capped scroll viewport can be
-    /// sized exactly (`maxVisibleRows` rows plus spacing).
+    /// Minimum height for the text area, so a one-line row never shifts
+    /// vertically when the field is swapped for a `Text` on completion. Long
+    /// text wraps and the area grows past this, up to `RowTextLayout.maxLines`,
+    /// beyond which it scrolls inside the row instead.
+    static let textRowHeight: CGFloat = 20
+    /// Minimum height for the whole row — what a single-line row measures, and
+    /// the unit the scroll cap is expressed in (`maxVisibleRows` of these plus
+    /// spacing). A row with wrapped text is taller — at most three lines' worth
+    /// — and reports its real height back to the list.
     static let rowHeight: CGFloat = 22
     /// Shared box for every completion control, medal or plain, so the task
     /// text starts at the same x on all rows — the bare symbol's natural width
@@ -767,10 +821,13 @@ private struct TodoRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
+        // Top-aligned: a wrapped row grows downwards, so the checkbox, the ↵
+        // hint and the grip stay level with the task's *first* line rather
+        // than drifting to the middle of the block of text.
+        HStack(alignment: .top, spacing: 0) {
             dragHandle
 
-            HStack(spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
             Button(action: onToggle) {
                 Image(systemName: completionSymbol)
                     .font(.system(size: 18))
@@ -800,6 +857,12 @@ private struct TodoRow: View {
                         .strikethrough(true, color: .white.opacity(0.6))
                         .foregroundStyle(.white.opacity(0.5))
                         .font(.system(size: 15, weight: .medium))
+                        // Completed rows wrap — and stop wrapping — exactly as
+                        // editable ones do, so checking a long task off doesn't
+                        // reflow the list.
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(RowTextLayout.maxLines)
+                        .fixedSize(horizontal: false, vertical: true)
                         // A completed row has no field to hold first responder,
                         // so this invisible responder stands in for it — the
                         // row stays part of keyboard navigation and Enter can
@@ -815,7 +878,7 @@ private struct TodoRow: View {
                             )
                         }
                 } else {
-                    PlainTextField(
+                    TaskTextEditor(
                         text: $item.text,
                         placeholder: placeholder,
                         index: index,
@@ -825,11 +888,15 @@ private struct TodoRow: View {
                         onEscape: onEscape,
                         onTab: onTab,
                         onBacktab: onBacktab,
+                        onMoveDown: onMoveDown,
+                        onMoveUp: onMoveUp,
+                        rowEntry: rowEntry,
+                        onFocusLanded: onFocusLanded,
                         onEmptyBackspace: onEmptyBackspace
                     )
                 }
             }
-            .frame(height: Self.textRowHeight)
+            .frame(minHeight: Self.textRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
 
             // Trailing gutter, always reserved so the text width never jumps:
@@ -852,7 +919,9 @@ private struct TodoRow: View {
                         .foregroundStyle(parse != nil ? Color.green : Color.white.opacity(0.35))
                 }
             }
-            .frame(width: 16, height: 16)
+            // As tall as one line of text, so the hint sits beside the first
+            // line of a wrapped row rather than centred against the block.
+            .frame(width: 16, height: Self.textRowHeight)
             }
             // A completed row shows no caret, so focus is carried by a faint
             // wash behind the row instead. The negative padding lets it breathe
@@ -863,8 +932,12 @@ private struct TodoRow: View {
                     .padding(.horizontal, -6)
             }
             .animation(.snappy(duration: 0.15), value: isHighlighted)
+            // Makes the content as tall as the grip beside it, so top-aligning
+            // the two leaves a single-line row looking exactly as centred as
+            // it did when every row was pinned to `rowHeight`.
+            .padding(.vertical, (Self.rowHeight - Self.textRowHeight) / 2)
         }
-        .frame(height: Self.rowHeight)
+        .frame(minHeight: Self.rowHeight)
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .animation(.snappy(duration: 0.2), value: item.isCompleted)
@@ -1069,12 +1142,35 @@ private struct RowKeyCatcher: NSViewRepresentable {
     }
 }
 
-/// A borderless single-line text field backed by AppKit. SwiftUI's `TextField`
-/// nudges its text up a pixel when it becomes first responder because the cell
-/// vertically centers text in display mode but the field editor draws it from a
-/// different origin while editing. `VerticallyCenteredTextFieldCell` forces both
-/// modes to center identically, so the text stays put on focus.
-private struct PlainTextField: NSViewRepresentable {
+/// A borderless, word-wrapping task editor backed by AppKit: an `NSTextView`
+/// inside a short `NSScrollView`.
+///
+/// It wraps rather than scrolling sideways. A scrollable single-line field
+/// slides its content horizontally to keep the caret in view, which on focus
+/// (the caret lands at the end) dragged the leading edge of a long task out of
+/// alignment with the rows above and below it — issue #9. Wrapping keeps every
+/// row's text starting at the same x and lets the row grow downwards instead.
+///
+/// It only grows so far: at `RowTextLayout.maxLines` the row stops and the text
+/// scrolls *vertically* inside it, so one rambling task can't take the panel
+/// over. That's what the scroll view is for, and it's why the arrow keys walk
+/// the row's own lines before they hand focus to another task.
+///
+/// This used to be an `NSTextField`, which draws its text two ways: the cell
+/// draws it when the row is idle, and a shared field editor draws it while the
+/// row is being typed into. The two don't agree — measured on this font, the
+/// cell lays lines out 19pt apart and starts the first one 3pt higher than the
+/// editor does, and the editor's clip view carries a 3pt horizontal offset of
+/// its own — so a focused row's text sat a few points up and to the right of
+/// where the same row drew it unfocused. A single centering fudge could hide
+/// that on a one-line row; across three lines, where the 1pt-per-line drift
+/// compounds, nothing can. A text view draws both states itself, so the two
+/// can't disagree. Its container inset matches the inset the cell used to draw
+/// at, so no row's text moved sideways in the swap.
+///
+/// `TodoItem.text` stays one logical line: the extra lines are layout only, and
+/// the Coordinator swallows every key and paste that would insert a real break.
+private struct TaskTextEditor: NSViewRepresentable {
     @Binding var text: String
     let placeholder: String
     let index: Int
@@ -1083,130 +1179,395 @@ private struct PlainTextField: NSViewRepresentable {
     /// means "schedule this task" rather than the plain confirm-and-advance.
     let onSubmit: (ScheduleParse?) -> Void
     /// Fires whenever the live parse of the text changes, so the row can tint
-    /// its ↵ hint while the phrase itself is highlighted in the field.
+    /// its ↵ hint while the phrase itself is highlighted in the text.
     let onParseChange: (ScheduleParse?) -> Void
     let onEscape: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
-    /// Backspace pressed while the field is already empty.
+    /// The arrow-key versions of the two above, used once the caret has run out
+    /// of lines to walk in this row.
+    let onMoveDown: () -> Void
+    let onMoveUp: () -> Void
+    /// Which edge of the row focus is arriving at, and the acknowledgement that
+    /// it has been used.
+    let rowEntry: RowEntry
+    let onFocusLanded: () -> Void
+    /// Backspace pressed while the row is already empty.
     let onEmptyBackspace: () -> Void
 
-    private static let font = NSFont.systemFont(ofSize: 15, weight: .medium)
+    fileprivate static let font = NSFont.systemFont(ofSize: 15, weight: .medium)
+    /// The inset `NSTextFieldCell` used to draw its text at. Matching it kept
+    /// every row's text at the same x through the swap to a text view, and in
+    /// line with the header above the list.
+    fileprivate static let textInset = NSSize(width: 2, height: 0)
 
-    func makeNSView(context: Context) -> FocusableTextField {
-        let field = FocusableTextField()
-        let cell = VerticallyCenteredTextFieldCell(textCell: "")
-        cell.isEditable = true
-        cell.isSelectable = true
-        cell.isBordered = false
-        cell.drawsBackground = false
-        cell.usesSingleLineMode = true
-        cell.lineBreakMode = .byTruncatingTail
-        cell.wraps = false
-        cell.isScrollable = true
-        field.cell = cell
-        field.focusRingType = .none
-        field.font = Self.font
-        field.textColor = .white
-        field.delegate = context.coordinator
-        field.target = context.coordinator
-        field.action = #selector(Coordinator.didSubmit(_:))
-        return field
+    func makeNSView(context: Context) -> RowScrollView {
+        let textView = RowTextView(frame: .zero)
+        textView.delegate = context.coordinator
+        textView.drawsBackground = false
+        textView.isEditable = true
+        textView.isSelectable = true
+        textView.isRichText = false
+        textView.importsGraphics = false
+        textView.usesFontPanel = false
+        textView.allowsUndo = true
+        textView.focusRingType = .none
+        textView.font = Self.font
+        textView.textColor = .white
+        textView.insertionPointColor = .white
+        // A task is plain text: nothing here may quietly rewrite what's typed.
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.isAutomaticTextReplacementEnabled = false
+        textView.isAutomaticSpellingCorrectionEnabled = false
+        textView.isAutomaticLinkDetectionEnabled = false
+        textView.isContinuousSpellCheckingEnabled = false
+        textView.isGrammarCheckingEnabled = false
+        // Free to grow taller than the viewport; the scroll view takes care of
+        // the rest. The padding goes on the inset instead, where it also
+        // positions the placeholder.
+        textView.textContainerInset = Self.textInset
+        textView.textContainer?.lineFragmentPadding = 0
+        // The container's width is set explicitly from the viewport (see
+        // `RowScrollView.layout`) rather than tracked off the text view. A
+        // tracked container is zero-width until SwiftUI first lays the row
+        // out, and a zero-width container doesn't wrap: anything that forces
+        // layout before then — placing the caret, scrolling to it — strings the
+        // whole task onto one endless line, and nothing brings the wrap back.
+        textView.textContainer?.widthTracksTextView = false
+        textView.textContainer?.heightTracksTextView = false
+        textView.textContainer?.containerSize = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
+        textView.isHorizontallyResizable = false
+        textView.isVerticallyResizable = true
+        textView.minSize = .zero
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        textView.autoresizingMask = [.width]
+
+        textView.onFocusChange = { [weak textView] focused in
+            guard let textView else { return }
+            context.coordinator.focusChanged(to: focused, in: textView)
+        }
+
+        let scroll = RowScrollView(frame: .zero)
+        scroll.documentView = textView
+        return scroll
     }
 
-    func updateNSView(_ field: FocusableTextField, context: Context) {
+    func updateNSView(_ scroll: RowScrollView, context: Context) {
         context.coordinator.parent = self
-        if field.stringValue != text { field.stringValue = text }
-        field.placeholderAttributedString = NSAttributedString(
-            string: placeholder,
-            attributes: [
-                .foregroundColor: NSColor.white.withAlphaComponent(0.25),
-                .font: Self.font,
-            ]
-        )
+        let textView = scroll.rowTextView
+        if textView.string != text {
+            // Replacing the string drops the attributes with it, so the row has
+            // to be painted again — with its date phrase highlighted if the
+            // keyboard is here, plain white if it isn't.
+            textView.string = text
+            context.coordinator.restyle(textView)
+        }
+        textView.placeholder = placeholder
         // Drive AppKit's first responder from SwiftUI's focus state.
-        field.wantsFocus = focusedIndex == index
-        field.focusIfWanted()
+        textView.wantsFocus = focusedIndex == index
+        textView.entersOnFirstLine = rowEntry == .fromAbove
+        if textView.focusIfWanted() {
+            // Deferred: this runs inside a SwiftUI view update.
+            let onFocusLanded = self.onFocusLanded
+            DispatchQueue.main.async(execute: onFocusLanded)
+        }
+    }
+
+    /// Measures wrapped text the way the row draws it — same font, same
+    /// container, no padding — so the height SwiftUI is given is the height the
+    /// text actually takes.
+    private static let measuring: (storage: NSTextStorage, layout: NSLayoutManager, container: NSTextContainer) = {
+        let storage = NSTextStorage()
+        let layout = NSLayoutManager()
+        let container = NSTextContainer(size: NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude))
+        container.lineFragmentPadding = 0
+        layout.addTextContainer(container)
+        storage.addLayoutManager(layout)
+        return (storage, layout, container)
+    }()
+
+    private static func measuredHeight(of string: String, width: CGFloat) -> CGFloat {
+        let (storage, layout, container) = measuring
+        container.size = NSSize(width: max(width, 0), height: .greatestFiniteMagnitude)
+        storage.setAttributedString(
+            NSAttributedString(string: string.isEmpty ? " " : string, attributes: [.font: font])
+        )
+        layout.ensureLayout(for: container)
+        return layout.usedRect(for: container).height
+    }
+
+    /// One line of the row's text, so the three-line cap lands exactly on a
+    /// line boundary instead of slicing a fourth line in half.
+    static let lineHeight: CGFloat = measuredHeight(of: "Ag", width: .greatestFiniteMagnitude)
+
+    /// The height the text needs once wrapped into `width`, never more than
+    /// `RowTextLayout.maxLines` lines' worth — past that the row holds still and
+    /// the text scrolls inside it.
+    ///
+    /// Rounded up so the row height lands on whole points: a fractional height
+    /// puts the hosted view at a fractional window Y, where the text shimmers
+    /// off the pixel grid (same reasoning as `listOverflows`).
+    static func wrappedHeight(of string: String, width: CGFloat) -> CGFloat {
+        let measured = measuredHeight(of: string, width: width - textInset.width * 2)
+        return ceil(RowTextLayout.cappedHeight(measured: measured, lineHeight: lineHeight))
+    }
+
+    /// Report the wrapped height to SwiftUI so the row — and the card behind
+    /// it — grow with the text, up to the cap. The placeholder is measured when
+    /// the row is empty so an empty row is never shorter than the text it's
+    /// inviting.
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: RowScrollView, context: Context) -> CGSize? {
+        guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
+        let content = text.isEmpty ? placeholder : text
+        let height = Self.wrappedHeight(of: content, width: width)
+        return CGSize(width: width, height: max(height, TodoRow.textRowHeight))
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
-    /// Claims first responder whenever SwiftUI says this row has focus. The
-    /// window hook matters when the field is *created* already focused — which
-    /// is what un-completing a task does, replacing the row's `Text` with a
-    /// fresh field: at `updateNSView` time it isn't in a window yet, so without
-    /// this the row would render focused while nothing held the keyboard.
-    final class FocusableTextField: NSTextField {
-        var wantsFocus = false
+    /// The row's viewport: at most `RowTextLayout.maxLines` tall, with the text
+    /// view free to be taller inside it.
+    final class RowScrollView: NSScrollView {
+        var rowTextView: RowTextView { documentView as! RowTextView }
 
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            drawsBackground = false
+            contentView.drawsBackground = false
+            borderType = .noBorder
+            focusRingType = .none
+            hasVerticalScroller = false
+            hasHorizontalScroller = false
+            // No rubber-banding: a row is two or three lines tall, and a bounce
+            // inside something that small reads as a glitch.
+            verticalScrollElasticity = .none
+            horizontalScrollElasticity = .none
+            automaticallyAdjustsContentInsets = false
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        override func layout() {
+            super.layout()
+            let viewport = contentView.bounds.size
+            // The text wraps into the width the row actually got. Set before
+            // anything can ask the layout manager a question, and only once the
+            // row has a width — a zero-width container doesn't wrap at all.
+            if viewport.width > 0 {
+                let inset = rowTextView.textContainerInset.width
+                let width = max(viewport.width - inset * 2, 1)
+                if rowTextView.textContainer?.containerSize.width != width {
+                    rowTextView.textContainer?.containerSize =
+                        NSSize(width: width, height: CGFloat.greatestFiniteMagnitude)
+                }
+            }
+            // The text view fills the viewport even when the task is one short
+            // line, so a click anywhere in the row lands in the text rather
+            // than falling through to the card behind it.
+            rowTextView.minSize = NSSize(width: 0, height: viewport.height)
+            if rowTextView.frame.width != viewport.width || rowTextView.frame.height < viewport.height {
+                rowTextView.setFrameSize(
+                    NSSize(width: viewport.width, height: max(rowTextView.frame.height, viewport.height))
+                )
+            }
+        }
+
+        /// A row only claims the wheel when it actually has lines hidden past
+        /// its cap; otherwise the gesture belongs to the task list behind it.
+        override func scrollWheel(with event: NSEvent) {
+            guard let documentView, documentView.frame.height > contentView.bounds.height else {
+                nextResponder?.scrollWheel(with: event)
+                return
+            }
+            super.scrollWheel(with: event)
+        }
+    }
+
+    /// Claims first responder whenever SwiftUI says this row has focus, and
+    /// draws the placeholder itself — a text view has none of its own.
+    final class RowTextView: NSTextView {
+        var wantsFocus = false
+        /// Whether focus is arriving from the row above, in which case the
+        /// caret lands on this row's first line rather than after all of it.
+        var entersOnFirstLine = false
+        /// Told when the keyboard arrives or leaves, so the row can take the
+        /// focused index and drop its date highlight on the way out.
+        var onFocusChange: ((Bool) -> Void)?
+
+        var placeholder = "" {
+            didSet { if placeholder != oldValue, string.isEmpty { needsDisplay = true } }
+        }
+
+        /// Matters when the view is *created* already focused — which is what
+        /// un-completing a task does, replacing the row's `Text` with a fresh
+        /// editor: at `updateNSView` time it isn't in a window yet, so without
+        /// this the row would render focused while nothing held the keyboard.
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             focusIfWanted()
         }
 
-        func focusIfWanted() {
-            guard wantsFocus, let window, currentEditor() == nil else { return }
+        /// Returns whether it actually claimed the keyboard just now.
+        @discardableResult
+        func focusIfWanted() -> Bool {
+            guard wantsFocus, let window, window.firstResponder !== self else { return false }
             window.makeFirstResponder(self)
-            guard let editor = currentEditor() else { return }
-            // On the first edit session AppKit sizes the shared field editor to
-            // the font's natural line height (~19.98pt) rather than the cell's
-            // centered draw rect (19pt) — until a later relayout corrects it.
-            // That mismatch draws the editing text a fraction above where the
-            // unfocused text sits, so the row visibly jumps on focus during
-            // arrow navigation (it self-heals once anything forces a relayout,
-            // e.g. adding a task). Pin the editor to the exact rect the text is
-            // drawn in so the two always line up.
-            if let cell { editor.frame = cell.drawingRect(forBounds: bounds) }
-            // Taking first responder selects the whole string by default;
-            // collapse to the end so focusing just drops the caret after the
-            // existing text instead of teeing it up to be overwritten.
-            let end = (stringValue as NSString).length
-            editor.selectedRange = NSRange(location: end, length: 0)
+            // Focusing drops the caret at the end of the line it arrived on
+            // rather than teeing the task up to be overwritten, and scrolls a
+            // row that's hit its cap to wherever that landed.
+            setSelectedRange(NSRange(location: caretLocationOnEntry(), length: 0))
+            scrollRangeToVisible(selectedRange())
+            return true
+        }
+
+        /// The end of the text, or — when the caret came down from the row
+        /// above — the end of the row's first visual line. On a single-line row
+        /// those are the same character.
+        private func caretLocationOnEntry() -> Int {
+            let end = (string as NSString).length
+            guard entersOnFirstLine, end > 0,
+                  let layout = layoutManager, let container = textContainer,
+                  // Never ask the layout manager anything before the row has a
+                  // width to wrap into — see `makeNSView`.
+                  container.containerSize.width > 1 else { return end }
+            layout.ensureLayout(for: container)
+            guard layout.numberOfGlyphs > 0 else { return end }
+            var fragment = NSRange(location: 0, length: 0)
+            _ = layout.lineFragmentRect(forGlyphAt: 0, effectiveRange: &fragment)
+            let characters = layout.characterRange(forGlyphRange: fragment, actualGlyphRange: nil)
+            var location = min(NSMaxRange(characters), end)
+            // A caret sitting exactly on a soft wrap can belong to either side
+            // of it; step back one character so it's unambiguously on the line
+            // it was meant to land on.
+            if location > 0, location < end {
+                let glyph = layout.glyphIndexForCharacter(at: location)
+                let landed = layout.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil).minY
+                let first = layout.lineFragmentRect(forGlyphAt: 0, effectiveRange: nil).minY
+                if landed > first + RowTextLayout.CaretLine.tolerance { location -= 1 }
+            }
+            return location
+        }
+
+        override func becomeFirstResponder() -> Bool {
+            let became = super.becomeFirstResponder()
+            if became { onFocusChange?(true) }
+            return became
+        }
+
+        override func resignFirstResponder() -> Bool {
+            let resigned = super.resignFirstResponder()
+            if resigned {
+                updateInsertionPointStateAndRestartTimer(false)
+                needsDisplay = true
+                onFocusChange?(false)
+            }
+            return resigned
+        }
+
+        /// Only the row that actually holds the keyboard shows a caret.
+        ///
+        /// Each row owns a text view of its own, and a text view that has been
+        /// asked to give up the keyboard still repaints its last insertion
+        /// point whenever it redraws — which left every idle task in the list
+        /// wearing a caret. (A text field never had this: its editor is one
+        /// shared view that simply leaves the row it came from.) Gated on the
+        /// draw itself, since that's the path a redraw takes.
+        override func drawInsertionPoint(in rect: NSRect, color: NSColor, turnedOn flag: Bool) {
+            guard window?.firstResponder === self else { return }
+            super.drawInsertionPoint(in: rect, color: color, turnedOn: flag)
+        }
+
+        override func updateInsertionPointStateAndRestartTimer(_ restartFlag: Bool) {
+            super.updateInsertionPointStateAndRestartTimer(
+                restartFlag && window?.firstResponder === self
+            )
+        }
+
+        override func draw(_ dirtyRect: NSRect) {
+            super.draw(dirtyRect)
+            guard string.isEmpty, !placeholder.isEmpty else { return }
+            // Drawn at the text's own origin, so the prompt and the first thing
+            // typed over it start at exactly the same pixel.
+            NSAttributedString(
+                string: placeholder,
+                attributes: [
+                    .foregroundColor: NSColor.white.withAlphaComponent(0.25),
+                    .font: TaskTextEditor.font,
+                ]
+            ).draw(at: NSPoint(x: textContainerInset.width, y: textContainerInset.height))
         }
     }
 
-    final class Coordinator: NSObject, NSTextFieldDelegate {
-        var parent: PlainTextField
+    final class Coordinator: NSObject, NSTextViewDelegate {
+        var parent: TaskTextEditor
         private var lastParse: ScheduleParse?
-        init(_ parent: PlainTextField) { self.parent = parent }
+        init(_ parent: TaskTextEditor) { self.parent = parent }
 
-        func controlTextDidChange(_ note: Notification) {
-            guard let field = note.object as? NSTextField else { return }
-            parent.text = field.stringValue
-            refreshParse(for: field)
+        func textDidChange(_ note: Notification) {
+            guard let textView = note.object as? RowTextView else { return }
+            // A task is one logical line even though it may be drawn on
+            // several: a pasted paragraph collapses to spaces rather than
+            // smuggling real breaks into the model.
+            let flattened = Self.flattened(textView.string)
+            if flattened != textView.string {
+                textView.string = flattened
+                textView.setSelectedRange(NSRange(location: (flattened as NSString).length, length: 0))
+            }
+            parent.text = flattened
+            // The placeholder appears and disappears with the text.
+            textView.needsDisplay = true
+            refreshParse(for: textView)
+            // The row may have just gained a line; if it's already at the cap,
+            // follow the caret rather than typing off the bottom edge.
+            textView.scrollRangeToVisible(textView.selectedRange())
         }
 
-        func controlTextDidBeginEditing(_ note: Notification) {
-            if parent.focusedIndex != parent.index { parent.focusedIndex = parent.index }
-            // Re-highlight a phrase that was typed earlier but never confirmed.
-            if let field = note.object as? NSTextField { refreshParse(for: field) }
+        /// Every kind of line break — CRLF, CR, LF, and the Unicode line and
+        /// paragraph separators — folded into single spaces.
+        private static func flattened(_ string: String) -> String {
+            guard string.contains(where: \.isNewline) else { return string }
+            let joined = string.replacingOccurrences(of: "\r\n", with: " ")
+            return String(joined.map { $0.isNewline ? " " : $0 })
         }
 
-        // Parse fresh at submit time so Enter always acts on what's visible.
-        @objc func didSubmit(_ sender: NSTextField) {
-            parent.onSubmit(NaturalDateParser.parse(sender.stringValue))
+        /// Called by the text view as the keyboard arrives and leaves.
+        func focusChanged(to focused: Bool, in textView: RowTextView) {
+            if focused {
+                if parent.focusedIndex != parent.index { parent.focusedIndex = parent.index }
+                // Re-highlight a phrase typed earlier but never confirmed.
+                refreshParse(for: textView)
+            } else {
+                // The highlight is an editing affordance: an unfocused row goes
+                // back to plain white, exactly as it read before it was touched.
+                clearHighlight(in: textView)
+                // And a row that was scrolled to follow the caret rewinds to
+                // the top, so an idle list reads as every task's opening words
+                // rather than wherever each was last being edited.
+                textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
+            }
         }
 
-        /// Re-parse the trailing date phrase and paint it in the field editor.
-        /// The attributes live only in the editor, so an unfocused field
-        /// re-renders plain white from `stringValue` — nothing leaks into the
-        /// model, and resetting the full range every keystroke is also what
-        /// clears the highlight once the phrase stops matching.
-        private func refreshParse(for field: NSTextField) {
-            let parse = NaturalDateParser.parse(field.stringValue)
+        /// Re-parse the trailing date phrase and paint it. Nothing leaks into
+        /// the model — the attributes live on the view's storage — and resetting
+        /// the full range every keystroke is also what clears the highlight once
+        /// the phrase stops matching.
+        func refreshParse(for textView: NSTextView) {
+            let parse = NaturalDateParser.parse(textView.string)
             if parse != lastParse {
                 lastParse = parse
-                // Defer: begin-editing can fire inside a SwiftUI view update.
+                // Defer: focus can change inside a SwiftUI view update.
                 let onParseChange = parent.onParseChange
                 DispatchQueue.main.async { onParseChange(parse) }
             }
 
-            guard let editor = field.currentEditor() as? NSTextView,
-                  let storage = editor.textStorage else { return }
+            guard let storage = textView.textStorage else { return }
             let full = NSRange(location: 0, length: storage.length)
             storage.beginEditing()
             storage.removeAttribute(.backgroundColor, range: full)
             storage.addAttribute(.foregroundColor, value: NSColor.white, range: full)
+            storage.addAttribute(.font, value: TaskTextEditor.font, range: full)
             if let parse, NSMaxRange(parse.matchedRange) <= storage.length {
                 storage.addAttribute(.foregroundColor, value: NSColor.systemGreen, range: parse.matchedRange)
                 storage.addAttribute(
@@ -1217,11 +1578,62 @@ private struct PlainTextField: NSViewRepresentable {
             }
             storage.endEditing()
             // Don't let fresh keystrokes inherit the highlight's attributes.
-            editor.typingAttributes = [.font: PlainTextField.font, .foregroundColor: NSColor.white]
+            textView.typingAttributes = [.font: TaskTextEditor.font, .foregroundColor: NSColor.white]
         }
 
-        func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+        /// Paints the row for the state it's in: the date phrase highlighted
+        /// while the keyboard is here, plain white once it leaves.
+        func restyle(_ textView: RowTextView) {
+            if textView.window?.firstResponder === textView {
+                refreshParse(for: textView)
+            } else {
+                clearHighlight(in: textView)
+            }
+        }
+
+        private func clearHighlight(in textView: NSTextView) {
+            guard let storage = textView.textStorage else { return }
+            let full = NSRange(location: 0, length: storage.length)
+            storage.beginEditing()
+            storage.removeAttribute(.backgroundColor, range: full)
+            storage.addAttribute(.foregroundColor, value: NSColor.white, range: full)
+            storage.addAttribute(.font, value: TaskTextEditor.font, range: full)
+            storage.endEditing()
+            lastParse = nil
+        }
+
+        /// Which of the row's wrapped lines the caret is on, read off the text
+        /// view's own layout. Nil when there's nothing laid out to be on — an
+        /// empty row — where the caret is trivially on the first line and the
+        /// last at once.
+        private func caretLine(in textView: NSTextView) -> RowTextLayout.CaretLine? {
+            guard let layout = textView.layoutManager, let container = textView.textContainer else { return nil }
+            layout.ensureLayout(for: container)
+            let glyphs = layout.numberOfGlyphs
+            guard glyphs > 0 else { return nil }
+            // A caret past the last character belongs to the line that
+            // character is on: the text holds no real breaks, so there is never
+            // an empty line below it for the caret to have fallen onto.
+            let length = (textView.string as NSString).length
+            let character = min(max(textView.selectedRange().location, 0), max(length - 1, 0))
+            let glyph = min(layout.glyphIndexForCharacter(at: character), glyphs - 1)
+            func top(ofGlyphAt index: Int) -> CGFloat {
+                layout.lineFragmentRect(forGlyphAt: index, effectiveRange: nil).minY
+            }
+            return RowTextLayout.CaretLine(
+                top: top(ofGlyphAt: glyph),
+                firstLineTop: top(ofGlyphAt: 0),
+                lastLineTop: top(ofGlyphAt: glyphs - 1)
+            )
+        }
+
+        func textView(_ textView: NSTextView, doCommandBy selector: Selector) -> Bool {
             switch selector {
+            // Parsed fresh at submit time so Enter always acts on what's
+            // visible.
+            case #selector(NSResponder.insertNewline(_:)):
+                parent.onSubmit(NaturalDateParser.parse(textView.string))
+                return true
             case #selector(NSResponder.cancelOperation(_:)):
                 parent.onEscape()
                 return true
@@ -1231,18 +1643,31 @@ private struct PlainTextField: NSViewRepresentable {
             case #selector(NSResponder.insertBacktab(_:)):
                 parent.onBacktab()
                 return true
+            // Option-Return, Control-Return and the line-break key all ask for
+            // a hard break. The row wraps on its own and the task is one
+            // logical line, so these do nothing at all.
+            case #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)),
+                 #selector(NSResponder.insertLineBreak(_:)),
+                 #selector(NSResponder.insertParagraphSeparator(_:)):
+                return true
             // Arrows walk the list like Tab/Shift-Tab — Down on the last
-            // filled row spills into a fresh task.
+            // filled row spills into a fresh task. A row whose text wrapped is
+            // walked line by line first, though: only from its top line does Up
+            // leave for the task above, and only from its bottom line does Down
+            // leave for the one below. Returning false hands the move back to
+            // the text view, which walks the caret and scrolls the row to it.
             case #selector(NSResponder.moveUp(_:)):
-                parent.onBacktab()
+                guard caretLine(in: textView)?.isOnFirstLine ?? true else { return false }
+                parent.onMoveUp()
                 return true
             case #selector(NSResponder.moveDown(_:)):
-                parent.onTab()
+                guard caretLine(in: textView)?.isOnLastLine ?? true else { return false }
+                parent.onMoveDown()
                 return true
             case #selector(NSResponder.deleteBackward(_:)):
                 // Backspace on an already-empty task deletes the slot; with
                 // text present (even at caret 0) AppKit handles it normally.
-                if control.stringValue.isEmpty {
+                if textView.string.isEmpty {
                     parent.onEmptyBackspace()
                     return true
                 }
@@ -1251,30 +1676,5 @@ private struct PlainTextField: NSViewRepresentable {
                 return false
             }
         }
-    }
-}
-
-/// `NSTextFieldCell` that keeps text vertically centered in both display and
-/// editing modes so the text doesn't shift when the field gains focus.
-private final class VerticallyCenteredTextFieldCell: NSTextFieldCell {
-    private func centered(_ rect: NSRect) -> NSRect {
-        let textHeight = cellSize(forBounds: rect).height
-        guard textHeight < rect.height else { return rect }
-        var r = rect
-        r.origin.y += (rect.height - textHeight) / 2
-        r.size.height = textHeight
-        return r
-    }
-
-    override func drawingRect(forBounds rect: NSRect) -> NSRect {
-        super.drawingRect(forBounds: centered(rect))
-    }
-
-    override func edit(withFrame rect: NSRect, in controlView: NSView, editor textObj: NSText, delegate: Any?, event: NSEvent?) {
-        super.edit(withFrame: centered(rect), in: controlView, editor: textObj, delegate: delegate, event: event)
-    }
-
-    override func select(withFrame rect: NSRect, in controlView: NSView, editor textObj: NSText, delegate: Any?, start selStart: Int, length selLength: Int) {
-        super.select(withFrame: centered(rect), in: controlView, editor: textObj, delegate: delegate, start: selStart, length: selLength)
     }
 }
