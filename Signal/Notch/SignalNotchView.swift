@@ -1458,8 +1458,31 @@ private struct TaskTextEditor: NSViewRepresentable {
 
         override func resignFirstResponder() -> Bool {
             let resigned = super.resignFirstResponder()
-            if resigned { onFocusChange?(false) }
+            if resigned {
+                updateInsertionPointStateAndRestartTimer(false)
+                needsDisplay = true
+                onFocusChange?(false)
+            }
             return resigned
+        }
+
+        /// Only the row that actually holds the keyboard shows a caret.
+        ///
+        /// Each row owns a text view of its own, and a text view that has been
+        /// asked to give up the keyboard still repaints its last insertion
+        /// point whenever it redraws — which left every idle task in the list
+        /// wearing a caret. (A text field never had this: its editor is one
+        /// shared view that simply leaves the row it came from.) Gated on the
+        /// draw itself, since that's the path a redraw takes.
+        override func drawInsertionPoint(in rect: NSRect, color: NSColor, turnedOn flag: Bool) {
+            guard window?.firstResponder === self else { return }
+            super.drawInsertionPoint(in: rect, color: color, turnedOn: flag)
+        }
+
+        override func updateInsertionPointStateAndRestartTimer(_ restartFlag: Bool) {
+            super.updateInsertionPointStateAndRestartTimer(
+                restartFlag && window?.firstResponder === self
+            )
         }
 
         override func draw(_ dirtyRect: NSRect) {
