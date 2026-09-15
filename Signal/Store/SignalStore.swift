@@ -2,6 +2,12 @@ import Foundation
 import SwiftData
 
 /// Owns "today's" to-dos and the day-transition logic (carry-over + history).
+///
+/// Today is one flat list split into two sections: the regular tasks the user
+/// types in, then the tasks the schedule delivered (`isScheduled`). `order`
+/// stays a single contiguous 0-based sequence across both, with the invariant
+/// that every regular item precedes every scheduled one — so the view can keep
+/// indexing one array while rendering a `SCHEDULED` header at the seam.
 @MainActor
 @Observable
 final class SignalStore {
@@ -11,6 +17,8 @@ final class SignalStore {
     /// heart of Signal. A day can grow beyond this when the user adds tasks.
     static let defaultTaskCount = 3
     /// Floor a day can be trimmed to via deletion — there's always one task.
+    /// Counts regular tasks only: a scheduled row is never the last thing
+    /// standing between the user and an empty day.
     static let minTaskCount = 1
 
     /// Today's log and its tasks: at least `defaultTaskCount`, more if the user
@@ -44,7 +52,26 @@ final class SignalStore {
             materializePending(into: today, on: startOfToday)
         }
 
-        items = today?.orderedItems ?? []
+        items = today.map { normalizeOrder($0) } ?? []
+    }
+
+    // MARK: - Sections
+
+    /// The tasks the user owns: everything above the `SCHEDULED` header.
+    var regularItems: [TodoItem] {
+        items.filter { !$0.isScheduled }
+    }
+
+    /// The tasks the schedule delivered, in the order they arrived.
+    var scheduledItems: [TodoItem] {
+        items.filter(\.isScheduled)
+    }
+
+    /// Index of the first scheduled row — equivalently, how many regular rows
+    /// there are, and where a newly added task is inserted. `items.count` when
+    /// nothing is scheduled today.
+    var scheduledSectionStart: Int {
+        items.firstIndex(where: \.isScheduled) ?? items.count
     }
 
     var completedCount: Int {
@@ -57,9 +84,20 @@ final class SignalStore {
         !items.isEmpty && completedCount == items.count
     }
 
-    /// A task can be removed as long as it wouldn't drop the day below its floor.
-    var canDeleteTask: Bool {
-        items.count > Self.minTaskCount
+    /// A regular task can be removed as long as it wouldn't drop the day below
+    /// its floor. A scheduled one always can — it isn't the user's to keep, and
+    /// removing it only empties the section the schedule fills back up.
+    func canDelete(_ item: TodoItem) -> Bool {
+        item.isScheduled || regularItems.count > Self.minTaskCount
+    }
+
+    /// Whether a reorder is legal: real slots, an actual move, and both ends in
+    /// the same section — a row can't be dragged across the `SCHEDULED` header
+    /// in either direction.
+    func canMove(from source: Int, to destination: Int) -> Bool {
+        guard source != destination,
+              items.indices.contains(source), items.indices.contains(destination) else { return false }
+        return items[source].isScheduled == items[destination].isScheduled
     }
 
     func toggleComplete(_ item: TodoItem) {
@@ -83,43 +121,45 @@ final class SignalStore {
         save()
     }
 
-    /// Appends a fresh empty slot to today and returns its index, so the caller
-    /// can move focus to it.
+    /// Adds a fresh empty slot at the end of the *regular* section — above the
+    /// scheduled rows, not below them — and returns its index so the caller can
+    /// move focus to it.
     @discardableResult
     func addTask() -> Int? {
         guard let today else { return nil }
-        let item = TodoItem(text: "", isCompleted: false, order: items.count)
+        let insertionPoint = scheduledSectionStart
+        let item = TodoItem(text: "", isCompleted: false, order: insertionPoint)
         item.day = today
         context.insert(item)
+
+        var reordered = items
+        reordered.insert(item, at: insertionPoint)
+        repack(reordered)
         save()
-        items = today.orderedItems
-        return items.count - 1
+        items = reordered
+        return insertionPoint
     }
 
     /// Removes a task and re-packs the remaining slots so `order` stays a
     /// contiguous 0-based sequence (which keeps `addTask`'s ordering correct).
-    /// No-op when `canDeleteTask` is false.
+    /// No-op when `canDelete(_:)` is false.
     func deleteTask(_ item: TodoItem) {
-        guard canDeleteTask, let today else { return }
+        guard canDelete(item), today != nil else { return }
+        let remaining = items.filter { $0.persistentModelID != item.persistentModelID }
         context.delete(item)
-        let remaining = today.orderedItems.filter { $0.persistentModelID != item.persistentModelID }
-        for (index, todo) in remaining.enumerated() {
-            todo.order = index
-        }
+        repack(remaining)
         save()
         items = remaining
     }
 
     /// Moves a task to a new slot and re-packs `order` so it stays a
-    /// contiguous 0-based sequence (the invariant `addTask` relies on).
+    /// contiguous 0-based sequence (the invariant `addTask` relies on). Moves
+    /// that would cross the section boundary are refused — see `canMove`.
     func moveTask(from source: Int, to destination: Int) {
-        guard source != destination,
-              items.indices.contains(source), items.indices.contains(destination) else { return }
+        guard canMove(from: source, to: destination) else { return }
         var reordered = items
         reordered.insert(reordered.remove(at: source), at: destination)
-        for (index, todo) in reordered.enumerated() {
-            todo.order = index
-        }
+        repack(reordered)
         save()
         items = reordered
     }
@@ -137,7 +177,7 @@ final class SignalStore {
         let task = ScheduledTask(text: parse.cleanText, dueDate: parse.dueDate, recurrence: parse.recurrence)
         context.insert(task)
 
-        if canDeleteTask {
+        if canDelete(item) {
             deleteTask(item)
         } else {
             item.text = ""
@@ -148,7 +188,9 @@ final class SignalStore {
     /// Fills today with any scheduled tasks that have come due. Idempotent —
     /// delivered one-time tasks fail the `deliveredAt == nil` predicate and
     /// recurring tasks advance `dueDate` past today — so it's safe on every
-    /// open. Blank slots are claimed first, then the day grows to fit.
+    /// open. Arrivals are appended to the scheduled section at the bottom and
+    /// never claim a blank regular slot: the three Signal slots stay the
+    /// user's to fill.
     private func materializePending(into log: DayLog, on date: Date) {
         let descriptor = FetchDescriptor<ScheduledTask>(
             predicate: #Predicate { $0.dueDate <= date && $0.deliveredAt == nil },
@@ -168,15 +210,14 @@ final class SignalStore {
             }
 
             if !alreadyPresent {
-                if let blank = log.orderedItems.first(where: {
-                    !$0.isCompleted && $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                }) {
-                    blank.text = task.text
-                } else {
-                    let item = TodoItem(text: task.text, isCompleted: false, order: log.items.count)
-                    item.day = log
-                    context.insert(item)
-                }
+                let item = TodoItem(
+                    text: task.text,
+                    isCompleted: false,
+                    order: log.items.count,
+                    isScheduled: true
+                )
+                item.day = log
+                context.insert(item)
             }
 
             if task.isRecurring {
@@ -196,19 +237,34 @@ final class SignalStore {
         let log = DayLog(date: date)
         context.insert(log)
 
-        var carried: [String] = []
+        // Carry-over keeps each task on the side of the header it was on, so a
+        // recurring task that went unfinished doesn't get promoted into the
+        // Signal slots overnight.
+        var carriedRegular: [String] = []
+        var carriedScheduled: [String] = []
         if SettingsStore.carryOverIncomplete, let prior = mostRecentPriorLog(before: date) {
-            carried = prior.orderedItems
+            let carried = prior.orderedItems
                 .filter { !$0.isCompleted && !$0.text.trimmingCharacters(in: .whitespaces).isEmpty }
-                .map(\.text)
+            carriedRegular = carried.filter { !$0.isScheduled }.map(\.text)
+            carriedScheduled = carried.filter(\.isScheduled).map(\.text)
         }
 
         // Start with the default number of slots, but grow to fit every carried
         // task so nothing is dropped when a prior day had more than three.
-        let slotCount = max(Self.defaultTaskCount, carried.count)
+        let slotCount = max(Self.defaultTaskCount, carriedRegular.count)
         for index in 0 ..< slotCount {
-            let text = index < carried.count ? carried[index] : ""
+            let text = index < carriedRegular.count ? carriedRegular[index] : ""
             let item = TodoItem(text: text, isCompleted: false, order: index)
+            item.day = log
+            context.insert(item)
+        }
+        for (offset, text) in carriedScheduled.enumerated() {
+            let item = TodoItem(
+                text: text,
+                isCompleted: false,
+                order: slotCount + offset,
+                isScheduled: true
+            )
             item.day = log
             context.insert(item)
         }
@@ -217,18 +273,53 @@ final class SignalStore {
         return log
     }
 
-    /// Defensive: make sure a loaded day is never empty. A fresh day starts at
-    /// `defaultTaskCount` (see `createDayLog`); days the user has grown or
-    /// trimmed are left as-is, down to the `minTaskCount` floor.
+    /// Defensive: make sure a loaded day is never empty of regular slots. A
+    /// fresh day starts at `defaultTaskCount` (see `createDayLog`); days the
+    /// user has grown or trimmed are left as-is, down to the `minTaskCount`
+    /// floor. `normalizeOrder` does the renumbering afterwards.
     private func ensureMinimumSlots(_ log: DayLog) {
-        let count = log.items.count
+        let count = log.items.filter { !$0.isScheduled }.count
         guard count < Self.minTaskCount else { return }
-        for index in count ..< Self.minTaskCount {
-            let item = TodoItem(text: "", isCompleted: false, order: index)
+        for _ in count ..< Self.minTaskCount {
+            let item = TodoItem(text: "", isCompleted: false, order: log.items.count)
             item.day = log
             context.insert(item)
         }
         save()
+    }
+
+    // MARK: - Ordering
+
+    /// The day's items in list order, with `order` re-packed to a contiguous
+    /// 0-based sequence that puts every regular task before every scheduled
+    /// one. Sorting is stable within each section, so relative order — the
+    /// user's own arrangement — is preserved; it only ever pushes a stray
+    /// scheduled row (one written before the flag existed, or left behind by a
+    /// deletion) down to the tail.
+    private func normalizeOrder(_ log: DayLog) -> [TodoItem] {
+        let sorted = log.orderedItems
+            .enumerated()
+            .sorted { lhs, rhs in
+                if lhs.element.isScheduled != rhs.element.isScheduled {
+                    return !lhs.element.isScheduled
+                }
+                return lhs.offset < rhs.offset
+            }
+            .map(\.element)
+
+        if repack(sorted) { save() }
+        return sorted
+    }
+
+    /// Renumbers `order` to match list position. Returns whether anything moved.
+    @discardableResult
+    private func repack(_ ordered: [TodoItem]) -> Bool {
+        var changed = false
+        for (index, todo) in ordered.enumerated() where todo.order != index {
+            todo.order = index
+            changed = true
+        }
+        return changed
     }
 
     // MARK: - Fetches
