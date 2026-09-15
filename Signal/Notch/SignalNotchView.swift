@@ -263,6 +263,8 @@ struct SignalNotchView: View {
                 onTab: idle { advanceOrAdd(from: pair.offset) },
                 onBacktab: idle { focusPrevious(from: pair.offset) },
                 onEmptyBackspace: idle { backspaceDelete(pair.element, at: pair.offset) },
+                onMoveUp: idle { moveTaskUp(at: pair.offset) },
+                onMoveDown: idle { moveTaskDown(at: pair.offset) },
                 onDragChanged: { translation in drag(pair.element, by: translation) },
                 onDragEnded: endDrag
             )
@@ -493,6 +495,28 @@ struct SignalNotchView: View {
         if index > 0 { focused = index - 1 }
     }
 
+    /// ⌥↑: the keyboard twin of dragging the grip up one slot. Focus follows
+    /// the row — its new index is written in the same transaction as the
+    /// reorder, so no other row ever sees its own index match `focused` and
+    /// steals first responder. The row keeps its identity (the ForEach keys on
+    /// the model ID), so the hosted field, and the caret inside it, survive the
+    /// move. On the first row nothing happens. Ignored mid-drag so the mouse
+    /// and the keyboard never reorder the same list at once.
+    private func moveTaskUp(at index: Int) {
+        guard draggingID == nil else { return }
+        withAnimation(.snappy(duration: 0.2)) {
+            if let newIndex = store.moveTaskUp(at: index) { focused = newIndex }
+        }
+    }
+
+    /// ⌥↓: same as `moveTaskUp(at:)`, one slot the other way. No-op on the last row.
+    private func moveTaskDown(at index: Int) {
+        guard draggingID == nil else { return }
+        withAnimation(.snappy(duration: 0.2)) {
+            if let newIndex = store.moveTaskDown(at: index) { focused = newIndex }
+        }
+    }
+
     /// The single toggle path, shared by Enter and the row's circle so both move
     /// focus the same way. Checking a task off steps down one row — completed
     /// rows are focusable too (they show a highlight instead of a caret), so
@@ -711,6 +735,9 @@ private struct TodoRow: View {
     let onBacktab: () -> Void
     /// Backspace pressed while the field is already empty.
     let onEmptyBackspace: () -> Void
+    /// ⌥↑ / ⌥↓: move this row one slot up or down (VS Code's "Move Line").
+    let onMoveUp: () -> Void
+    let onMoveDown: () -> Void
     /// Cumulative vertical distance dragged from where the grip was grabbed.
     let onDragChanged: (CGFloat) -> Void
     let onDragEnded: () -> Void
@@ -811,7 +838,9 @@ private struct TodoRow: View {
                                 onSubmit: { onSubmit(nil) },
                                 onEscape: onEscape,
                                 onTab: onTab,
-                                onBacktab: onBacktab
+                                onBacktab: onBacktab,
+                                onMoveUp: onMoveUp,
+                                onMoveDown: onMoveDown
                             )
                         }
                 } else {
@@ -825,7 +854,9 @@ private struct TodoRow: View {
                         onEscape: onEscape,
                         onTab: onTab,
                         onBacktab: onBacktab,
-                        onEmptyBackspace: onEmptyBackspace
+                        onEmptyBackspace: onEmptyBackspace,
+                        onMoveUp: onMoveUp,
+                        onMoveDown: onMoveDown
                     )
                 }
             }
@@ -892,7 +923,7 @@ private struct TodoRow: View {
                     .onEnded { _ in onDragEnded() }
             )
             .disabled(confirmationLabel != nil)
-            .help("Drag to reorder")
+            .help("Drag to reorder (⌥↑ / ⌥↓)")
     }
 
     private var handleOpacity: Double {
@@ -993,6 +1024,15 @@ private struct ScrollOverflowReporter: NSViewRepresentable {
     }
 }
 
+private extension NSEvent {
+    /// Option held on its own. Arrow keys always carry `.function` and
+    /// `.numericPad`, so only the four real modifiers are compared — and
+    /// ⇧⌥↑ (extend selection) is deliberately left to AppKit.
+    var isOptionOnly: Bool {
+        modifierFlags.intersection([.command, .control, .option, .shift]) == .option
+    }
+}
+
 /// An invisible responder that stands in for the text field on a completed row.
 /// Completing a task swaps its field for a `Text` (a live NSTextField can't draw
 /// the strikethrough), which would otherwise drop the row out of the responder
@@ -1006,6 +1046,8 @@ private struct RowKeyCatcher: NSViewRepresentable {
     let onEscape: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
+    let onMoveUp: () -> Void
+    let onMoveDown: () -> Void
 
     func makeNSView(context: Context) -> CatcherView {
         let view = CatcherView()
@@ -1024,6 +1066,8 @@ private struct RowKeyCatcher: NSViewRepresentable {
         view.onEscape = onEscape
         view.onTab = onTab
         view.onBacktab = onBacktab
+        view.onMoveUp = onMoveUp
+        view.onMoveDown = onMoveDown
     }
 
     final class CatcherView: NSView {
@@ -1032,6 +1076,8 @@ private struct RowKeyCatcher: NSViewRepresentable {
         var onEscape: (() -> Void)?
         var onTab: (() -> Void)?
         var onBacktab: (() -> Void)?
+        var onMoveUp: (() -> Void)?
+        var onMoveDown: (() -> Void)?
 
         override var acceptsFirstResponder: Bool { true }
 
@@ -1055,6 +1101,12 @@ private struct RowKeyCatcher: NSViewRepresentable {
                 onEscape?()
             case 48:  // Tab
                 event.modifierFlags.contains(.shift) ? onBacktab?() : onTab?()
+            // ⌥↓ / ⌥↑ reorder instead of navigating — matched first so the
+            // plain-arrow cases below stay Option-free.
+            case 125 where event.isOptionOnly:
+                onMoveDown?()
+            case 126 where event.isOptionOnly:
+                onMoveUp?()
             case 125:  // Down
                 onTab?()
             case 126:  // Up
@@ -1090,6 +1142,9 @@ private struct PlainTextField: NSViewRepresentable {
     let onBacktab: () -> Void
     /// Backspace pressed while the field is already empty.
     let onEmptyBackspace: () -> Void
+    /// ⌥↑ / ⌥↓: move this row one slot up or down.
+    let onMoveUp: () -> Void
+    let onMoveDown: () -> Void
 
     private static let font = NSFont.systemFont(ofSize: 15, weight: .medium)
 
@@ -1220,8 +1275,36 @@ private struct PlainTextField: NSViewRepresentable {
             editor.typingAttributes = [.font: PlainTextField.font, .foregroundColor: NSColor.white]
         }
 
+        /// Key code of the event currently being interpreted when it's ⌥↑ (126)
+        /// or ⌥↓ (125) with Option alone; nil for anything else. The selectors
+        /// below are also reachable without Option (⌃B/⌃F, and ⌥arrow variants
+        /// with other modifiers), so the event itself is the only reliable
+        /// way to tell the reorder chord apart from ordinary caret motion.
+        private var optionArrowKeyCode: UInt16? {
+            guard let event = NSApp.currentEvent, event.type == .keyDown, event.isOptionOnly,
+                  event.keyCode == 125 || event.keyCode == 126 else { return nil }
+            return event.keyCode
+        }
+
         func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
             switch selector {
+            // ⌥↑ / ⌥↓ arrive as a two-selector sequence per key press —
+            // `moveBackward:` then `moveToBeginningOfParagraph:` for up, and
+            // the forward pair for down (see StandardKeyBinding.dict). Act on
+            // the second and swallow the first, otherwise the caret steps
+            // sideways before the row moves.
+            case #selector(NSResponder.moveBackward(_:)), #selector(NSResponder.moveForward(_:)):
+                return optionArrowKeyCode != nil
+            case #selector(NSResponder.moveToBeginningOfParagraph(_:)):
+                guard optionArrowKeyCode == 126 else { return false }
+                parent.onMoveUp()
+                // Consumed even on the first row: a boundary is a silent
+                // no-op, not a beep and not a caret jump.
+                return true
+            case #selector(NSResponder.moveToEndOfParagraph(_:)):
+                guard optionArrowKeyCode == 125 else { return false }
+                parent.onMoveDown()
+                return true
             case #selector(NSResponder.cancelOperation(_:)):
                 parent.onEscape()
                 return true

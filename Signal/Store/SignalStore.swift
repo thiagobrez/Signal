@@ -124,6 +124,25 @@ final class SignalStore {
         items = reordered
     }
 
+    /// Swaps a task with the one above it — the keyboard's half of the reorder
+    /// the drag grip does. Returns the row's new index, or nil when it's
+    /// already on top (or `index` is out of range): nothing moves.
+    @discardableResult
+    func moveTaskUp(at index: Int) -> Int? {
+        guard items.indices.contains(index), index > 0 else { return nil }
+        moveTask(from: index, to: index - 1)
+        return index - 1
+    }
+
+    /// Swaps a task with the one below it. Returns the row's new index, or nil
+    /// when it's already at the bottom (or `index` is out of range).
+    @discardableResult
+    func moveTaskDown(at index: Int) -> Int? {
+        guard items.indices.contains(index), index < items.count - 1 else { return nil }
+        moveTask(from: index, to: index + 1)
+        return index + 1
+    }
+
     func save() {
         try? context.save()
     }
