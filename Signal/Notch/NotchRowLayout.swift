@@ -14,20 +14,40 @@ struct NotchRowLayout {
     let heights: [CGFloat]
     /// The gap between two consecutive rows.
     let spacing: CGFloat
+    /// Extra vertical space wedged in *above* a row, keyed by its index. The
+    /// list uses it for the block that separates the two sections — the "Add a
+    /// task" footer and the `SCHEDULED` header — which sits between the last
+    /// regular row and the first scheduled one without being a row itself.
+    let extras: [Int: CGFloat]
 
-    /// Every row plus the gaps between them; zero when there are no rows (an
-    /// empty list has no gaps to account for either).
+    init(heights: [CGFloat], spacing: CGFloat, extras: [Int: CGFloat] = [:]) {
+        self.heights = heights
+        self.spacing = spacing
+        self.extras = extras
+    }
+
+    /// Every row plus the gaps between them and any extra blocks wedged in
+    /// between; zero when there are no rows (an empty list has no gaps to
+    /// account for either).
     var contentHeight: CGFloat {
         guard !heights.isEmpty else { return 0 }
-        return heights.reduce(0, +) + CGFloat(heights.count - 1) * spacing
+        return heights.reduce(0, +)
+            + CGFloat(heights.count - 1) * spacing
+            + extras.values.reduce(0, +)
     }
 
     /// The row's top edge, measured from the top of the list.
     func top(of index: Int) -> CGFloat {
-        heights.prefix(max(0, index)).reduce(0) { $0 + $1 + spacing }
+        let rows = heights.prefix(max(0, index)).reduce(0) { $0 + $1 + spacing }
+        let blocks = extras.reduce(0) { $1.key <= index ? $0 + $1.value : $0 }
+        return rows + blocks
     }
 
     /// How far the next row's top sits below this row's top.
+    ///
+    /// Deliberately blind to `extras`: it's the drag's unit of travel, and a
+    /// drag never crosses a section gap — the view clamps a swap that would at
+    /// the boundary, exactly as it does at either end of the list.
     func stride(of index: Int) -> CGFloat {
         guard heights.indices.contains(index) else { return spacing }
         return heights[index] + spacing

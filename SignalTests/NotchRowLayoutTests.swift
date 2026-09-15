@@ -94,4 +94,46 @@ final class NotchRowLayoutTests: XCTestCase {
         XCTAssertEqual(rows.boundaryLimit(at: 0), 16)
         XCTAssertEqual(rows.boundaryLimit(at: 1), 25)
     }
+
+    // MARK: - extras (the block between the regular and scheduled sections)
+
+    func testExtrasAddToContentHeight() {
+        // Three 22pt rows and two gaps is 86; the section block above row 2
+        // adds its 50 on top.
+        let rows = NotchRowLayout(heights: [22, 22, 22], spacing: spacing, extras: [2: 50])
+        XCTAssertEqual(rows.contentHeight, 136)
+    }
+
+    func testTopIncludesExtrasAtAndAboveRow() {
+        // The block sits above row 2, so rows 0 and 1 are where they always
+        // were and everything from row 2 down is pushed past it.
+        let rows = NotchRowLayout(heights: [22, 22, 22], spacing: spacing, extras: [2: 50])
+        XCTAssertEqual(rows.top(of: 0), 0)
+        XCTAssertEqual(rows.top(of: 1), 32)
+        XCTAssertEqual(rows.top(of: 2), 114)
+    }
+
+    func testIsVisibleAccountsForExtras() {
+        // Row 2 spans 114...136 with the block in place, so a 60pt viewport
+        // resting at the top no longer reaches it.
+        let rows = NotchRowLayout(heights: [22, 22, 22], spacing: spacing, extras: [2: 50])
+        XCTAssertFalse(rows.isVisible(2, scrollOrigin: 0, viewportHeight: 60))
+        XCTAssertTrue(rows.isVisible(2, scrollOrigin: 80, viewportHeight: 60))
+    }
+
+    func testEmptyExtrasIsBackwardsCompatible() {
+        // A list with no scheduled section measures exactly as it did before.
+        let plain = layout([22, 40, 22])
+        let empty = NotchRowLayout(heights: [22, 40, 22], spacing: spacing, extras: [:])
+        XCTAssertEqual(empty.contentHeight, plain.contentHeight)
+        XCTAssertEqual(empty.top(of: 2), plain.top(of: 2))
+    }
+
+    func testStrideIgnoresExtras() {
+        // The drag's unit of travel never spans the section gap — the view
+        // clamps the swap at the boundary instead.
+        let rows = NotchRowLayout(heights: [22, 22, 22], spacing: spacing, extras: [2: 50])
+        XCTAssertEqual(rows.stride(of: 1), 32)
+        XCTAssertEqual(rows.boundaryLimit(at: 1), 16)
+    }
 }
