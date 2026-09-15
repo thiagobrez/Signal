@@ -112,6 +112,7 @@
 		B9C0B8AFDE6757214E7F8AA5 /* ChangelogParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BC6F0678AECBFC37827B77 /* ChangelogParser.swift */; };
 		BB43276A219A505D510E0F65 /* RowTextLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CEC63AC8768122470BEC80 /* RowTextLayout.swift */; };
 		BB729B3E8046B64FBE0CB016 /* UpdaterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */; };
+		BBA22F748C9396BF6853C3BE /* SignalStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F08A8EE8C365DE984E145D /* SignalStoreTests.swift */; };
 		BC391A1D707873A245507449 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CABDE5D429850284CDE2585B /* AppIcon.icon */; };
 		BCB72BF78669CCE888703935 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
 		BD2E5228368A4F5C5DB26061 /* NaturalDateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1334E4232F4E61339C73F41 /* NaturalDateParser.swift */; };
@@ -186,6 +187,7 @@
 		9429655D342968F0EC345753 /* ScheduleRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleRepository.swift; sourceTree = "<group>"; };
 		94BC6F0678AECBFC37827B77 /* ChangelogParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangelogParser.swift; sourceTree = "<group>"; };
 		94BDB779114317E30DA71331 /* RecurrenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrenceTests.swift; sourceTree = "<group>"; };
+		99F08A8EE8C365DE984E145D /* SignalStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalStoreTests.swift; sourceTree = "<group>"; };
 		9D5999FF8532367E6DBD5F60 /* Signal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Signal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FB3897E7BD71986FC13843D /* NaturalDateParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaturalDateParserTests.swift; sourceTree = "<group>"; };
 		AD40B91BE6D69CE63BBF11CC /* tube.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = tube.wav; sourceTree = "<group>"; };
@@ -307,6 +309,7 @@
 				DA3EB99F6E1EE86D2A4F04A9 /* ScheduleGridTests.swift */,
 				44151AC7BEE2C1F3D2D439DC /* ScheduleRepositoryTests.swift */,
 				7F94AC8EFF44F9B8BABD02E2 /* SignalStoreSectionsTests.swift */,
+				99F08A8EE8C365DE984E145D /* SignalStoreTests.swift */,
 			);
 			path = SignalTests;
 			sourceTree = "<group>";
@@ -696,6 +699,7 @@
 				FE5877D17E4DAD26FCAE3270 /* SettingsStore.swift in Sources */,
 				334DA49FB6F14F0031B2D9AC /* SignalStore.swift in Sources */,
 				9303F0BF8AF81893E95A8180 /* SignalStoreSectionsTests.swift in Sources */,
+				BBA22F748C9396BF6853C3BE /* SignalStoreTests.swift in Sources */,
 				53A706B52415C17CDB58AAA3 /* SoundPlayer.swift in Sources */,
 				A4DD06C0F712CF729D21BC63 /* TodoItem.swift in Sources */,
 			);

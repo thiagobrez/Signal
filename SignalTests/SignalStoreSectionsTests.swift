@@ -136,6 +136,22 @@ final class SignalStoreSectionsTests: XCTestCase {
         XCTAssertEqual(store.items.map(\.isScheduled), [false, false, false, true])
     }
 
+    func testKeyboardReorderStopsAtSectionBoundary() {
+        schedule("water plants", due: today)
+        let store = makeStore()
+        store.items[2].text = "last regular"
+
+        // ⌥↓ on the last regular row and ⌥↑ on the first scheduled row: both
+        // refused, focus stays where it is (nil), nothing moves.
+        XCTAssertNil(store.moveTaskDown(at: 2))
+        XCTAssertNil(store.moveTaskUp(at: 3))
+        XCTAssertEqual(store.items.map(\.text), ["", "", "last regular", "water plants"])
+
+        // Within the regular section the keyboard still reorders.
+        XCTAssertEqual(store.moveTaskUp(at: 2), 1)
+        XCTAssertEqual(store.items.map(\.text), ["", "last regular", "", "water plants"])
+    }
+
     func testMoveTaskWithinRegularSectionStillWorks() {
         schedule("water plants", due: today)
         let store = makeStore()
