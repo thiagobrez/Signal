@@ -113,6 +113,12 @@ targets:
       - path: Signal/Models/DayLog.swift
       - path: Signal/Models/TodoItem.swift
       - path: Signal/Store/ScheduleRepository.swift
+      - path: Signal/Store/SignalStore.swift
+      - path: Signal/SettingsStore.swift
+      - path: Signal/Sound/SoundPlayer.swift
+      - path: Signal/Analytics/Analytics.swift
+    dependencies:
+      - package: TelemetryDeck
 
 # Shared schemes so `xcodebuild -scheme <name>` works in CI (schemes only
 # auto-generate when the project is opened in Xcode's UI).
