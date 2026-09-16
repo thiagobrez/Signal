@@ -33,9 +33,13 @@ enum SoundPlayer {
         guard id != noneID, !id.isEmpty else { return }
         guard let sound = makeSound(for: id) else { return }
 
-        let target = AudioOutputDevices.resolvePlaybackDevice(
-            preferred: deviceUID, available: AudioOutputDevices.current()
-        )
+        // Only enumerate devices when a specific one was asked for; the common
+        // System Default path shouldn't pay for a CoreAudio round-trip.
+        let target: String? = deviceUID == AudioOutputDevice.systemDefaultID
+            ? nil
+            : AudioOutputDevices.resolvePlaybackDevice(
+                preferred: deviceUID, available: AudioOutputDevices.current()
+            )
 
         // A device can disappear between the lookup above and the play call (or
         // be rejected outright by CoreAudio), in which case `play()` returns
