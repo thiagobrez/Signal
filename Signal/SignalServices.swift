@@ -109,7 +109,7 @@ final class SignalServices {
                 // version, so a fresh install never sees old release notes.
                 SettingsStore.lastSeenWhatsNewVersion = currentVersion
                 scheduler.markPromptedToday()
-                SoundPlayer.play(SettingsStore.openSound)
+                SoundPlayer.play(SettingsStore.openSound, on: SettingsStore.openSoundDevice)
                 controller.presentInteractive(source: .launch)
             }
         } else if SettingsStore.showWhatsNewAfterUpdates,
@@ -120,7 +120,7 @@ final class SignalServices {
             whatsNew.present(releases: releases) { [controller, scheduler] in
                 guard SettingsStore.openOnLaunch else { return }
                 scheduler.markPromptedToday()
-                SoundPlayer.play(SettingsStore.openSound)
+                SoundPlayer.play(SettingsStore.openSound, on: SettingsStore.openSoundDevice)
                 controller.presentInteractive(source: .launch)
             }
         } else {
@@ -130,7 +130,7 @@ final class SignalServices {
             SettingsStore.lastSeenWhatsNewVersion = currentVersion
             if SettingsStore.openOnLaunch {
                 scheduler.markPromptedToday()
-                SoundPlayer.play(SettingsStore.openSound)
+                SoundPlayer.play(SettingsStore.openSound, on: SettingsStore.openSoundDevice)
                 controller.presentInteractive(source: .launch)
             }
         }

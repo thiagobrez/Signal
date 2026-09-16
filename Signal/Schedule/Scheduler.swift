@@ -106,7 +106,7 @@ final class Scheduler {
     private func fireDailyPrompt() {
         guard SettingsStore.dailyPromptEnabled else { return }
         markPromptedToday()
-        SoundPlayer.play(SettingsStore.openSound)
+        SoundPlayer.play(SettingsStore.openSound, on: SettingsStore.openSoundDevice)
         controller.presentInteractive(source: .scheduled)
     }
 

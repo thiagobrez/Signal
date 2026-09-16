@@ -118,6 +118,7 @@ targets:
       # tests exercise the shipping code.
       - path: Signal/SettingsStore.swift
       - path: Signal/Sound/SoundPlayer.swift
+      - path: Signal/Sound/AudioOutputDevices.swift
       - path: Signal/Analytics/Analytics.swift
     dependencies:
       - package: TelemetryDeck

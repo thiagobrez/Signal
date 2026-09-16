@@ -25,21 +25,51 @@ enum SoundPlayer {
             .sorted()
     }
 
-    /// Plays the sound identified by `id`. No-op for `none`/empty.
-    static func play(_ id: String) {
+    /// Plays the sound identified by `id` through the output device with UID
+    /// `deviceUID`. No-op for `none`/empty. `deviceUID` may be
+    /// `AudioOutputDevice.systemDefaultID` (or a device that is no longer
+    /// connected), in which case macOS picks the output device as usual.
+    static func play(_ id: String, on deviceUID: String = AudioOutputDevice.systemDefaultID) {
         guard id != noneID, !id.isEmpty else { return }
+        guard let sound = makeSound(for: id) else { return }
 
-        let sound: NSSound?
-        if id.hasPrefix("sys:") {
-            sound = NSSound(named: String(id.dropFirst(4)))
-        } else if let url = Bundle.main.url(forResource: id, withExtension: "wav") {
-            sound = NSSound(contentsOf: url, byReference: true)
-        } else {
-            // Last resort: treat as a named sound.
-            sound = NSSound(named: id)
+        let target = AudioOutputDevices.resolvePlaybackDevice(
+            preferred: deviceUID, available: AudioOutputDevices.current()
+        )
+
+        // A device can disappear between the lookup above and the play call (or
+        // be rejected outright by CoreAudio), in which case `play()` returns
+        // false and no sound is ever heard. Retry on the system default so a
+        // stale preference never silences a cue.
+        if !start(sound, on: target), target != nil, let fallback = makeSound(for: id) {
+            _ = start(fallback, on: nil)
         }
+    }
 
-        guard let sound else { return }
+    /// Builds a fresh, independently routable `NSSound` for `id`.
+    ///
+    /// System sounds are loaded from their file rather than via
+    /// `NSSound(named:)`: that initializer hands back a cached shared instance
+    /// whose `playbackDeviceIdentifier` stops taking effect after its first
+    /// playback, so the second preview would come out of the wrong device.
+    private static func makeSound(for id: String) -> NSSound? {
+        if id.hasPrefix("sys:") {
+            let name = String(id.dropFirst(4))
+            let url = URL(fileURLWithPath: "/System/Library/Sounds/\(name).aiff")
+            if let sound = NSSound(contentsOf: url, byReference: true) { return sound }
+            return NSSound(named: name)?.copy() as? NSSound
+        }
+        if let url = Bundle.main.url(forResource: id, withExtension: "wav") {
+            return NSSound(contentsOf: url, byReference: true)
+        }
+        // Last resort: treat as a named sound.
+        return NSSound(named: id)?.copy() as? NSSound
+    }
+
+    /// Starts `sound` on `device` (nil = system default), returning whether
+    /// playback actually began.
+    private static func start(_ sound: NSSound, on device: String?) -> Bool {
+        sound.playbackDeviceIdentifier = device
         // `NSSound.play()` is asynchronous, so the object must stay alive until
         // playback finishes. Without an owner the temporary is deallocated as
         // soon as this call returns — most visibly when firing from a Timer
@@ -47,7 +77,13 @@ enum SoundPlayer {
         // sound off before it's audible. Retention keeps it playing; the
         // delegate releases it when done.
         Retainer.shared.retain(sound)
-        sound.play()
+        guard sound.play() else {
+            // The delegate never fires when playback fails to start, so drop
+            // the reference here instead of leaking it.
+            Retainer.shared.release(sound)
+            return false
+        }
+        return true
     }
 
     /// Holds strong references to sounds while they play and drops them on the
@@ -65,10 +101,14 @@ enum SoundPlayer {
             lock.unlock()
         }
 
-        func sound(_ sound: NSSound, didFinishPlaying _: Bool) {
+        func release(_ sound: NSSound) {
             lock.lock()
             playing.remove(sound)
             lock.unlock()
+        }
+
+        func sound(_ sound: NSSound, didFinishPlaying _: Bool) {
+            release(sound)
         }
     }
 }
