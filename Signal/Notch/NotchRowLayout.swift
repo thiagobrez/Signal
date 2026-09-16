@@ -86,4 +86,46 @@ struct NotchRowLayout {
     func boundaryLimit(at index: Int) -> CGFloat {
         stride(of: index) / 2
     }
+
+    /// Which edge of the viewport a dragged row is pressing against: -1 when
+    /// its top is within `edgeZone` of the top edge (or past it), +1 when its
+    /// bottom is within `edgeZone` of the bottom edge (or past it), 0 when it
+    /// sits comfortably inside. `offset` is the drag translation applied to the
+    /// row's slot, so this is where the row is *drawn*, not where the cursor
+    /// is — the panel's coordinate spaces report zero frames, so the row's
+    /// computed position is the reliable proxy.
+    func dragEdge(
+        of index: Int,
+        offset: CGFloat,
+        scrollOrigin: CGFloat,
+        viewportHeight: CGFloat,
+        edgeZone: CGFloat
+    ) -> Int {
+        guard heights.indices.contains(index) else { return 0 }
+        let top = top(of: index) + offset - scrollOrigin
+        let bottom = top + heights[index]
+        if top < edgeZone { return -1 }
+        if bottom > viewportHeight - edgeZone { return 1 }
+        return 0
+    }
+
+    /// The drag offset held back so the row never leaves the viewport: at
+    /// either edge it stops flush, and it's the list scrolling beneath it that
+    /// carries it further. Without this the row can be dragged clean out of the
+    /// clip view and go on swapping where nobody can see it.
+    func clampedToViewport(
+        _ offset: CGFloat,
+        of index: Int,
+        scrollOrigin: CGFloat,
+        viewportHeight: CGFloat
+    ) -> CGFloat {
+        guard heights.indices.contains(index) else { return offset }
+        let slotTop = top(of: index)
+        let minOffset = scrollOrigin - slotTop
+        let maxOffset = scrollOrigin + viewportHeight - heights[index] - slotTop
+        // A row taller than the viewport has no offset that fits it; leave the
+        // drag alone rather than pinning it to a nonsense value.
+        guard minOffset <= maxOffset else { return offset }
+        return max(minOffset, min(maxOffset, offset))
+    }
 }
