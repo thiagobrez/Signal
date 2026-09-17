@@ -4,6 +4,7 @@ import SwiftUI
 
 struct PreferencesView: View {
     @AppStorage(SettingsStore.Key.carryOverIncomplete) private var carryOver = true
+    @AppStorage(SettingsStore.Key.showMenuBarIcon) private var showMenuBarIcon = true
     @AppStorage(SettingsStore.Key.openOnLaunch) private var openOnLaunch = true
     @AppStorage(SettingsStore.Key.dailyPromptEnabled) private var dailyPromptEnabled = true
     @AppStorage(SettingsStore.Key.dailyPromptHour) private var dailyPromptHour = 9
@@ -24,6 +25,13 @@ struct PreferencesView: View {
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, newValue in setLaunchAtLogin(newValue) }
                 Toggle("Carry unfinished tasks over to the next day", isOn: $carryOver)
+                Toggle("Show Signal in the menu bar", isOn: $showMenuBarIcon)
+                    .accessibilityIdentifier("showMenuBarIconToggle")
+                Text("When hidden, use your hotkey to open Signal. To get back to "
+                     + "Preferences, open Signal again from Spotlight, Launchpad "
+                     + "or Finder while it's running.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Hotkey") {
