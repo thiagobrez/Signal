@@ -39,7 +39,11 @@ struct ScheduleOverviewView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .animation(.snappy(duration: 0.2), value: model.mode)
         .onKeyPress(.escape) {
-            controller.hideOverview()
+            if model.isEditing {
+                model.endEditing()
+            } else {
+                controller.hideOverview()
+            }
             return .handled
         }
         .onChange(of: controller.overviewPresentationRequest) { _, _ in model.reset() }
@@ -74,10 +78,20 @@ struct ScheduleOverviewView: View {
                 }
                 .disabled(model.isEditing)
 
-                // Escape always works: the first one ends the edit, and only
-                // then does the second close the surface.
-                Button("") { controller.hideOverview() }
-                    .keyboardShortcut(.cancelAction)
+                // Escape stays enabled, and decides here what it means: the
+                // first one ends the edit, the second closes the surface. It
+                // can't be left to the focused editor, because a key
+                // equivalent is offered to the view hierarchy *before* the
+                // first responder's keyDown — so this button would always win
+                // and Escape would never do anything but close.
+                Button("") {
+                    if model.isEditing {
+                        model.endEditing()
+                    } else {
+                        controller.hideOverview()
+                    }
+                }
+                .keyboardShortcut(.cancelAction)
             }
             .buttonStyle(.plain)
             .opacity(0)
