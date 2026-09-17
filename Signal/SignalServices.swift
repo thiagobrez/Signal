@@ -48,7 +48,7 @@ final class SignalServices {
         store = SignalStore(context: container.mainContext)
         scheduleRepository = ScheduleRepository(context: container.mainContext)
         controller = NotchController(store: store, scheduleRepository: scheduleRepository)
-        scheduler = Scheduler(controller: controller)
+        scheduler = Scheduler(controller: controller, store: store)
         onboarding = OnboardingWindowController()
         whatsNew = WhatsNewWindowController()
         stats = StatsWindowController(container: container)
