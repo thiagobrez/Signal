@@ -24,6 +24,7 @@
 		1952CB422C1F7DA7A8869078 /* OverviewEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8157D0118CFB85BA365B15D1 /* OverviewEntry.swift */; };
 		1AF44987ABA75D46DCB18913 /* pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4C4F741DBD56F9C4C17A0174 /* pop.wav */; };
 		1F642132401680546E551213 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
+		1FDA47D9A8E523AE114A93B7 /* ReopenPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 564B166B55611F0BBE0EBBDC /* ReopenPolicy.swift */; };
 		1FE571435B3485C4A8284456 /* MenuBarHintController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50680D0620746B6A15932126 /* MenuBarHintController.swift */; };
 		242231A5CCB521FDAB83BEF2 /* tube.wav in Resources */ = {isa = PBXBuildFile; fileRef = AD40B91BE6D69CE63BBF11CC /* tube.wav */; };
 		244A5D5C9551D4A95121D7BA /* pencil.wav in Resources */ = {isa = PBXBuildFile; fileRef = B1389E0ACDE4C1E41AE3799A /* pencil.wav */; };
@@ -70,6 +71,7 @@
 		6CD7359B6468D893D57D63D8 /* SignalNotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */; };
 		727A2D12D5D0E2E4BEBA8831 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
 		72FF73ADB9978E4C4D189B8E /* ScheduleEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D080F456DB21B1E4AA008C /* ScheduleEdit.swift */; };
+		7326B8CE8899567F584CC9E2 /* ReopenPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 564B166B55611F0BBE0EBBDC /* ReopenPolicy.swift */; };
 		7340E7C960D0B0FB091CBA83 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = B280BAD1315E22650C657F91 /* TelemetryDeck */; };
 		75C7AFE4A25EBA6E968B278C /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8D74719DA574C846852019 /* SettingsStore.swift */; };
 		789D107BF7681C29EFDC9542 /* DayDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE0C8BAC5E5E983F0113E37 /* DayDetailView.swift */; };
@@ -101,6 +103,7 @@
 		9624DAF763B7AC5760573917 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = FD11BDA6ACBACC9C1A61E2C4 /* CHANGELOG.md */; };
 		9699B23A07199C55A8EED6E6 /* ScheduleOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F3110D5B10DEF5CDA09D4A /* ScheduleOverviewView.swift */; };
 		99B9C1A1897935651293C335 /* ScheduleRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44151AC7BEE2C1F3D2D439DC /* ScheduleRepositoryTests.swift */; };
+		9AB5674389D96BE22C70A6D7 /* ReopenPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E6DEDAE2FA9D163BC2FAEF8 /* ReopenPolicyTests.swift */; };
 		A4DD06C0F712CF729D21BC63 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */; };
 		A6188962D97B6430646F8BA6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */; };
 		A7DBDB1A11BE9099D2488A2D /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
@@ -136,6 +139,7 @@
 		CC3C5C706E03687EB1DAB319 /* RowTextLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CEC63AC8768122470BEC80 /* RowTextLayout.swift */; };
 		CD575E14343E55CFA5891885 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
 		CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
+		D0AC4866F0A0B93549708781 /* SettingsOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7B9587B6955D80CE16293A /* SettingsOpener.swift */; };
 		D10C73E070497C6E8DF1C8ED /* ScheduleOverviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F87A8B662C2B58337D3A3C4 /* ScheduleOverviewModel.swift */; };
 		D27F6F6256F88FDA46401552 /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */; };
 		D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 85754D73DEB6E570698C3CD6 /* meadow.wav */; };
@@ -145,8 +149,10 @@
 		DB92C196ABF47DD94D5C59BB /* NaturalDateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1334E4232F4E61339C73F41 /* NaturalDateParser.swift */; };
 		DC01A8EAD1D7221CB3085182 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462ED15C9D00B34967E04C53 /* Analytics.swift */; };
 		DD05BE4948693215CF375D60 /* MenuBarHintPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB86ADE59206D6C1D0DFC92E /* MenuBarHintPolicy.swift */; };
+		DE19466D07677BF7D325888C /* ReopenPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 564B166B55611F0BBE0EBBDC /* ReopenPolicy.swift */; };
 		DEE3E1C49F4C7DC871405CB2 /* NotchRowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169FF8FD53312CBD71185C1B /* NotchRowLayout.swift */; };
 		DFED7E224D5D085E54E06DCD /* ScheduleEditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB31E35474C55324DF18347 /* ScheduleEditTests.swift */; };
+		E1449066181A955B6E597F3E /* SettingsOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7B9587B6955D80CE16293A /* SettingsOpener.swift */; };
 		E3B1F1081E1611ADC8E10A69 /* SignalQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008557C7E0D6B65492385BAC /* SignalQuote.swift */; };
 		EFED4F987C3570E1D4B42406 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
 		F0834126ECD6A0A9C897E8C8 /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7DE1A9A552F49F0CF15F95EA /* DynamicNotchKit */; };
@@ -165,6 +171,7 @@
 		0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsView.swift; sourceTree = "<group>"; };
 		0BE8F900E70FCE320A998C23 /* ChangelogParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangelogParserTests.swift; sourceTree = "<group>"; };
 		0DC018ABC274DE6580B1EF5F /* ScheduleEditPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleEditPopover.swift; sourceTree = "<group>"; };
+		0E6DEDAE2FA9D163BC2FAEF8 /* ReopenPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReopenPolicyTests.swift; sourceTree = "<group>"; };
 		0EB88C8ED63626236905C763 /* StatsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsCalculator.swift; sourceTree = "<group>"; };
 		0FE0C8BAC5E5E983F0113E37 /* DayDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDetailView.swift; sourceTree = "<group>"; };
 		146D2AB23F5E793F6008D409 /* DayLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayLog.swift; sourceTree = "<group>"; };
@@ -189,6 +196,7 @@
 		4F87A8B662C2B58337D3A3C4 /* ScheduleOverviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleOverviewModel.swift; sourceTree = "<group>"; };
 		50680D0620746B6A15932126 /* MenuBarHintController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarHintController.swift; sourceTree = "<group>"; };
 		506E631B936A49D6A9A3A268 /* OnboardingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindowController.swift; sourceTree = "<group>"; };
+		564B166B55611F0BBE0EBBDC /* ReopenPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReopenPolicy.swift; sourceTree = "<group>"; };
 		5BD5B847B93B4B04134E8002 /* AutoOpenPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoOpenPolicy.swift; sourceTree = "<group>"; };
 		6358254F1F4002673C3D2D1A /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		703A620C14130D54DCE2B2A9 /* SignalServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalServices.swift; sourceTree = "<group>"; };
@@ -206,6 +214,7 @@
 		94BDB779114317E30DA71331 /* RecurrenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrenceTests.swift; sourceTree = "<group>"; };
 		99F08A8EE8C365DE984E145D /* SignalStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalStoreTests.swift; sourceTree = "<group>"; };
 		9D5999FF8532367E6DBD5F60 /* Signal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Signal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9E7B9587B6955D80CE16293A /* SettingsOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsOpener.swift; sourceTree = "<group>"; };
 		9FB3897E7BD71986FC13843D /* NaturalDateParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaturalDateParserTests.swift; sourceTree = "<group>"; };
 		A9B5042AE3D0B3D1EDE6CE1F /* AudioOutputDevicesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputDevicesTests.swift; sourceTree = "<group>"; };
 		AD40B91BE6D69CE63BBF11CC /* tube.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = tube.wav; sourceTree = "<group>"; };
@@ -310,6 +319,7 @@
 				2A46B2522F6C5BA2257681E8 /* AppDelegate.swift */,
 				CABDE5D429850284CDE2585B /* AppIcon.icon */,
 				46D4CD682FA36C8295604786 /* DemoMode.swift */,
+				564B166B55611F0BBE0EBBDC /* ReopenPolicy.swift */,
 				8C8D74719DA574C846852019 /* SettingsStore.swift */,
 				B6350E3A747785646888F518 /* Signal.entitlements */,
 				C453E4D521FCA575CE77C9A3 /* SignalApp.swift */,
@@ -338,6 +348,7 @@
 				9FB3897E7BD71986FC13843D /* NaturalDateParserTests.swift */,
 				E86AEA7A48082457D72A211D /* NotchRowLayoutTests.swift */,
 				94BDB779114317E30DA71331 /* RecurrenceTests.swift */,
+				0E6DEDAE2FA9D163BC2FAEF8 /* ReopenPolicyTests.swift */,
 				2CA025EC0BD713A80AC99FFF /* RowTextLayoutTests.swift */,
 				0AB31E35474C55324DF18347 /* ScheduleEditTests.swift */,
 				DA3EB99F6E1EE86D2A4F04A9 /* ScheduleGridTests.swift */,
@@ -422,6 +433,7 @@
 				F879369015787A57B62384C1 /* AboutView.swift */,
 				0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */,
 				D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */,
+				9E7B9587B6955D80CE16293A /* SettingsOpener.swift */,
 				165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */,
 			);
 			path = Preferences;
@@ -684,6 +696,7 @@
 				AFEB4E3D7C241EDC5E664230 /* OverviewEntry.swift in Sources */,
 				57939519C4740E3B15A17227 /* OverviewView.swift in Sources */,
 				381E6BE72F1CF0DAD4CA8FE8 /* PreferencesView.swift in Sources */,
+				1FDA47D9A8E523AE114A93B7 /* ReopenPolicy.swift in Sources */,
 				CC3C5C706E03687EB1DAB319 /* RowTextLayout.swift in Sources */,
 				38F13E69B1661131172BEC74 /* ScheduleEdit.swift in Sources */,
 				B31E22A7FD95D35FC958B439 /* ScheduleEditPopover.swift in Sources */,
@@ -697,6 +710,7 @@
 				92734566A3C2DE691DD45795 /* ScheduledTask.swift in Sources */,
 				53AE49FB1145DC58F6442365 /* ScheduledTaskRow.swift in Sources */,
 				EFED4F987C3570E1D4B42406 /* Scheduler.swift in Sources */,
+				D0AC4866F0A0B93549708781 /* SettingsOpener.swift in Sources */,
 				75C7AFE4A25EBA6E968B278C /* SettingsStore.swift in Sources */,
 				11E840DDA3FC43E65E509E0A /* SignalApp.swift in Sources */,
 				2D95712B6D0C0487E16CDDC2 /* SignalNotchView.swift in Sources */,
@@ -733,6 +747,8 @@
 				DEE3E1C49F4C7DC871405CB2 /* NotchRowLayout.swift in Sources */,
 				BE5B6DB2D2B11A6528643835 /* NotchRowLayoutTests.swift in Sources */,
 				FB5E8DF5E4F4AC63BC95419C /* RecurrenceTests.swift in Sources */,
+				DE19466D07677BF7D325888C /* ReopenPolicy.swift in Sources */,
+				9AB5674389D96BE22C70A6D7 /* ReopenPolicyTests.swift in Sources */,
 				8C0EB6A671BFFCAEED6811FF /* RowTextLayout.swift in Sources */,
 				C7A7FC0628F81CAA9851D7D1 /* RowTextLayoutTests.swift in Sources */,
 				D8927B22E4A9059D80B1AD31 /* ScheduleEdit.swift in Sources */,
@@ -776,6 +792,7 @@
 				1952CB422C1F7DA7A8869078 /* OverviewEntry.swift in Sources */,
 				83FBA7C5A7E4CB777AFBB5BC /* OverviewView.swift in Sources */,
 				83939F1D30F9B1A18AE76D65 /* PreferencesView.swift in Sources */,
+				7326B8CE8899567F584CC9E2 /* ReopenPolicy.swift in Sources */,
 				BB43276A219A505D510E0F65 /* RowTextLayout.swift in Sources */,
 				72FF73ADB9978E4C4D189B8E /* ScheduleEdit.swift in Sources */,
 				60C4845C9F5B71FB10388DCB /* ScheduleEditPopover.swift in Sources */,
@@ -789,6 +806,7 @@
 				79E5B8A8F8E754E8F4C80D47 /* ScheduledTask.swift in Sources */,
 				0C510D3BE811872BB7DBD2F0 /* ScheduledTaskRow.swift in Sources */,
 				903BA73065746F8059593306 /* Scheduler.swift in Sources */,
+				E1449066181A955B6E597F3E /* SettingsOpener.swift in Sources */,
 				38549BBAA9843F968099473A /* SettingsStore.swift in Sources */,
 				7FAF10A54C6C081CFFA1A256 /* SignalApp.swift in Sources */,
 				6CD7359B6468D893D57D63D8 /* SignalNotchView.swift in Sources */,

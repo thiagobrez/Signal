@@ -12,6 +12,7 @@ enum SettingsStore {
         static let didMigrateToggleSignalShortcut = "didMigrateToggleSignalShortcut"
         static let carryOverIncomplete = "carryOverIncomplete"
         static let openOnLaunch = "openOnLaunch"
+        static let showMenuBarIcon = "showMenuBarIcon"
         static let dailyPromptEnabled = "dailyPromptEnabled"
         static let dailyPromptHour = "dailyPromptHour"
         static let dailyPromptMinute = "dailyPromptMinute"
@@ -40,6 +41,7 @@ enum SettingsStore {
             Key.didMigrateToggleSignalShortcut: false,
             Key.carryOverIncomplete: true,
             Key.openOnLaunch: true,
+            Key.showMenuBarIcon: true,
             Key.dailyPromptEnabled: true,
             Key.dailyPromptHour: 9,
             Key.dailyPromptMinute: 0,
@@ -101,6 +103,15 @@ enum SettingsStore {
 
     static var carryOverIncomplete: Bool { d.bool(forKey: Key.carryOverIncomplete) }
     static var openOnLaunch: Bool { d.bool(forKey: Key.openOnLaunch) }
+
+    /// Whether the menu bar item is inserted. `SignalApp` and `PreferencesView`
+    /// bind the same key with `@AppStorage`; the setter exists for the lock-out
+    /// failsafe in `AppDelegate` — if Preferences can't be opened while the icon
+    /// is hidden, the icon comes back rather than stranding the user (#17).
+    static var showMenuBarIcon: Bool {
+        get { d.bool(forKey: Key.showMenuBarIcon) }
+        set { d.set(newValue, forKey: Key.showMenuBarIcon) }
+    }
     static var dailyPromptEnabled: Bool { d.bool(forKey: Key.dailyPromptEnabled) }
     static var dailyPromptHour: Int { d.integer(forKey: Key.dailyPromptHour) }
     static var dailyPromptMinute: Int { d.integer(forKey: Key.dailyPromptMinute) }

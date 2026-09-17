@@ -26,6 +26,9 @@ Signal lives in your **menu bar**. Click its icon for a small menu:
 Each day gives you three slots. Type a task into a slot, and click it to mark it
 done. Finish all three and you'll get a small celebration.
 
+Prefer a clean menu bar? You can hide the icon under **Preferences… → General →
+"Show Signal in the menu bar"** and use your hotkey instead.
+
 ## Frequently asked questions
 
 ### How do I open Signal quickly with a keyboard shortcut?
@@ -58,6 +61,13 @@ hours during which they can appear.
 Yes. Under **Preferences… → Sound** you can pick a sound (or **None**) for when
 Signal opens, when you complete a task, and when all three are done. Use the
 play button next to each to preview it.
+
+### I hid the menu bar icon — how do I get it back?
+
+Open Signal again while it's still running — from Spotlight, Launchpad or
+Finder. The panel drops down and the **Preferences** window comes with it, where
+you can turn **"Show Signal in the menu bar"** back on. Your hotkey keeps working
+the whole time.
 
 ### How do I make Signal open at login?
 

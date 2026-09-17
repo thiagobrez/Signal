@@ -6,8 +6,13 @@ import SwiftUI
 struct SignalApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
+    // Inline `= true` matters: `body` can be evaluated before
+    // `SettingsStore.registerDefaults()` runs, and an unset key must not read
+    // as "hidden".
+    @AppStorage(SettingsStore.Key.showMenuBarIcon) private var showMenuBarIcon = true
+
     var body: some Scene {
-        MenuBarExtra {
+        MenuBarExtra(isInserted: $showMenuBarIcon) {
             MenuBarContent()
         } label: {
             Image(nsImage: .signalMenuBar)
