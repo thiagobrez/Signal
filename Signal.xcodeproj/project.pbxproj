@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00CEEAF1D4209EDCA5D4DB07 /* scribble.wav in Resources */ = {isa = PBXBuildFile; fileRef = CB7E2BD16B84F461552B37B3 /* scribble.wav */; };
 		01D8F51F66071C34131CCC4E /* NaturalDateParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1334E4232F4E61339C73F41 /* NaturalDateParser.swift */; };
+		02784E43111F5ED343FEA223 /* TodoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B24089DDB17EFBD23ACA6E /* TodoRow.swift */; };
 		03EBE1A844DF22D16DF40F78 /* SignalQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008557C7E0D6B65492385BAC /* SignalQuote.swift */; };
 		0546BC32AA8E72C7F0895F3C /* pencil.wav in Resources */ = {isa = PBXBuildFile; fileRef = B1389E0ACDE4C1E41AE3799A /* pencil.wav */; };
 		06DB32C8478B62D612426EA6 /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46D4CD682FA36C8295604786 /* DemoMode.swift */; };
@@ -41,6 +42,7 @@
 		38F13E69B1661131172BEC74 /* ScheduleEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D080F456DB21B1E4AA008C /* ScheduleEdit.swift */; };
 		394D5E79BE2A699DEF03F426 /* NotchRowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169FF8FD53312CBD71185C1B /* NotchRowLayout.swift */; };
 		3BDBBB7DA4E54534E0CF1E6C /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 525E24A23AC8A26E90F43271 /* DynamicNotchKit */; };
+		3CF3586B48329A22C75A960D /* TaskTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40EFE909F778F1ED6D50A42F /* TaskTextEditor.swift */; };
 		3EA912B3368E41F3E6C15FD6 /* ScheduleGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE4AD39F0AC1A1C42B516384 /* ScheduleGrid.swift */; };
 		3ECF97CFDB2BF7587829A391 /* KeyboardShortcuts+Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9443DF09CA185DC6771DD87 /* KeyboardShortcuts+Names.swift */; };
 		428628C96EDAFDFEB6B7194B /* ScheduleYearView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C6365B23C7F63967F9F938 /* ScheduleYearView.swift */; };
@@ -125,6 +127,7 @@
 		CC3C5C706E03687EB1DAB319 /* RowTextLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CEC63AC8768122470BEC80 /* RowTextLayout.swift */; };
 		CD575E14343E55CFA5891885 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73845020201BE00A671F84BC /* SoundPlayer.swift */; };
 		CE553EB8083A21CA1703D7C4 /* SignalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7076C59B414FF7A85B8CAC7 /* SignalStore.swift */; };
+		CF4A0441CFC4E5D90363470C /* TaskTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40EFE909F778F1ED6D50A42F /* TaskTextEditor.swift */; };
 		D10C73E070497C6E8DF1C8ED /* ScheduleOverviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F87A8B662C2B58337D3A3C4 /* ScheduleOverviewModel.swift */; };
 		D27F6F6256F88FDA46401552 /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B8A9268779730EB73B532AD /* AcknowledgementsView.swift */; };
 		D2A1AFA994151C1717B011F5 /* meadow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 85754D73DEB6E570698C3CD6 /* meadow.wav */; };
@@ -137,6 +140,7 @@
 		EFED4F987C3570E1D4B42406 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B94E448EA5FDD667DF3D0F /* Scheduler.swift */; };
 		F0834126ECD6A0A9C897E8C8 /* DynamicNotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7DE1A9A552F49F0CF15F95EA /* DynamicNotchKit */; };
 		F199DE916A17A5797367378E /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46D4CD682FA36C8295604786 /* DemoMode.swift */; };
+		F2ABDB179B11421F0972A085 /* TodoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B24089DDB17EFBD23ACA6E /* TodoRow.swift */; };
 		F42B88AB80B775ABCB9C2084 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = BD2156A0FBF41D9300662BAF /* Sparkle */; };
 		F5529D4FD3E89ECD701970B8 /* StatsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3A748EE9D12BCE0EECB0EC /* StatsWindowController.swift */; };
 		F8DFD434CDC38016A6103665 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
@@ -154,6 +158,7 @@
 		0EB88C8ED63626236905C763 /* StatsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsCalculator.swift; sourceTree = "<group>"; };
 		0FE0C8BAC5E5E983F0113E37 /* DayDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDetailView.swift; sourceTree = "<group>"; };
 		146D2AB23F5E793F6008D409 /* DayLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayLog.swift; sourceTree = "<group>"; };
+		14B24089DDB17EFBD23ACA6E /* TodoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoRow.swift; sourceTree = "<group>"; };
 		165190C89D291AFC84D7F0B8 /* UpdaterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterManager.swift; sourceTree = "<group>"; };
 		169FF8FD53312CBD71185C1B /* NotchRowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRowLayout.swift; sourceTree = "<group>"; };
 		1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalNotchView.swift; sourceTree = "<group>"; };
@@ -163,6 +168,7 @@
 		2BCD4C9217020A4A5A1BAC52 /* ScheduleWeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleWeekView.swift; sourceTree = "<group>"; };
 		2CA025EC0BD713A80AC99FFF /* RowTextLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowTextLayoutTests.swift; sourceTree = "<group>"; };
 		40154A5F7EB8B58FED0136B3 /* ScheduledTaskRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledTaskRow.swift; sourceTree = "<group>"; };
+		40EFE909F778F1ED6D50A42F /* TaskTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskTextEditor.swift; sourceTree = "<group>"; };
 		44151AC7BEE2C1F3D2D439DC /* ScheduleRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleRepositoryTests.swift; sourceTree = "<group>"; };
 		44CEC63AC8768122470BEC80 /* RowTextLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowTextLayout.swift; sourceTree = "<group>"; };
 		462ED15C9D00B34967E04C53 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
@@ -378,6 +384,8 @@
 				169FF8FD53312CBD71185C1B /* NotchRowLayout.swift */,
 				44CEC63AC8768122470BEC80 /* RowTextLayout.swift */,
 				1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */,
+				40EFE909F778F1ED6D50A42F /* TaskTextEditor.swift */,
+				14B24089DDB17EFBD23ACA6E /* TodoRow.swift */,
 			);
 			path = Notch;
 			sourceTree = "<group>";
@@ -667,7 +675,9 @@
 				4B15E001C3B00CBCE6D8011A /* StatsCalculator.swift in Sources */,
 				0AFD5A8D2367B0DF579283C2 /* StatsView.swift in Sources */,
 				F5529D4FD3E89ECD701970B8 /* StatsWindowController.swift in Sources */,
+				3CF3586B48329A22C75A960D /* TaskTextEditor.swift in Sources */,
 				BCB72BF78669CCE888703935 /* TodoItem.swift in Sources */,
+				F2ABDB179B11421F0972A085 /* TodoRow.swift in Sources */,
 				BB729B3E8046B64FBE0CB016 /* UpdaterManager.swift in Sources */,
 				92F47F4387EF0E04195536CE /* WhatsNewView.swift in Sources */,
 				6548510EEF095A12899FA25D /* WhatsNewWindowController.swift in Sources */,
@@ -749,7 +759,9 @@
 				4C8F3BC18F387B56A3C898AE /* StatsCalculator.swift in Sources */,
 				B50C859C7169176E1CE79AB2 /* StatsView.swift in Sources */,
 				B792BEDC9F2F0E213A960CE0 /* StatsWindowController.swift in Sources */,
+				CF4A0441CFC4E5D90363470C /* TaskTextEditor.swift in Sources */,
 				727A2D12D5D0E2E4BEBA8831 /* TodoItem.swift in Sources */,
+				02784E43111F5ED343FEA223 /* TodoRow.swift in Sources */,
 				B81B699C68126F4F4360A4E5 /* UpdaterManager.swift in Sources */,
 				ACF41FB542CDC1078D028B57 /* WhatsNewView.swift in Sources */,
 				874A3953B4FFC03A8DDCE1DA /* WhatsNewWindowController.swift in Sources */,
