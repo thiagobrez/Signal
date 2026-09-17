@@ -5,6 +5,7 @@ import Foundation
 enum SettingsStore {
     enum Key {
         static let hasSeenOnboarding = "hasSeenOnboarding"
+        static let hasSeenMenuBarHint = "hasSeenMenuBarHint"
         static let lastSeenWhatsNewVersion = "lastSeenWhatsNewVersion"
         static let showWhatsNewAfterUpdates = "showWhatsNewAfterUpdates"
         static let hasRequestedReview = "hasRequestedReview"
@@ -30,6 +31,7 @@ enum SettingsStore {
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
             Key.hasSeenOnboarding: false,
+            Key.hasSeenMenuBarHint: false,
             // lastSeenWhatsNewVersion is deliberately unregistered: nil means
             // "fresh install or pre-What's-New build", which must be told
             // apart from any real version.
@@ -62,6 +64,13 @@ enum SettingsStore {
     static var hasSeenOnboarding: Bool {
         get { d.bool(forKey: Key.hasSeenOnboarding) }
         set { d.set(newValue, forKey: Key.hasSeenOnboarding) }
+    }
+
+    /// Read/write: flipped once the "Signal lives here!" hint has actually been
+    /// shown under the menu bar icon, so it only ever appears on the first run.
+    static var hasSeenMenuBarHint: Bool {
+        get { d.bool(forKey: Key.hasSeenMenuBarHint) }
+        set { d.set(newValue, forKey: Key.hasSeenMenuBarHint) }
     }
 
     /// Read/write: the marketing version whose release notes the user has seen

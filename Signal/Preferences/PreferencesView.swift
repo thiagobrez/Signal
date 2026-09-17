@@ -75,6 +75,14 @@ struct PreferencesView: View {
                      : "Switches to an empty throwaway database and relaunches Signal.")
                     .font(.caption)
                     .foregroundStyle(DemoMode.isEnabled ? .orange : .secondary)
+                Button("Show onboarding again") {
+                    SettingsStore.hasSeenOnboarding = false
+                    SettingsStore.hasSeenMenuBarHint = false
+                    DemoMode.relaunch()
+                }
+                Text("Relaunches Signal into the first-launch onboarding, followed by the menu bar hint.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             #endif
         }

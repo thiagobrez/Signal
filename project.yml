@@ -103,12 +103,14 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
     sources:
       - path: SignalTests
+      - path: Signal/Schedule/AutoOpenPolicy.swift
       - path: Signal/Schedule/NaturalDateParser.swift
       - path: Signal/WhatsNew/ChangelogParser.swift
       - path: Signal/Schedule/ScheduleEdit.swift
       - path: Signal/Schedule/ScheduleGrid.swift
       - path: Signal/Notch/NotchRowLayout.swift
       - path: Signal/Notch/RowTextLayout.swift
+      - path: Signal/MenuBarHint/MenuBarHintPolicy.swift
       - path: Signal/Models/ScheduledTask.swift
       - path: Signal/Models/DayLog.swift
       - path: Signal/Models/TodoItem.swift
