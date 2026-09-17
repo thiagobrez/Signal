@@ -137,6 +137,9 @@ struct TaskTextEditor: NSViewRepresentable {
     /// Fires whenever the live parse of the text changes, so the row can tint
     /// its ↵ hint while the phrase itself is highlighted in the text.
     let onParseChange: (ScheduleParse?) -> Void
+    /// The day this row sits on, when it isn't today: date phrases then resolve
+    /// against that day rather than against now. Nil in the panel.
+    var parseAnchor: Date?
     let onEscape: () -> Void
     let onTab: () -> Void
     let onBacktab: () -> Void
@@ -513,7 +516,7 @@ struct TaskTextEditor: NSViewRepresentable {
         /// the full range every keystroke is also what clears the highlight once
         /// the phrase stops matching.
         func refreshParse(for textView: NSTextView) {
-            let parse = NaturalDateParser.parse(textView.string)
+            let parse = NaturalDateParser.parse(textView.string, anchor: parent.parseAnchor)
             if parse != lastParse {
                 lastParse = parse
                 // Defer: focus can change inside a SwiftUI view update.
@@ -619,7 +622,7 @@ struct TaskTextEditor: NSViewRepresentable {
             // Parsed fresh at submit time so Enter always acts on what's
             // visible.
             case #selector(NSResponder.insertNewline(_:)):
-                parent.onSubmit(NaturalDateParser.parse(textView.string))
+                parent.onSubmit(NaturalDateParser.parse(textView.string, anchor: parent.parseAnchor))
                 return true
             case #selector(NSResponder.cancelOperation(_:)):
                 parent.onEscape()

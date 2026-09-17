@@ -31,6 +31,25 @@ final class RecurrenceTests: XCTestCase {
         XCTAssertEqual(next, date(2026, 1, 19))
     }
 
+    // MARK: - firstOccurrence(onOrAfter:)
+
+    func testDailyFirstOccurrenceIsTheDayItself() {
+        let first = Recurrence.daily.firstOccurrence(onOrAfter: date(2026, 1, 8, hour: 15), calendar: calendar)
+        XCTAssertEqual(first, date(2026, 1, 8))
+    }
+
+    func testWeeklyFirstOccurrenceOnAMatchingDayIsThatDay() {
+        // Monday Jan 12, rule fires Mondays (weekday 2) → Jan 12 itself.
+        let first = Recurrence.weekly(weekday: 2).firstOccurrence(onOrAfter: date(2026, 1, 12), calendar: calendar)
+        XCTAssertEqual(first, date(2026, 1, 12))
+    }
+
+    func testWeeklyFirstOccurrenceOnANonMatchingDayIsTheNextMatch() {
+        // Wednesday Jan 14, rule fires Mondays → Monday Jan 19.
+        let first = Recurrence.weekly(weekday: 2).firstOccurrence(onOrAfter: date(2026, 1, 14), calendar: calendar)
+        XCTAssertEqual(first, date(2026, 1, 19))
+    }
+
     func testWeeklyAcrossMonthBoundary() {
         // Friday Jan 30, rule fires Fridays → Friday Feb 6.
         let next = Recurrence.weekly(weekday: 6).nextOccurrence(after: date(2026, 1, 30), calendar: calendar)

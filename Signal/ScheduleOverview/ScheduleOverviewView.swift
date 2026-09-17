@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import SwiftData
 
 /// The big notch surface opened by long-pressing the toggle hotkey: every
@@ -12,9 +13,9 @@ struct ScheduleOverviewView: View {
     /// between Week, Month, and Year.
     private static let bodyHeight: CGFloat = 340
 
-    init(repository: ScheduleRepository, controller: NotchController) {
+    init(repository: ScheduleRepository, store: SignalStore, controller: NotchController) {
         self.controller = controller
-        _model = State(initialValue: ScheduleOverviewModel(repository: repository))
+        _model = State(initialValue: ScheduleOverviewModel(repository: repository, store: store))
     }
 
     var body: some View {
@@ -43,14 +44,40 @@ struct ScheduleOverviewView: View {
         }
         .onChange(of: controller.overviewPresentationRequest) { _, _ in model.reset() }
         .onAppear { model.reset() }
+        // Hiding the surface ends the edit: the text is committed and any
+        // draft row that was never named goes away.
+        .onChange(of: controller.isOverviewVisible) { _, visible in
+            if !visible { model.endEditing() }
+        }
+        // Dropping the caret has to reach AppKit as well, otherwise the text
+        // view keeps first responder and goes on swallowing keys. The row the
+        // caret just left is pruned if it was never given a name.
+        .onChange(of: model.focusedID) { old, new in
+            if new == nil { NSApp.keyWindow?.makeFirstResponder(nil) }
+            DispatchQueue.main.async { model.pruneEmptyDraft(old) }
+        }
         // The panel is key while the overview is up, so plain-key shortcuts
-        // reach these hidden buttons without any focused control.
+        // reach these hidden buttons without any focused control. They are all
+        // suspended while a row is being typed into — otherwise typing a "t",
+        // or moving the caret, would navigate the week instead.
         .background {
             Group {
+                Group {
+                    Button("") { model.goPrevious() }
+                        .keyboardShortcut(.leftArrow, modifiers: [])
+                    Button("") { model.goNext() }
+                        .keyboardShortcut(.rightArrow, modifiers: [])
+                    Button("") { model.goToToday() }
+                        .keyboardShortcut("t", modifiers: [])
+                    Button("") { model.zoomOut() }
+                        .keyboardShortcut(.upArrow, modifiers: [])
+                }
+                .disabled(model.isEditing)
+
+                // Escape always works: the first one ends the edit, and only
+                // then does the second close the surface.
                 Button("") { controller.hideOverview() }
                     .keyboardShortcut(.cancelAction)
-                Button("") { model.zoomOut() }
-                    .keyboardShortcut(.upArrow, modifiers: [])
             }
             .buttonStyle(.plain)
             .opacity(0)
@@ -73,7 +100,6 @@ struct ScheduleOverviewView: View {
                     .frame(width: 20, height: 20)
                     .contentShape(Rectangle())
             }
-            .keyboardShortcut(.leftArrow, modifiers: [])
 
             Text(model.periodTitle)
                 .font(.system(size: 12, weight: .semibold))
@@ -89,7 +115,6 @@ struct ScheduleOverviewView: View {
                     .frame(width: 20, height: 20)
                     .contentShape(Rectangle())
             }
-            .keyboardShortcut(.rightArrow, modifiers: [])
 
             Button(action: model.goToToday) {
                 Text("Today")
@@ -98,7 +123,6 @@ struct ScheduleOverviewView: View {
                     .padding(.vertical, 3)
                     .background(Capsule().fill(.white.opacity(0.08)))
             }
-            .keyboardShortcut("t", modifiers: [])
 
             Spacer()
 

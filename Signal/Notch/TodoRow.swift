@@ -34,8 +34,18 @@ struct TodoRow: View {
     let onReorderUp: () -> Void
     let onReorderDown: () -> Void
     /// Cumulative vertical distance dragged from where the grip was grabbed.
-    let onDragChanged: (CGFloat) -> Void
-    let onDragEnded: () -> Void
+    var onDragChanged: (CGFloat) -> Void = { _ in }
+    var onDragEnded: () -> Void = {}
+    /// Whether the leading gutter hosts a drag grip. The schedule overview
+    /// doesn't reorder, so its rows drop the gutter entirely.
+    var showsDragHandle = true
+    /// Which podium slot this row occupies, when that isn't its own index —
+    /// the overview renders today's list inside a day row, so the medal has to
+    /// follow the task's place in `store.items` rather than its place on screen.
+    var podiumIndex: Int?
+    /// The day this row sits on, when it isn't today — forwarded to the editor
+    /// so date phrases resolve against that day.
+    var parseAnchor: Date?
 
     @State private var hovering = false
     /// Live parse of the field's trailing date phrase — tints the ↵ hint green
@@ -72,18 +82,22 @@ struct TodoRow: View {
         focused == index && item.isCompleted && confirmationLabel == nil
     }
 
+    /// Where the row sits in today's list, which is what the podium is drawn
+    /// from. `index` stays the row's place in the focus order.
+    private var slot: Int { podiumIndex ?? index }
+
     /// The top three slots are the "signal" — they wear a podium medal. Rows
     /// the schedule delivered sit in their own section below and never do:
     /// the medals belong to what the user chose for today.
     private var isSignalSlot: Bool {
-        !item.isScheduled && index < SignalStore.defaultTaskCount
+        !item.isScheduled && slot < SignalStore.defaultTaskCount
     }
 
     /// Completing a row reveals what it earned, exactly as the plain rows
     /// reveal their check: the top three show their podium number instead.
     private var completionSymbol: String {
         guard item.isCompleted else { return "circle" }
-        return isSignalSlot ? "\(index + 1).circle.fill" : "checkmark.circle.fill"
+        return isSignalSlot ? "\(slot + 1).circle.fill" : "checkmark.circle.fill"
     }
 
     private var completionColor: Color {
@@ -98,7 +112,7 @@ struct TodoRow: View {
         // hint and the grip stay level with the task's *first* line rather
         // than drifting to the middle of the block of text.
         HStack(alignment: .top, spacing: 0) {
-            dragHandle
+            if showsDragHandle { dragHandle }
 
             HStack(alignment: .top, spacing: 12) {
             Button(action: onToggle) {
@@ -118,13 +132,7 @@ struct TodoRow: View {
             // item is completed (and no longer editable) we show a Text instead.
             Group {
                 if let confirmationLabel {
-                    HStack(spacing: 6) {
-                        Image(systemName: "calendar.badge.clock")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text(confirmationLabel)
-                            .font(.system(size: 15, weight: .medium))
-                    }
-                    .foregroundStyle(Color.green)
+                    ScheduleConfirmationLabel(text: confirmationLabel)
                 } else if item.isCompleted {
                     Text(item.text.isEmpty ? " " : item.text)
                         .strikethrough(true, color: .white.opacity(0.6))
@@ -160,6 +168,7 @@ struct TodoRow: View {
                         focusedIndex: $focused,
                         onSubmit: onSubmit,
                         onParseChange: { parse = $0 },
+                        parseAnchor: parseAnchor,
                         onEscape: onEscape,
                         onTab: onTab,
                         onBacktab: onBacktab,
@@ -176,29 +185,12 @@ struct TodoRow: View {
             .frame(minHeight: Self.textRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Trailing gutter, always reserved so the text width never jumps:
-            // delete on hover, otherwise the ↵ confirm hint while editing —
-            // green when Enter would schedule the task to another day.
-            ZStack {
-                if hovering, store.canDelete(item), confirmationLabel == nil {
-                    Button(action: onDelete) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .frame(width: 16, height: 16)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .help("Delete task")
-                } else if focused == index, confirmationLabel == nil {
-                    Image(systemName: "return")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(parse != nil ? Color.green : Color.white.opacity(0.35))
-                }
-            }
-            // As tall as one line of text, so the hint sits beside the first
-            // line of a wrapped row rather than centred against the block.
-            .frame(width: 16, height: Self.textRowHeight)
+            TaskRowTrailingGutter(
+                showsDelete: hovering && store.canDelete(item) && confirmationLabel == nil,
+                isFocused: focused == index && confirmationLabel == nil,
+                willSchedule: parse != nil,
+                onDelete: onDelete
+            )
             }
             // A completed row shows no caret, so focus is carried by a faint
             // wash behind the row instead. The negative padding lets it breathe
@@ -261,7 +253,7 @@ struct TodoRow: View {
     ]
 
     private var medalColor: Color {
-        Self.medalColors[min(index, Self.medalColors.count - 1)]
+        Self.medalColors[min(max(slot, 0), Self.medalColors.count - 1)]
     }
 
     /// Held back at rest so the podium reads as "these three matter" without
@@ -270,4 +262,55 @@ struct TodoRow: View {
         isEmpty ? 0.45 : 0.85
     }
 
+}
+
+/// The strip at the trailing edge of an editable task row. Always the same
+/// width so the text beside it never reflows: the delete button while the
+/// pointer is on the row, otherwise the ↵ hint while the keyboard is — green
+/// when Enter would schedule the task rather than confirm it.
+struct TaskRowTrailingGutter: View {
+    let showsDelete: Bool
+    let isFocused: Bool
+    let willSchedule: Bool
+    var deleteHelp = "Delete task"
+    let onDelete: () -> Void
+
+    var body: some View {
+        ZStack {
+            if showsDelete {
+                Button(action: onDelete) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .frame(width: 16, height: 16)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(deleteHelp)
+            } else if isFocused {
+                Image(systemName: "return")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(willSchedule ? Color.green : Color.white.opacity(0.35))
+            }
+        }
+        // As tall as one line of text, so the hint sits beside the first
+        // line of a wrapped row rather than centred against the block.
+        .frame(width: 16, height: TodoRow.textRowHeight)
+    }
+}
+
+/// The brief "Scheduled for…" beat a row shows after Enter, before it leaves
+/// for the day it was scheduled to.
+struct ScheduleConfirmationLabel: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "calendar.badge.clock")
+                .font(.system(size: 12, weight: .semibold))
+            Text(text)
+                .font(.system(size: 15, weight: .medium))
+        }
+        .foregroundStyle(Color.green)
+    }
 }

@@ -222,6 +222,15 @@ final class SignalStore {
         for task in due {
             let text = task.text.trimmingCharacters(in: .whitespacesAndNewlines)
 
+            // A schedule with no text is an abandoned draft from the overview,
+            // not something to deliver — the overview prunes its own blanks,
+            // and this is the net under that.
+            if text.isEmpty {
+                context.delete(task)
+                changed = true
+                continue
+            }
+
             // Carry-over may already have brought the same unfinished task
             // into today (e.g. an incomplete "every day" task) — don't double up.
             let alreadyPresent = log.items.contains {

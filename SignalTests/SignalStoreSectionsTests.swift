@@ -92,6 +92,18 @@ final class SignalStoreSectionsTests: XCTestCase {
         XCTAssertEqual(task.dueDate, day(1))
     }
 
+    func testBlankScheduleIsDeletedRatherThanDelivered() {
+        // An abandoned draft from the overview: it must never become a row.
+        schedule("   ", due: today)
+
+        let store = makeStore()
+
+        XCTAssertTrue(store.scheduledItems.isEmpty)
+        XCTAssertEqual(store.items.count, SignalStore.defaultTaskCount)
+        let remaining = try? container.mainContext.fetch(FetchDescriptor<ScheduledTask>())
+        XCTAssertEqual(remaining?.count, 0)
+    }
+
     func testMaterializedTaskIsNotDuplicatedByCarryOver() {
         // An "every day" task that went unfinished yesterday is carried over,
         // so today's delivery must not add a second copy of it.
