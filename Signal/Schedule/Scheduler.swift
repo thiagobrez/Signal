@@ -125,7 +125,7 @@ final class Scheduler {
         // must not come back later through a settings-change or wake `rebuild()`.
         markPromptedToday()
         guard shouldAutoOpen(.dailyPrompt) else { return }
-        SoundPlayer.play(SettingsStore.openSound)
+        SoundPlayer.play(SettingsStore.openSound, on: SettingsStore.openSoundDevice)
         controller.presentInteractive(source: .scheduled)
     }
 

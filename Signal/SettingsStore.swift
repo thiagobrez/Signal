@@ -23,6 +23,9 @@ enum SettingsStore {
         static let completionSound = "completionSound"
         static let celebrationSound = "celebrationSound"
         static let openSound = "openSound"
+        static let completionSoundDevice = "completionSoundDevice"
+        static let celebrationSoundDevice = "celebrationSoundDevice"
+        static let openSoundDevice = "openSoundDevice"
     }
 
     static func registerDefaults() {
@@ -48,6 +51,9 @@ enum SettingsStore {
             Key.completionSound: "pop",
             Key.celebrationSound: "sys:Hero",
             Key.openSound: "sys:Blow",
+            Key.completionSoundDevice: AudioOutputDevice.systemDefaultID,
+            Key.celebrationSoundDevice: AudioOutputDevice.systemDefaultID,
+            Key.openSoundDevice: AudioOutputDevice.systemDefaultID,
         ])
     }
 
@@ -106,4 +112,18 @@ enum SettingsStore {
     static var completionSound: String { d.string(forKey: Key.completionSound) ?? "pop" }
     static var celebrationSound: String { d.string(forKey: Key.celebrationSound) ?? "sys:Hero" }
     static var openSound: String { d.string(forKey: Key.openSound) ?? "sys:Blow" }
+
+    /// UID of the output device each cue plays through, or
+    /// `AudioOutputDevice.systemDefaultID` to follow the system default.
+    static var completionSoundDevice: String {
+        d.string(forKey: Key.completionSoundDevice) ?? AudioOutputDevice.systemDefaultID
+    }
+
+    static var celebrationSoundDevice: String {
+        d.string(forKey: Key.celebrationSoundDevice) ?? AudioOutputDevice.systemDefaultID
+    }
+
+    static var openSoundDevice: String {
+        d.string(forKey: Key.openSoundDevice) ?? AudioOutputDevice.systemDefaultID
+    }
 }
