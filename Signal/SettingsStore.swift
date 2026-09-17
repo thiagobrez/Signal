@@ -5,6 +5,7 @@ import Foundation
 enum SettingsStore {
     enum Key {
         static let hasSeenOnboarding = "hasSeenOnboarding"
+        static let hasSeenMenuBarHint = "hasSeenMenuBarHint"
         static let lastSeenWhatsNewVersion = "lastSeenWhatsNewVersion"
         static let showWhatsNewAfterUpdates = "showWhatsNewAfterUpdates"
         static let hasRequestedReview = "hasRequestedReview"
@@ -23,11 +24,15 @@ enum SettingsStore {
         static let completionSound = "completionSound"
         static let celebrationSound = "celebrationSound"
         static let openSound = "openSound"
+        static let completionSoundDevice = "completionSoundDevice"
+        static let celebrationSoundDevice = "celebrationSoundDevice"
+        static let openSoundDevice = "openSoundDevice"
     }
 
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
             Key.hasSeenOnboarding: false,
+            Key.hasSeenMenuBarHint: false,
             // lastSeenWhatsNewVersion is deliberately unregistered: nil means
             // "fresh install or pre-What's-New build", which must be told
             // apart from any real version.
@@ -48,6 +53,9 @@ enum SettingsStore {
             Key.completionSound: "pop",
             Key.celebrationSound: "sys:Hero",
             Key.openSound: "sys:Blow",
+            Key.completionSoundDevice: AudioOutputDevice.systemDefaultID,
+            Key.celebrationSoundDevice: AudioOutputDevice.systemDefaultID,
+            Key.openSoundDevice: AudioOutputDevice.systemDefaultID,
         ])
     }
 
@@ -58,6 +66,13 @@ enum SettingsStore {
     static var hasSeenOnboarding: Bool {
         get { d.bool(forKey: Key.hasSeenOnboarding) }
         set { d.set(newValue, forKey: Key.hasSeenOnboarding) }
+    }
+
+    /// Read/write: flipped once the "Signal lives here!" hint has actually been
+    /// shown under the menu bar icon, so it only ever appears on the first run.
+    static var hasSeenMenuBarHint: Bool {
+        get { d.bool(forKey: Key.hasSeenMenuBarHint) }
+        set { d.set(newValue, forKey: Key.hasSeenMenuBarHint) }
     }
 
     /// Read/write: the marketing version whose release notes the user has seen
@@ -108,4 +123,18 @@ enum SettingsStore {
     static var completionSound: String { d.string(forKey: Key.completionSound) ?? "pop" }
     static var celebrationSound: String { d.string(forKey: Key.celebrationSound) ?? "sys:Hero" }
     static var openSound: String { d.string(forKey: Key.openSound) ?? "sys:Blow" }
+
+    /// UID of the output device each cue plays through, or
+    /// `AudioOutputDevice.systemDefaultID` to follow the system default.
+    static var completionSoundDevice: String {
+        d.string(forKey: Key.completionSoundDevice) ?? AudioOutputDevice.systemDefaultID
+    }
+
+    static var celebrationSoundDevice: String {
+        d.string(forKey: Key.celebrationSoundDevice) ?? AudioOutputDevice.systemDefaultID
+    }
+
+    static var openSoundDevice: String {
+        d.string(forKey: Key.openSoundDevice) ?? AudioOutputDevice.systemDefaultID
+    }
 }

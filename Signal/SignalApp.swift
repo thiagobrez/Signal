@@ -1,3 +1,4 @@
+import Combine
 import KeyboardShortcuts
 import SwiftUI
 
@@ -129,24 +130,42 @@ private struct OptionalShortcut: ViewModifier {
     }
 }
 
-private struct MenuBarContent: View {
-    @Environment(\.openSettings) private var openSettings
+/// The menu's copy of the user's hotkeys as SwiftUI shortcuts. SwiftUI only
+/// re-evaluates `MenuBarContent.body` when something it observes changes, so
+/// reading `KeyboardShortcuts.getShortcut` inline froze the key equivalents at
+/// launch (#16). KeyboardShortcuts posts a notification whenever a shortcut is
+/// recorded, cleared or reset; republishing on it rebuilds the menu, so the
+/// hints follow Preferences immediately. Display only — the real global hotkeys
+/// are wired in `SignalServices`.
+private final class MenuBarShortcuts: ObservableObject {
+    @Published private(set) var toggleSignal: KeyboardShortcut?
+    @Published private(set) var toggleStats: KeyboardShortcut?
 
-    #if !APPSTORE
-    @ObservedObject private var updater = UpdaterManager.shared
-    #endif
+    /// Mirrors `Notification.Name.shortcutByNameDidChange` in KeyboardShortcuts
+    /// 1.10.0 (internal to the package, hence spelled out here).
+    private static let shortcutDidChange =
+        Notification.Name("KeyboardShortcuts_shortcutByNameDidChange")
 
-    #if APPSTORE
-    private static let writeReviewURL =
-        URL(string: "https://apps.apple.com/app/id6784999549?action=write-review")!
-    #endif
+    private var cancellable: AnyCancellable?
+
+    init() {
+        reload()
+        cancellable = NotificationCenter.default
+            .publisher(for: Self.shortcutDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.reload() }
+    }
+
+    private func reload() {
+        toggleSignal = Self.shortcut(.toggleSignal)
+        toggleStats = Self.shortcut(.toggleStats)
+    }
 
     /// The user's currently-assigned hotkey as a SwiftUI shortcut, so it renders
-    /// right-aligned in the menu just like Preferences (⌘,) and Quit (⌘Q). Read
-    /// live from the store each time the menu opens, so it reflects a re-recorded
-    /// or cleared shortcut. This only affects the menu's display and, at most, the
-    /// key equivalent while the menu is open — the real global hotkey is handled
-    /// by `SignalServices`, which is unaffected.
+    /// right-aligned in the menu just like Preferences (⌘,) and Quit (⌘Q). This
+    /// only affects the menu's display and, at most, the key equivalent while the
+    /// menu is open — the real global hotkey is handled by `SignalServices`,
+    /// which is unaffected.
     private static func shortcut(_ name: KeyboardShortcuts.Name) -> KeyboardShortcut? {
         guard
             let shortcut = KeyboardShortcuts.getShortcut(for: name),
@@ -164,6 +183,21 @@ private struct MenuBarContent: View {
             modifiers: modifiers
         )
     }
+}
+
+private struct MenuBarContent: View {
+    @Environment(\.openSettings) private var openSettings
+
+    @StateObject private var shortcuts = MenuBarShortcuts()
+
+    #if !APPSTORE
+    @ObservedObject private var updater = UpdaterManager.shared
+    #endif
+
+    #if APPSTORE
+    private static let writeReviewURL =
+        URL(string: "https://apps.apple.com/app/id6784999549?action=write-review")!
+    #endif
 
     var body: some View {
         #if DEBUG
@@ -188,7 +222,7 @@ private struct MenuBarContent: View {
         Button("Show / Hide Signal") {
             SignalServices.shared.controller.toggle()
         }
-        .modifier(OptionalShortcut(Self.shortcut(.toggleSignal)))
+        .modifier(OptionalShortcut(shortcuts.toggleSignal))
 
         // `present()` rather than `toggle()`: a menu click should always show.
         // Shares the toggle hotkey — a *long press* opens the overview — so we
@@ -197,12 +231,12 @@ private struct MenuBarContent: View {
         Button("Scheduled Tasks (Hold)…") {
             SignalServices.shared.controller.presentOverview()
         }
-        .modifier(OptionalShortcut(Self.shortcut(.toggleSignal)))
+        .modifier(OptionalShortcut(shortcuts.toggleSignal))
 
         Button("Task Stats…") {
             SignalServices.shared.stats.present()
         }
-        .modifier(OptionalShortcut(Self.shortcut(.toggleStats)))
+        .modifier(OptionalShortcut(shortcuts.toggleStats))
 
         Button("What's New…") {
             SignalServices.shared.whatsNew.presentLatest()

@@ -2,17 +2,21 @@ import AppKit
 import Foundation
 
 /// Arms timers for the daily prompt and the quick glances, and re-arms on
-/// settings change, system wake, and at midnight.
+/// settings change, system wake, and at midnight. Both are unsolicited opens,
+/// so both stay quiet when Signal is already up or the day's tasks are all
+/// done — see `AutoOpenPolicy`.
 @MainActor
 final class Scheduler {
     private let controller: NotchController
+    private let store: SignalStore
     private var timers: [Timer] = []
     private var debounceTimer: Timer?
 
     private let lastPromptedKey = "lastPromptedDay"
 
-    init(controller: NotchController) {
+    init(controller: NotchController, store: SignalStore) {
         self.controller = controller
+        self.store = store
     }
 
     func start() {
@@ -103,15 +107,30 @@ final class Scheduler {
         timers.append(timer)
     }
 
+    /// Rolls the day over first, so a stale "yesterday was all done" can never
+    /// silence today's prompt; `refreshForToday()` is a no-op once today's log
+    /// exists.
+    private func shouldAutoOpen(_ trigger: AutoOpenPolicy.Trigger) -> Bool {
+        store.refreshForToday()
+        return AutoOpenPolicy.skipReason(
+            for: trigger,
+            ui: controller.autoOpenUIState,
+            allTasksComplete: store.isDayComplete
+        ) == nil
+    }
+
     private func fireDailyPrompt() {
         guard SettingsStore.dailyPromptEnabled else { return }
+        // Spent for today either way: a prompt that was deliberately skipped
+        // must not come back later through a settings-change or wake `rebuild()`.
         markPromptedToday()
-        SoundPlayer.play(SettingsStore.openSound)
+        guard shouldAutoOpen(.dailyPrompt) else { return }
+        SoundPlayer.play(SettingsStore.openSound, on: SettingsStore.openSoundDevice)
         controller.presentInteractive(source: .scheduled)
     }
 
     private func fireGlance() {
-        guard SettingsStore.glancesEnabled, !controller.isVisible else { return }
+        guard SettingsStore.glancesEnabled, shouldAutoOpen(.glance) else { return }
         controller.presentGlance(duration: SettingsStore.glanceDurationSeconds)
     }
 }

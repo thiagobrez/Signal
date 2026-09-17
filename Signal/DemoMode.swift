@@ -28,7 +28,10 @@ enum DemoMode {
         }
     }
 
-    private static func relaunch() {
+    /// Starts a fresh instance and quits this one. Also used by the debug-only
+    /// "Show onboarding again" button, which has to relaunch for the
+    /// first-launch path in `SignalServices.start()` to run again.
+    static func relaunch() {
         let config = NSWorkspace.OpenConfiguration()
         // Without a new instance, launching an already-running app only sends
         // a reopen event to this process.

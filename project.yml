@@ -103,6 +103,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
     sources:
       - path: SignalTests
+      - path: Signal/Schedule/AutoOpenPolicy.swift
       - path: Signal/Schedule/NaturalDateParser.swift
       - path: Signal/WhatsNew/ChangelogParser.swift
       - path: Signal/Schedule/ScheduleEdit.swift
@@ -110,6 +111,7 @@ targets:
       - path: Signal/Notch/NotchRowLayout.swift
       - path: Signal/Notch/RowTextLayout.swift
       - path: Signal/ReopenPolicy.swift
+      - path: Signal/MenuBarHint/MenuBarHintPolicy.swift
       - path: Signal/Models/ScheduledTask.swift
       - path: Signal/Models/DayLog.swift
       - path: Signal/Models/TodoItem.swift
@@ -119,6 +121,7 @@ targets:
       # tests exercise the shipping code.
       - path: Signal/SettingsStore.swift
       - path: Signal/Sound/SoundPlayer.swift
+      - path: Signal/Sound/AudioOutputDevices.swift
       - path: Signal/Analytics/Analytics.swift
     dependencies:
       - package: TelemetryDeck
