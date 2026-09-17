@@ -12,6 +12,7 @@
 		02784E43111F5ED343FEA223 /* TodoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B24089DDB17EFBD23ACA6E /* TodoRow.swift */; };
 		03EBE1A844DF22D16DF40F78 /* SignalQuote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008557C7E0D6B65492385BAC /* SignalQuote.swift */; };
 		0546BC32AA8E72C7F0895F3C /* pencil.wav in Resources */ = {isa = PBXBuildFile; fileRef = B1389E0ACDE4C1E41AE3799A /* pencil.wav */; };
+		055A10A718817888064C6DBE /* TaskRowMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF806385EC5F8078C04F3E59 /* TaskRowMetrics.swift */; };
 		06DB32C8478B62D612426EA6 /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46D4CD682FA36C8295604786 /* DemoMode.swift */; };
 		08F36652507A4AB93CE0FF1B /* SignalServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A620C14130D54DCE2B2A9 /* SignalServices.swift */; };
 		0AFD5A8D2367B0DF579283C2 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6358254F1F4002673C3D2D1A /* StatsView.swift */; };
@@ -84,6 +85,7 @@
 		83FBA7C5A7E4CB777AFBB5BC /* OverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C92EDF42D1B31D0626721A9 /* OverviewView.swift */; };
 		85F678417CEE01A7CD182F57 /* ScheduleOverviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F87A8B662C2B58337D3A3C4 /* ScheduleOverviewModel.swift */; };
 		874A3953B4FFC03A8DDCE1DA /* WhatsNewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712741D49CAABCCA8B00060A /* WhatsNewWindowController.swift */; };
+		87DD3E073A31D90B6DF783CD /* TaskRowMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF806385EC5F8078C04F3E59 /* TaskRowMetrics.swift */; };
 		89CDCCB06B8FAEB5A9CD2F10 /* DayLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146D2AB23F5E793F6008D409 /* DayLog.swift */; };
 		8C0EB6A671BFFCAEED6811FF /* RowTextLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CEC63AC8768122470BEC80 /* RowTextLayout.swift */; };
 		8D4B15FD1F3E5B9F1BB7D632 /* ChangelogParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94BC6F0678AECBFC37827B77 /* ChangelogParser.swift */; };
@@ -205,6 +207,7 @@
 		C453E4D521FCA575CE77C9A3 /* SignalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalApp.swift; sourceTree = "<group>"; };
 		CABDE5D429850284CDE2585B /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		CB7E2BD16B84F461552B37B3 /* scribble.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = scribble.wav; sourceTree = "<group>"; };
+		CF806385EC5F8078C04F3E59 /* TaskRowMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowMetrics.swift; sourceTree = "<group>"; };
 		D6D167E0E17A1CBA37D880B5 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		DA3EB99F6E1EE86D2A4F04A9 /* ScheduleGridTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleGridTests.swift; sourceTree = "<group>"; };
 		DD2A50DE2EEC439D6ED30078 /* TodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoItem.swift; sourceTree = "<group>"; };
@@ -382,6 +385,7 @@
 				169FF8FD53312CBD71185C1B /* NotchRowLayout.swift */,
 				44CEC63AC8768122470BEC80 /* RowTextLayout.swift */,
 				1B6F1806BB0E509980D60F2F /* SignalNotchView.swift */,
+				CF806385EC5F8078C04F3E59 /* TaskRowMetrics.swift */,
 				40EFE909F778F1ED6D50A42F /* TaskTextEditor.swift */,
 				14B24089DDB17EFBD23ACA6E /* TodoRow.swift */,
 			);
@@ -671,6 +675,7 @@
 				4B15E001C3B00CBCE6D8011A /* StatsCalculator.swift in Sources */,
 				0AFD5A8D2367B0DF579283C2 /* StatsView.swift in Sources */,
 				F5529D4FD3E89ECD701970B8 /* StatsWindowController.swift in Sources */,
+				055A10A718817888064C6DBE /* TaskRowMetrics.swift in Sources */,
 				3CF3586B48329A22C75A960D /* TaskTextEditor.swift in Sources */,
 				BCB72BF78669CCE888703935 /* TodoItem.swift in Sources */,
 				F2ABDB179B11421F0972A085 /* TodoRow.swift in Sources */,
@@ -755,6 +760,7 @@
 				4C8F3BC18F387B56A3C898AE /* StatsCalculator.swift in Sources */,
 				B50C859C7169176E1CE79AB2 /* StatsView.swift in Sources */,
 				B792BEDC9F2F0E213A960CE0 /* StatsWindowController.swift in Sources */,
+				87DD3E073A31D90B6DF783CD /* TaskRowMetrics.swift in Sources */,
 				CF4A0441CFC4E5D90363470C /* TaskTextEditor.swift in Sources */,
 				727A2D12D5D0E2E4BEBA8831 /* TodoItem.swift in Sources */,
 				02784E43111F5ED343FEA223 /* TodoRow.swift in Sources */,

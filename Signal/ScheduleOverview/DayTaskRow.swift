@@ -4,30 +4,30 @@ import SwiftUI
 /// state. History is never edited — today and the days ahead get the panel's
 /// own editable row instead.
 ///
-/// Styled to the panel's row metrics so a day of history lines up with the
-/// editable days above it.
+/// Drawn at the overview's compact metrics, like the editable rows of today
+/// and the days ahead, so every day of the week lines up.
 struct DayTaskRow: View {
     let item: TodoItem
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: TaskRowMetrics.compact.spacing) {
             Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 18))
+                .font(TaskRowMetrics.compact.iconFont)
                 .foregroundStyle(item.isCompleted ? Color.green : Color.white.opacity(0.35))
-                .frame(width: 20, height: 20)
+                .frame(width: TaskRowMetrics.compact.iconBox, height: TaskRowMetrics.compact.textRowHeight)
 
             Text(item.text)
-                .font(.system(size: 15, weight: .medium))
+                .font(TaskRowMetrics.compact.textFont)
                 .strikethrough(item.isCompleted, color: .white.opacity(0.5))
                 .foregroundStyle(item.isCompleted ? .white.opacity(0.5) : .white)
                 .multilineTextAlignment(.leading)
                 .lineLimit(RowTextLayout.maxLines)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(minHeight: TodoRow.textRowHeight, alignment: .leading)
+                .frame(minHeight: TaskRowMetrics.compact.textRowHeight, alignment: .leading)
 
             Spacer(minLength: 0)
         }
-        .padding(.vertical, (TodoRow.rowHeight - TodoRow.textRowHeight) / 2)
-        .frame(minHeight: TodoRow.rowHeight)
+        .padding(.vertical, TaskRowMetrics.compact.verticalPadding)
+        .frame(minHeight: TaskRowMetrics.compact.rowHeight)
     }
 }

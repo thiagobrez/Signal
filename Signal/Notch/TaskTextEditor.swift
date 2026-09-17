@@ -156,8 +156,10 @@ struct TaskTextEditor: NSViewRepresentable {
     /// ⌥↑ / ⌥↓: move this row one slot up or down.
     let onReorderUp: () -> Void
     let onReorderDown: () -> Void
+    /// The scale the row is drawn at — the panel's unless told otherwise.
+    var metrics: TaskRowMetrics = .panel
 
-    static let font = NSFont.systemFont(ofSize: 15, weight: .medium)
+    private var font: NSFont { metrics.nsTextFont }
     /// The inset `NSTextFieldCell` used to draw its text at. Matching it kept
     /// every row's text at the same x through the swap to a text view, and in
     /// line with the header above the list.
@@ -174,7 +176,8 @@ struct TaskTextEditor: NSViewRepresentable {
         textView.usesFontPanel = false
         textView.allowsUndo = true
         textView.focusRingType = .none
-        textView.font = Self.font
+        textView.font = font
+        textView.rowFont = font
         textView.textColor = .white
         textView.insertionPointColor = .white
         // A task is plain text: nothing here may quietly rewrite what's typed.
@@ -226,6 +229,11 @@ struct TaskTextEditor: NSViewRepresentable {
             context.coordinator.restyle(textView)
         }
         textView.placeholder = placeholder
+        if textView.rowFont != font {
+            textView.rowFont = font
+            textView.font = font
+            context.coordinator.restyle(textView)
+        }
         // Drive AppKit's first responder from SwiftUI's focus state.
         textView.wantsFocus = focusedIndex == index
         textView.entersOnFirstLine = rowEntry == .fromAbove
@@ -249,7 +257,7 @@ struct TaskTextEditor: NSViewRepresentable {
         return (storage, layout, container)
     }()
 
-    private static func measuredHeight(of string: String, width: CGFloat) -> CGFloat {
+    private static func measuredHeight(of string: String, width: CGFloat, font: NSFont) -> CGFloat {
         let (storage, layout, container) = measuring
         container.size = NSSize(width: max(width, 0), height: .greatestFiniteMagnitude)
         storage.setAttributedString(
@@ -261,7 +269,15 @@ struct TaskTextEditor: NSViewRepresentable {
 
     /// One line of the row's text, so the three-line cap lands exactly on a
     /// line boundary instead of slicing a fourth line in half.
-    static let lineHeight: CGFloat = measuredHeight(of: "Ag", width: .greatestFiniteMagnitude)
+    /// Measured once per text size.
+    private static var lineHeights: [CGFloat: CGFloat] = [:]
+
+    static func lineHeight(for metrics: TaskRowMetrics) -> CGFloat {
+        if let cached = lineHeights[metrics.textSize] { return cached }
+        let height = measuredHeight(of: "Ag", width: .greatestFiniteMagnitude, font: metrics.nsTextFont)
+        lineHeights[metrics.textSize] = height
+        return height
+    }
 
     /// The height the text needs once wrapped into `width`, never more than
     /// `RowTextLayout.maxLines` lines' worth — past that the row holds still and
@@ -270,9 +286,9 @@ struct TaskTextEditor: NSViewRepresentable {
     /// Rounded up so the row height lands on whole points: a fractional height
     /// puts the hosted view at a fractional window Y, where the text shimmers
     /// off the pixel grid (same reasoning as `listOverflows`).
-    static func wrappedHeight(of string: String, width: CGFloat) -> CGFloat {
-        let measured = measuredHeight(of: string, width: width - textInset.width * 2)
-        return ceil(RowTextLayout.cappedHeight(measured: measured, lineHeight: lineHeight))
+    static func wrappedHeight(of string: String, width: CGFloat, metrics: TaskRowMetrics = .panel) -> CGFloat {
+        let measured = measuredHeight(of: string, width: width - textInset.width * 2, font: metrics.nsTextFont)
+        return ceil(RowTextLayout.cappedHeight(measured: measured, lineHeight: lineHeight(for: metrics)))
     }
 
     /// Report the wrapped height to SwiftUI so the row — and the card behind
@@ -282,8 +298,8 @@ struct TaskTextEditor: NSViewRepresentable {
     func sizeThatFits(_ proposal: ProposedViewSize, nsView: RowScrollView, context: Context) -> CGSize? {
         guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
         let content = text.isEmpty ? placeholder : text
-        let height = Self.wrappedHeight(of: content, width: width)
-        return CGSize(width: width, height: max(height, TodoRow.textRowHeight))
+        let height = Self.wrappedHeight(of: content, width: width, metrics: metrics)
+        return CGSize(width: width, height: max(height, metrics.textRowHeight))
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -360,6 +376,10 @@ struct TaskTextEditor: NSViewRepresentable {
 
         var placeholder = "" {
             didSet { if placeholder != oldValue, string.isEmpty { needsDisplay = true } }
+        }
+        /// The font the row is drawn in, which the placeholder shares.
+        var rowFont = TaskRowMetrics.panel.nsTextFont {
+            didSet { if rowFont != oldValue, string.isEmpty { needsDisplay = true } }
         }
 
         /// Matters when the view is *created* already focused — which is what
@@ -456,7 +476,7 @@ struct TaskTextEditor: NSViewRepresentable {
                 string: placeholder,
                 attributes: [
                     .foregroundColor: NSColor.white.withAlphaComponent(0.25),
-                    .font: TaskTextEditor.font,
+                    .font: rowFont,
                 ]
             ).draw(at: NSPoint(x: textContainerInset.width, y: textContainerInset.height))
         }
@@ -529,7 +549,7 @@ struct TaskTextEditor: NSViewRepresentable {
             storage.beginEditing()
             storage.removeAttribute(.backgroundColor, range: full)
             storage.addAttribute(.foregroundColor, value: NSColor.white, range: full)
-            storage.addAttribute(.font, value: TaskTextEditor.font, range: full)
+            storage.addAttribute(.font, value: parent.metrics.nsTextFont, range: full)
             if let parse, NSMaxRange(parse.matchedRange) <= storage.length {
                 storage.addAttribute(.foregroundColor, value: NSColor.systemGreen, range: parse.matchedRange)
                 storage.addAttribute(
@@ -540,7 +560,7 @@ struct TaskTextEditor: NSViewRepresentable {
             }
             storage.endEditing()
             // Don't let fresh keystrokes inherit the highlight's attributes.
-            textView.typingAttributes = [.font: TaskTextEditor.font, .foregroundColor: NSColor.white]
+            textView.typingAttributes = [.font: parent.metrics.nsTextFont, .foregroundColor: NSColor.white]
         }
 
         /// Paints the row for the state it's in: the date phrase highlighted
@@ -559,7 +579,7 @@ struct TaskTextEditor: NSViewRepresentable {
             storage.beginEditing()
             storage.removeAttribute(.backgroundColor, range: full)
             storage.addAttribute(.foregroundColor, value: NSColor.white, range: full)
-            storage.addAttribute(.font, value: TaskTextEditor.font, range: full)
+            storage.addAttribute(.font, value: parent.metrics.nsTextFont, range: full)
             storage.endEditing()
             lastParse = nil
         }

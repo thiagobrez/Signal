@@ -34,20 +34,21 @@ struct ScheduledTaskRow: View {
     @State private var hovering = false
     @State private var parse: ScheduleParse?
 
-    /// Matches the completion circle's box in `TodoRow` so the text of a
-    /// schedule starts at exactly the same x as the text of a to-do.
-    private static let iconSize: CGFloat = 20
+    /// The same compact metrics today's `TodoRow`s use in the overview, so a
+    /// schedule's glyph is the size of a to-do's checkbox and its text starts
+    /// at exactly the same x.
+    private static let metrics = TaskRowMetrics.compact
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: Self.metrics.spacing) {
             Image(systemName: task.isRecurring ? "repeat" : "calendar")
-                .font(.system(size: 13, weight: .semibold))
+                .font(Self.metrics.iconFont)
                 .foregroundStyle(task.isRecurring ? Color.green : Color.white.opacity(0.4))
-                .frame(width: Self.iconSize, height: Self.iconSize)
+                .frame(width: Self.metrics.iconBox, height: Self.metrics.textRowHeight)
 
             Group {
                 if let confirmationLabel {
-                    ScheduleConfirmationLabel(text: confirmationLabel)
+                    ScheduleConfirmationLabel(text: confirmationLabel, metrics: Self.metrics)
                 } else {
                     TaskTextEditor(
                         text: $task.text,
@@ -67,11 +68,12 @@ struct ScheduledTaskRow: View {
                         onEmptyBackspace: onEmptyBackspace,
                         // The overview doesn't reorder.
                         onReorderUp: {},
-                        onReorderDown: {}
+                        onReorderDown: {},
+                        metrics: Self.metrics
                     )
                 }
             }
-            .frame(minHeight: TodoRow.textRowHeight)
+            .frame(minHeight: Self.metrics.textRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if let label = recurrenceLabel, confirmationLabel == nil {
@@ -81,7 +83,7 @@ struct ScheduledTaskRow: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Capsule().fill(.green.opacity(0.15)))
-                    .frame(height: TodoRow.textRowHeight)
+                    .frame(height: Self.metrics.textRowHeight)
                     .fixedSize()
             }
 
@@ -90,11 +92,12 @@ struct ScheduledTaskRow: View {
                 isFocused: focused == index && confirmationLabel == nil,
                 willSchedule: parse != nil,
                 deleteHelp: task.isRecurring ? "Delete routine" : "Delete task",
+                metrics: Self.metrics,
                 onDelete: onDelete
             )
         }
-        .padding(.vertical, (TodoRow.rowHeight - TodoRow.textRowHeight) / 2)
-        .frame(minHeight: TodoRow.rowHeight)
+        .padding(.vertical, Self.metrics.verticalPadding)
+        .frame(minHeight: Self.metrics.rowHeight)
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .animation(.snappy(duration: 0.2), value: confirmationLabel)

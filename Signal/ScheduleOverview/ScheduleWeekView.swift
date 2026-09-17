@@ -224,7 +224,8 @@ struct ScheduleWeekView: View {
             showsDragHandle: false,
             podiumIndex: slot,
             // Today's rows keep the panel's strictly-future keyword semantics.
-            parseAnchor: nil
+            parseAnchor: nil,
+            metrics: .compact
         )
     }
 
@@ -262,20 +263,20 @@ struct ScheduleWeekView: View {
 
     private func addButton(on day: Date) -> some View {
         Button { addTask(on: day) } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: TaskRowMetrics.compact.spacing) {
                 Image(systemName: "plus.circle")
-                    .font(.system(size: 18))
-                    .frame(width: 20, height: 20)
+                    .font(TaskRowMetrics.compact.iconFont)
+                    .frame(width: TaskRowMetrics.compact.iconBox, height: TaskRowMetrics.compact.textRowHeight)
                 Text("Add a task")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(TaskRowMetrics.compact.textFont)
                 Spacer(minLength: 0)
             }
             .foregroundStyle(.white.opacity(0.3))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(minHeight: TodoRow.rowHeight)
-        .padding(.vertical, (TodoRow.rowHeight - TodoRow.textRowHeight) / 2)
+        .frame(minHeight: TaskRowMetrics.compact.textRowHeight)
+        .padding(.vertical, TaskRowMetrics.compact.verticalPadding)
     }
 
     // MARK: - Focus choreography
@@ -458,22 +459,22 @@ private struct ScheduledTaskHistoryRow: View {
     let task: ScheduledTask
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: TaskRowMetrics.compact.spacing) {
             Image(systemName: task.isRecurring ? "repeat" : "calendar")
-                .font(.system(size: 13, weight: .semibold))
+                .font(TaskRowMetrics.compact.iconFont)
                 .foregroundStyle(task.isRecurring ? Color.green : Color.white.opacity(0.4))
-                .frame(width: 20, height: 20)
+                .frame(width: TaskRowMetrics.compact.iconBox, height: TaskRowMetrics.compact.textRowHeight)
 
             Text(task.text)
-                .font(.system(size: 15, weight: .medium))
+                .font(TaskRowMetrics.compact.textFont)
                 .foregroundStyle(.white.opacity(0.7))
                 .lineLimit(RowTextLayout.maxLines)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(minHeight: TodoRow.textRowHeight, alignment: .leading)
+                .frame(minHeight: TaskRowMetrics.compact.textRowHeight, alignment: .leading)
 
             Spacer(minLength: 0)
         }
-        .padding(.vertical, (TodoRow.rowHeight - TodoRow.textRowHeight) / 2)
-        .frame(minHeight: TodoRow.rowHeight)
+        .padding(.vertical, TaskRowMetrics.compact.verticalPadding)
+        .frame(minHeight: TaskRowMetrics.compact.rowHeight)
     }
 }

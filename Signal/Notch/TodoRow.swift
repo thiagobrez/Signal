@@ -46,6 +46,9 @@ struct TodoRow: View {
     /// The day this row sits on, when it isn't today — forwarded to the editor
     /// so date phrases resolve against that day.
     var parseAnchor: Date?
+    /// The scale the row is drawn at: the panel's by default, compact in the
+    /// schedule overview.
+    var metrics: TaskRowMetrics = .panel
 
     @State private var hovering = false
     /// Live parse of the field's trailing date phrase — tints the ↵ hint green
@@ -56,16 +59,12 @@ struct TodoRow: View {
     /// vertically when the field is swapped for a `Text` on completion. Long
     /// text wraps and the area grows past this, up to `RowTextLayout.maxLines`,
     /// beyond which it scrolls inside the row instead.
-    static let textRowHeight: CGFloat = 20
+    static let textRowHeight = TaskRowMetrics.panel.textRowHeight
     /// Minimum height for the whole row — what a single-line row measures, and
     /// the unit the scroll cap is expressed in (`maxVisibleRows` of these plus
     /// spacing). A row with wrapped text is taller — at most three lines' worth
     /// — and reports its real height back to the list.
-    static let rowHeight: CGFloat = 22
-    /// Shared box for every completion control, medal or plain, so the task
-    /// text starts at the same x on all rows — the bare symbol's natural width
-    /// differs from the medal's composed one.
-    private static let checkboxSize: CGFloat = 20
+    static let rowHeight = TaskRowMetrics.panel.rowHeight
     /// Width of the strip on the row's leading edge that hosts the drag grip.
     /// It's real layout — the list is shifted left by the same amount so the
     /// task text still lines up with the header — because an overlay hanging
@@ -114,13 +113,17 @@ struct TodoRow: View {
         HStack(alignment: .top, spacing: 0) {
             if showsDragHandle { dragHandle }
 
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: metrics.spacing) {
             Button(action: onToggle) {
                 Image(systemName: completionSymbol)
-                    .font(.system(size: 18))
+                    .font(metrics.iconFont)
                     .foregroundStyle(completionColor)
                     .contentTransition(.symbolEffect(.replace))
-                    .frame(width: Self.checkboxSize, height: Self.checkboxSize)
+                    // One shared box for every completion control, medal or
+                    // plain, so the task text starts at the same x on all
+                    // rows — the bare symbol's natural width differs from the
+                    // medal's composed one.
+                    .frame(width: metrics.iconBox, height: metrics.textRowHeight)
                     // Also covers a reorder moving the row onto, off, or along
                     // the podium — the symbol swaps rather than snapping.
                     .animation(.snappy(duration: 0.2), value: completionSymbol)
@@ -132,12 +135,12 @@ struct TodoRow: View {
             // item is completed (and no longer editable) we show a Text instead.
             Group {
                 if let confirmationLabel {
-                    ScheduleConfirmationLabel(text: confirmationLabel)
+                    ScheduleConfirmationLabel(text: confirmationLabel, metrics: metrics)
                 } else if item.isCompleted {
                     Text(item.text.isEmpty ? " " : item.text)
                         .strikethrough(true, color: .white.opacity(0.6))
                         .foregroundStyle(.white.opacity(0.5))
-                        .font(.system(size: 15, weight: .medium))
+                        .font(metrics.textFont)
                         // Completed rows wrap — and stop wrapping — exactly as
                         // editable ones do, so checking a long task off doesn't
                         // reflow the list.
@@ -178,17 +181,19 @@ struct TodoRow: View {
                         onFocusLanded: onFocusLanded,
                         onEmptyBackspace: onEmptyBackspace,
                         onReorderUp: onReorderUp,
-                        onReorderDown: onReorderDown
+                        onReorderDown: onReorderDown,
+                        metrics: metrics
                     )
                 }
             }
-            .frame(minHeight: Self.textRowHeight)
+            .frame(minHeight: metrics.textRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
 
             TaskRowTrailingGutter(
                 showsDelete: hovering && store.canDelete(item) && confirmationLabel == nil,
                 isFocused: focused == index && confirmationLabel == nil,
                 willSchedule: parse != nil,
+                metrics: metrics,
                 onDelete: onDelete
             )
             }
@@ -204,9 +209,9 @@ struct TodoRow: View {
             // Makes the content as tall as the grip beside it, so top-aligning
             // the two leaves a single-line row looking exactly as centred as
             // it did when every row was pinned to `rowHeight`.
-            .padding(.vertical, (Self.rowHeight - Self.textRowHeight) / 2)
+            .padding(.vertical, metrics.verticalPadding)
         }
-        .frame(minHeight: Self.rowHeight)
+        .frame(minHeight: metrics.rowHeight)
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .animation(.snappy(duration: 0.2), value: item.isCompleted)
@@ -273,6 +278,7 @@ struct TaskRowTrailingGutter: View {
     let isFocused: Bool
     let willSchedule: Bool
     var deleteHelp = "Delete task"
+    var metrics: TaskRowMetrics = .panel
     let onDelete: () -> Void
 
     var body: some View {
@@ -295,7 +301,7 @@ struct TaskRowTrailingGutter: View {
         }
         // As tall as one line of text, so the hint sits beside the first
         // line of a wrapped row rather than centred against the block.
-        .frame(width: 16, height: TodoRow.textRowHeight)
+        .frame(width: 16, height: metrics.textRowHeight)
     }
 }
 
@@ -303,13 +309,14 @@ struct TaskRowTrailingGutter: View {
 /// for the day it was scheduled to.
 struct ScheduleConfirmationLabel: View {
     let text: String
+    var metrics: TaskRowMetrics = .panel
 
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: metrics.textSize - 3, weight: .semibold))
             Text(text)
-                .font(.system(size: 15, weight: .medium))
+                .font(metrics.textFont)
         }
         .foregroundStyle(Color.green)
     }
