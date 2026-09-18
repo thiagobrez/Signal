@@ -62,46 +62,88 @@ final class ScheduleRepositoryTests: XCTestCase {
         XCTAssertEqual(task.text, "water the plants")
     }
 
-    // MARK: - update
+    // MARK: - add
 
-    func testUpdateOneTimeToWeeklyRecomputesDueDate() {
-        let task = insert("report", due: date(2026, 1, 20))
-        // Monday Jan 12 → next Wednesday (weekday 4) is Jan 14.
-        repository.update(task, to: .weekly(weekday: 4), now: date(2026, 1, 12, hour: 9), calendar: calendar)
-        XCTAssertEqual(task.recurrence, .weekly(weekday: 4))
-        XCTAssertEqual(task.dueDate, date(2026, 1, 14))
+    func testAddRefusesADayAlreadyPast() {
+        XCTAssertNil(
+            repository.add(on: date(2026, 1, 11), now: date(2026, 1, 12, hour: 9), calendar: calendar)
+        )
+        XCTAssertTrue(repository.pending().isEmpty)
     }
 
-    func testUpdateWeeklyToOneTimeClearsRecurrenceColumns() {
-        let task = insert("report", due: date(2026, 1, 14), recurrence: .weekly(weekday: 4))
-        repository.update(task, to: .oneTime(date: date(2026, 1, 22, hour: 17)), now: date(2026, 1, 12), calendar: calendar)
-        XCTAssertNil(task.recurrence)
-        XCTAssertNil(task.recurrenceUnit)
-        XCTAssertNil(task.recurrenceWeekday)
-        XCTAssertEqual(task.dueDate, date(2026, 1, 22))
+    func testAddOnTodayAndOnAFutureDayLandsAtStartOfDay() {
+        let today = repository.add(
+            text: "dentist", on: date(2026, 1, 12, hour: 23),
+            now: date(2026, 1, 12, hour: 9), calendar: calendar
+        )
+        XCTAssertEqual(today?.dueDate, date(2026, 1, 12))
+
+        let future = repository.add(
+            on: date(2026, 1, 20, hour: 17), now: date(2026, 1, 12, hour: 9), calendar: calendar
+        )
+        XCTAssertEqual(future?.dueDate, date(2026, 1, 20))
+        XCTAssertNil(future?.recurrence)
+        XCTAssertEqual(future?.text, "")
     }
 
-    func testUpdateDailyToWeeklyOnTodaysWeekdayLandsNextWeek() {
-        let task = insert("standup", due: date(2026, 1, 13), recurrence: .daily)
-        // Monday Jan 12, switching to "every Monday" → Jan 19, not today.
-        repository.update(task, to: .weekly(weekday: 2), now: date(2026, 1, 12, hour: 9), calendar: calendar)
+    // MARK: - reschedule
+
+    func testRescheduleAppliesTextDateAndRecurrence() throws {
+        let task = insert("gym every monday", due: date(2026, 1, 20))
+        let parse = try XCTUnwrap(
+            NaturalDateParser.parse(
+                "gym every monday", now: date(2026, 1, 12, hour: 9),
+                anchor: date(2026, 1, 19), calendar: calendar
+            )
+        )
+        repository.reschedule(task, parse: parse)
+
+        XCTAssertEqual(task.text, "gym")
+        XCTAssertEqual(task.recurrence, .weekly(weekday: 2))
+        // Jan 19 is itself a Monday, so the routine starts there.
         XCTAssertEqual(task.dueDate, date(2026, 1, 19))
     }
 
-    func testUpdateWithSameShapeIsANoOp() {
-        // Recurring: dueDate must not be pushed out by a no-change Save.
-        let weekly = insert("report", due: date(2026, 1, 14), recurrence: .weekly(weekday: 4))
-        repository.update(weekly, to: .weekly(weekday: 4), now: date(2026, 1, 12), calendar: calendar)
-        XCTAssertEqual(weekly.dueDate, date(2026, 1, 14))
+    func testRescheduleBackToOneTimeClearsRecurrenceColumns() throws {
+        let task = insert("report", due: date(2026, 1, 14), recurrence: .weekly(weekday: 4))
+        let parse = try XCTUnwrap(
+            NaturalDateParser.parse(
+                "report tomorrow", now: date(2026, 1, 12, hour: 9), calendar: calendar
+            )
+        )
+        repository.reschedule(task, parse: parse)
 
-        let daily = insert("standup", due: date(2026, 1, 13), recurrence: .daily)
-        repository.update(daily, to: .daily, now: date(2026, 1, 14), calendar: calendar)
-        XCTAssertEqual(daily.dueDate, date(2026, 1, 13))
+        XCTAssertEqual(task.text, "report")
+        XCTAssertNil(task.recurrence)
+        XCTAssertNil(task.recurrenceUnit)
+        XCTAssertNil(task.recurrenceWeekday)
+        XCTAssertEqual(task.dueDate, date(2026, 1, 13))
+    }
 
-        // One-time to the same day keeps everything as-is.
-        let once = insert("dentist", due: date(2026, 1, 20))
-        repository.update(once, to: .oneTime(date: date(2026, 1, 20, hour: 8)), now: date(2026, 1, 12), calendar: calendar)
-        XCTAssertEqual(once.dueDate, date(2026, 1, 20))
-        XCTAssertNil(once.recurrence)
+    // MARK: - purgeEmpty
+
+    func testPurgeEmptyDropsBlanksAndSparesTheExceptedOne() {
+        let named = insert("dentist", due: date(2026, 1, 20))
+        let blank = insert("", due: date(2026, 1, 20))
+        let whitespace = insert("   ", due: date(2026, 1, 21))
+        let kept = insert("", due: date(2026, 1, 22))
+
+        repository.purgeEmpty(except: kept.persistentModelID)
+
+        let remaining = repository.pending()
+        XCTAssertEqual(remaining.count, 2)
+        XCTAssertTrue(remaining.contains { $0.persistentModelID == named.persistentModelID })
+        XCTAssertTrue(remaining.contains { $0.persistentModelID == kept.persistentModelID })
+        XCTAssertFalse(remaining.contains { $0.persistentModelID == blank.persistentModelID })
+        XCTAssertFalse(remaining.contains { $0.persistentModelID == whitespace.persistentModelID })
+    }
+
+    func testPurgeEmptyWithNoExceptionDropsEveryBlank() {
+        insert("dentist", due: date(2026, 1, 20))
+        insert("", due: date(2026, 1, 20))
+
+        repository.purgeEmpty()
+
+        XCTAssertEqual(repository.pending().map(\.text), ["dentist"])
     }
 }

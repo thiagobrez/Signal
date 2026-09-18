@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 import SwiftData
 
 /// A single thing shown on a day in the overview: either an upcoming schedule
@@ -13,27 +13,47 @@ enum OverviewEntry: Identifiable {
         case .todo(let item): return item.persistentModelID
         }
     }
+
+    var text: String {
+        switch self {
+        case .scheduled(let task): return task.text
+        case .todo(let item): return item.text
+        }
+    }
+
+    var isBlank: Bool {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 }
 
-/// A read-only row for one of a day's real to-dos, showing its completion
-/// state. Editing happens in the main Signal panel — here it's just history.
-struct DayTaskRow: View {
-    let item: TodoItem
+/// One editable row of the week, in the order the keyboard walks them. Rows are
+/// grouped so Tab on the last row of a group can spill into a fresh row on the
+/// same day, exactly as it does at the bottom of the panel's list.
+struct OverviewFocusRow: Identifiable {
+    /// Which run of rows this one belongs to.
+    enum Group: Equatable {
+        /// The EVERY DAY section, which belongs to no single day.
+        case daily
+        /// Today's own tasks, and below them the ones its schedule delivered.
+        case todayRegular
+        case todayScheduled
+        case future(Date)
+    }
 
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(item.isCompleted ? Color.green : Color.white.opacity(0.35))
+    let entry: OverviewEntry
+    /// The day the row is drawn on; nil in the EVERY DAY section.
+    let day: Date?
+    let group: Group
 
-            Text(item.text)
-                .font(.system(size: 13, weight: .medium))
-                .strikethrough(item.isCompleted, color: .white.opacity(0.5))
-                .foregroundStyle(item.isCompleted ? .white.opacity(0.5) : .white)
-                .lineLimit(1)
+    var id: PersistentIdentifier { entry.id }
 
-            Spacer(minLength: 0)
+    /// The day a Tab off the end of this group adds to — nil for the groups
+    /// that have no add button of their own.
+    var addDay: Date? {
+        switch group {
+        case .daily, .todayScheduled: return nil
+        case .todayRegular: return day
+        case .future(let day): return day
         }
-        .padding(.vertical, 3)
     }
 }

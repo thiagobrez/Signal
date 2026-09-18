@@ -137,6 +137,10 @@ final class NotchController {
 
     func presentOverview() {
         glanceHideTask?.cancel()
+        // The overview edits today through the store, so today's log has to
+        // exist — and its due schedules to have been delivered — before the
+        // view resets and reads it.
+        store.refreshForToday()
         overviewPresentationRequest &+= 1
 
         let overview = ensureOverviewNotch()
@@ -190,7 +194,11 @@ final class NotchController {
     private func ensureOverviewNotch() -> DynamicNotch<ScheduleOverviewView, EmptyView, EmptyView> {
         if let overviewNotch { return overviewNotch }
         let created = DynamicNotch(hoverBehavior: [.keepVisible], style: .auto) { [unowned self] in
-            ScheduleOverviewView(repository: self.scheduleRepository, controller: self)
+            ScheduleOverviewView(
+                repository: self.scheduleRepository,
+                store: self.store,
+                controller: self
+            )
         }
         overviewNotch = created
         return created
@@ -229,6 +237,9 @@ final class NotchController {
 
     private func collapseOverview() async {
         if !isVisible { removeClickMonitor() }
+        // Today's rows are edited in place in the overview too, so its text
+        // is committed on the way out exactly as the panel's is.
+        store.save()
         await overviewNotch?.hide(force: true)
     }
 

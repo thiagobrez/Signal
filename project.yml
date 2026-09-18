@@ -106,7 +106,6 @@ targets:
       - path: Signal/Schedule/AutoOpenPolicy.swift
       - path: Signal/Schedule/NaturalDateParser.swift
       - path: Signal/WhatsNew/ChangelogParser.swift
-      - path: Signal/Schedule/ScheduleEdit.swift
       - path: Signal/Schedule/ScheduleGrid.swift
       - path: Signal/Notch/NotchRowLayout.swift
       - path: Signal/Notch/RowTextLayout.swift
@@ -117,6 +116,8 @@ targets:
       - path: Signal/Models/TodoItem.swift
       - path: Signal/Store/ScheduleRepository.swift
       - path: Signal/Store/SignalStore.swift
+      - path: Signal/ScheduleOverview/ScheduleOverviewModel.swift
+      - path: Signal/ScheduleOverview/OverviewEntry.swift
       # SignalStore's dependencies, pulled in whole rather than stubbed so the
       # tests exercise the shipping code.
       - path: Signal/SettingsStore.swift

@@ -127,6 +127,63 @@ final class NaturalDateParserTests: XCTestCase {
         XCTAssertNil(parse(""))
     }
 
+    // MARK: - Anchored to a future day
+
+    /// Parsed as if typed onto `day` in the schedule overview.
+    private func parse(_ text: String, on day: Date) -> ScheduleParse? {
+        NaturalDateParser.parse(text, now: now, anchor: day, calendar: calendar)
+    }
+
+    func testAnchoredTomorrowIsTheDayAfterTheAnchor() throws {
+        // Typed onto Monday Jan 12 while "now" is Wednesday Jan 7.
+        let parse = try XCTUnwrap(parse("call mom tomorrow", on: day(2026, 1, 12)))
+        XCTAssertEqual(parse.dueDate, day(2026, 1, 13))
+        XCTAssertNil(parse.recurrence)
+        // It isn't actually tomorrow, so the label says the date.
+        XCTAssertNotEqual(parse.confirmationLabel, "Scheduled for tomorrow")
+        XCTAssertTrue(parse.confirmationLabel.hasPrefix("Scheduled for "))
+    }
+
+    func testAnchoredBareWeekdayIsTheFirstOneAfterTheAnchor() throws {
+        // Onto Monday Jan 12: the next Friday is Jan 16, not Jan 9.
+        let parse = try XCTUnwrap(parse("call mom friday", on: day(2026, 1, 12)))
+        XCTAssertEqual(parse.dueDate, day(2026, 1, 16))
+    }
+
+    func testAnchoredWeeklyStartsOnTheAnchorWhenItMatches() throws {
+        // "every monday" typed onto a Monday starts that very Monday.
+        let parse = try XCTUnwrap(parse("gym every monday", on: day(2026, 1, 12)))
+        XCTAssertEqual(parse.recurrence, .weekly(weekday: 2))
+        XCTAssertEqual(parse.dueDate, day(2026, 1, 12))
+        XCTAssertEqual(parse.confirmationLabel, "Every Monday")
+    }
+
+    func testAnchoredWeeklyOnANonMatchingDayStartsAtTheNextMatch() throws {
+        // Onto Wednesday Jan 14 → Monday Jan 19.
+        let parse = try XCTUnwrap(parse("gym every monday", on: day(2026, 1, 14)))
+        XCTAssertEqual(parse.dueDate, day(2026, 1, 19))
+    }
+
+    func testAnchoredDailyStartsOnTheAnchor() throws {
+        let parse = try XCTUnwrap(parse("stretch every day", on: day(2026, 1, 12)))
+        XCTAssertEqual(parse.recurrence, .daily)
+        XCTAssertEqual(parse.dueDate, day(2026, 1, 12))
+    }
+
+    func testAnchoredEveryWeekTakesTheAnchorsWeekday() throws {
+        // Monday Jan 12 → weekly on Mondays, starting that day.
+        let parse = try XCTUnwrap(parse("groceries every week", on: day(2026, 1, 12)))
+        XCTAssertEqual(parse.recurrence, .weekly(weekday: 2))
+        XCTAssertEqual(parse.dueDate, day(2026, 1, 12))
+    }
+
+    func testUnanchoredOutputIsUnchanged() throws {
+        // The panel's path: an explicit nil anchor resolves exactly as before.
+        let anchored = NaturalDateParser.parse("gym every monday", now: now, anchor: nil, calendar: calendar)
+        XCTAssertEqual(anchored, parse("gym every monday"))
+        XCTAssertEqual(try XCTUnwrap(anchored).dueDate, day(2026, 1, 12))
+    }
+
     // MARK: - Mechanics
 
     func testCaseInsensitive() throws {
