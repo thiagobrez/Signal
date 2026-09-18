@@ -5,12 +5,14 @@ import Foundation
 enum SettingsStore {
     enum Key {
         static let hasSeenOnboarding = "hasSeenOnboarding"
+        static let hasSeenMenuBarHint = "hasSeenMenuBarHint"
         static let lastSeenWhatsNewVersion = "lastSeenWhatsNewVersion"
         static let showWhatsNewAfterUpdates = "showWhatsNewAfterUpdates"
         static let hasRequestedReview = "hasRequestedReview"
         static let didMigrateToggleSignalShortcut = "didMigrateToggleSignalShortcut"
         static let carryOverIncomplete = "carryOverIncomplete"
         static let openOnLaunch = "openOnLaunch"
+        static let showMenuBarIcon = "showMenuBarIcon"
         static let dailyPromptEnabled = "dailyPromptEnabled"
         static let dailyPromptHour = "dailyPromptHour"
         static let dailyPromptMinute = "dailyPromptMinute"
@@ -22,11 +24,15 @@ enum SettingsStore {
         static let completionSound = "completionSound"
         static let celebrationSound = "celebrationSound"
         static let openSound = "openSound"
+        static let completionSoundDevice = "completionSoundDevice"
+        static let celebrationSoundDevice = "celebrationSoundDevice"
+        static let openSoundDevice = "openSoundDevice"
     }
 
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
             Key.hasSeenOnboarding: false,
+            Key.hasSeenMenuBarHint: false,
             // lastSeenWhatsNewVersion is deliberately unregistered: nil means
             // "fresh install or pre-What's-New build", which must be told
             // apart from any real version.
@@ -35,6 +41,7 @@ enum SettingsStore {
             Key.didMigrateToggleSignalShortcut: false,
             Key.carryOverIncomplete: true,
             Key.openOnLaunch: true,
+            Key.showMenuBarIcon: true,
             Key.dailyPromptEnabled: true,
             Key.dailyPromptHour: 9,
             Key.dailyPromptMinute: 0,
@@ -46,6 +53,9 @@ enum SettingsStore {
             Key.completionSound: "pop",
             Key.celebrationSound: "sys:Hero",
             Key.openSound: "sys:Blow",
+            Key.completionSoundDevice: AudioOutputDevice.systemDefaultID,
+            Key.celebrationSoundDevice: AudioOutputDevice.systemDefaultID,
+            Key.openSoundDevice: AudioOutputDevice.systemDefaultID,
         ])
     }
 
@@ -56,6 +66,13 @@ enum SettingsStore {
     static var hasSeenOnboarding: Bool {
         get { d.bool(forKey: Key.hasSeenOnboarding) }
         set { d.set(newValue, forKey: Key.hasSeenOnboarding) }
+    }
+
+    /// Read/write: flipped once the "Signal lives here!" hint has actually been
+    /// shown under the menu bar icon, so it only ever appears on the first run.
+    static var hasSeenMenuBarHint: Bool {
+        get { d.bool(forKey: Key.hasSeenMenuBarHint) }
+        set { d.set(newValue, forKey: Key.hasSeenMenuBarHint) }
     }
 
     /// Read/write: the marketing version whose release notes the user has seen
@@ -86,6 +103,15 @@ enum SettingsStore {
 
     static var carryOverIncomplete: Bool { d.bool(forKey: Key.carryOverIncomplete) }
     static var openOnLaunch: Bool { d.bool(forKey: Key.openOnLaunch) }
+
+    /// Whether the menu bar item is inserted. `SignalApp` and `PreferencesView`
+    /// bind the same key with `@AppStorage`; the setter exists for the lock-out
+    /// failsafe in `AppDelegate` — if Preferences can't be opened while the icon
+    /// is hidden, the icon comes back rather than stranding the user (#17).
+    static var showMenuBarIcon: Bool {
+        get { d.bool(forKey: Key.showMenuBarIcon) }
+        set { d.set(newValue, forKey: Key.showMenuBarIcon) }
+    }
     static var dailyPromptEnabled: Bool { d.bool(forKey: Key.dailyPromptEnabled) }
     static var dailyPromptHour: Int { d.integer(forKey: Key.dailyPromptHour) }
     static var dailyPromptMinute: Int { d.integer(forKey: Key.dailyPromptMinute) }
@@ -97,4 +123,18 @@ enum SettingsStore {
     static var completionSound: String { d.string(forKey: Key.completionSound) ?? "pop" }
     static var celebrationSound: String { d.string(forKey: Key.celebrationSound) ?? "sys:Hero" }
     static var openSound: String { d.string(forKey: Key.openSound) ?? "sys:Blow" }
+
+    /// UID of the output device each cue plays through, or
+    /// `AudioOutputDevice.systemDefaultID` to follow the system default.
+    static var completionSoundDevice: String {
+        d.string(forKey: Key.completionSoundDevice) ?? AudioOutputDevice.systemDefaultID
+    }
+
+    static var celebrationSoundDevice: String {
+        d.string(forKey: Key.celebrationSoundDevice) ?? AudioOutputDevice.systemDefaultID
+    }
+
+    static var openSoundDevice: String {
+        d.string(forKey: Key.openSoundDevice) ?? AudioOutputDevice.systemDefaultID
+    }
 }

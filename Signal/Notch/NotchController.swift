@@ -40,6 +40,18 @@ final class NotchController {
 
     // MARK: - Public API
 
+    /// Snapshot for `AutoOpenPolicy`: what an unsolicited open would land on.
+    /// The flags are set synchronously by `presentInteractive`/`presentGlance`/
+    /// `hide`/`presentOverview` before the animation queue runs, so this
+    /// reflects the user's intent even mid-transition.
+    var autoOpenUIState: AutoOpenPolicy.UIState {
+        .init(
+            isPanelVisible: isVisible,
+            isPanelInteractive: mode == .interactive,
+            isOverviewVisible: isOverviewVisible
+        )
+    }
+
     func toggle() {
         if isOverviewVisible {
             // A plain press closes the overview too, rather than swapping to the

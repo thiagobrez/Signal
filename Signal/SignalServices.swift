@@ -15,6 +15,7 @@ final class SignalServices {
     let onboarding: OnboardingWindowController
     let whatsNew: WhatsNewWindowController
     let stats: StatsWindowController
+    let menuBarHint: MenuBarHintController
 
     /// Pending long-press timer for the toggle hotkey; nil once it fires or
     /// the key is released.
@@ -48,10 +49,11 @@ final class SignalServices {
         store = SignalStore(context: container.mainContext)
         scheduleRepository = ScheduleRepository(context: container.mainContext)
         controller = NotchController(store: store, scheduleRepository: scheduleRepository)
-        scheduler = Scheduler(controller: controller)
+        scheduler = Scheduler(controller: controller, store: store)
         onboarding = OnboardingWindowController()
         whatsNew = WhatsNewWindowController()
         stats = StatsWindowController(container: container)
+        menuBarHint = MenuBarHintController()
     }
 
     /// Wires up the hotkeys, scheduler, and the launch-time prompt. Called from the AppDelegate.
@@ -100,17 +102,19 @@ final class SignalServices {
 
         // First launch: show onboarding instead of the notch so the two don't
         // collide. When it finishes, drop the user into the app just like a
-        // normal open-on-launch. First launch after an update: show What's New
-        // instead, then resume the open-on-launch behavior when it closes.
+        // normal open-on-launch, and point out the menu bar item the app now
+        // lives behind. First launch after an update: show What's New instead,
+        // then resume the open-on-launch behavior when it closes.
         let currentVersion = WhatsNewWindowController.currentVersion
         if !SettingsStore.hasSeenOnboarding {
-            onboarding.present { [controller, scheduler] in
+            onboarding.present { [controller, scheduler, menuBarHint] in
                 // Finishing onboarding credits the user with the current
                 // version, so a fresh install never sees old release notes.
                 SettingsStore.lastSeenWhatsNewVersion = currentVersion
                 scheduler.markPromptedToday()
-                SoundPlayer.play(SettingsStore.openSound)
+                SoundPlayer.play(SettingsStore.openSound, on: SettingsStore.openSoundDevice)
                 controller.presentInteractive(source: .launch)
+                menuBarHint.presentIfNeeded()
             }
         } else if SettingsStore.showWhatsNewAfterUpdates,
                   let lastSeen = SettingsStore.lastSeenWhatsNewVersion,
@@ -120,7 +124,7 @@ final class SignalServices {
             whatsNew.present(releases: releases) { [controller, scheduler] in
                 guard SettingsStore.openOnLaunch else { return }
                 scheduler.markPromptedToday()
-                SoundPlayer.play(SettingsStore.openSound)
+                SoundPlayer.play(SettingsStore.openSound, on: SettingsStore.openSoundDevice)
                 controller.presentInteractive(source: .launch)
             }
         } else {
@@ -130,7 +134,7 @@ final class SignalServices {
             SettingsStore.lastSeenWhatsNewVersion = currentVersion
             if SettingsStore.openOnLaunch {
                 scheduler.markPromptedToday()
-                SoundPlayer.play(SettingsStore.openSound)
+                SoundPlayer.play(SettingsStore.openSound, on: SettingsStore.openSoundDevice)
                 controller.presentInteractive(source: .launch)
             }
         }

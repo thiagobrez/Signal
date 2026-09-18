@@ -4,6 +4,7 @@ import SwiftUI
 
 struct PreferencesView: View {
     @AppStorage(SettingsStore.Key.carryOverIncomplete) private var carryOver = true
+    @AppStorage(SettingsStore.Key.showMenuBarIcon) private var showMenuBarIcon = true
     @AppStorage(SettingsStore.Key.openOnLaunch) private var openOnLaunch = true
     @AppStorage(SettingsStore.Key.dailyPromptEnabled) private var dailyPromptEnabled = true
     @AppStorage(SettingsStore.Key.dailyPromptHour) private var dailyPromptHour = 9
@@ -15,6 +16,14 @@ struct PreferencesView: View {
     @AppStorage(SettingsStore.Key.completionSound) private var completionSound = "pop"
     @AppStorage(SettingsStore.Key.celebrationSound) private var celebrationSound = "sys:Hero"
     @AppStorage(SettingsStore.Key.openSound) private var openSound = "sys:Blow"
+    @AppStorage(SettingsStore.Key.completionSoundDevice)
+    private var completionSoundDevice = AudioOutputDevice.systemDefaultID
+    @AppStorage(SettingsStore.Key.celebrationSoundDevice)
+    private var celebrationSoundDevice = AudioOutputDevice.systemDefaultID
+    @AppStorage(SettingsStore.Key.openSoundDevice)
+    private var openSoundDevice = AudioOutputDevice.systemDefaultID
+
+    @StateObject private var outputDevices = AudioOutputDeviceMonitor()
 
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
@@ -24,6 +33,13 @@ struct PreferencesView: View {
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, newValue in setLaunchAtLogin(newValue) }
                 Toggle("Carry unfinished tasks over to the next day", isOn: $carryOver)
+                Toggle("Show Signal in the menu bar", isOn: $showMenuBarIcon)
+                    .accessibilityIdentifier("showMenuBarIconToggle")
+                Text("When hidden, use your hotkey to open Signal. To get back to "
+                     + "Preferences, open Signal again from Spotlight, Launchpad "
+                     + "or Finder while it's running.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Hotkey") {
@@ -39,9 +55,14 @@ struct PreferencesView: View {
             }
 
             Section("Sound") {
-                soundPicker("On open", selection: $openSound)
-                soundPicker("On completion", selection: $completionSound)
-                soundPicker("On all done", selection: $celebrationSound, includesCelebration: true)
+                soundRows("On open", sound: $openSound, device: $openSoundDevice)
+                soundRows("On completion", sound: $completionSound, device: $completionSoundDevice)
+                soundRows(
+                    "On all done",
+                    sound: $celebrationSound,
+                    device: $celebrationSoundDevice,
+                    includesCelebration: true
+                )
             }
 
             Section("Quick reminders") {
@@ -62,6 +83,14 @@ struct PreferencesView: View {
                      : "Switches to an empty throwaway database and relaunches Signal.")
                     .font(.caption)
                     .foregroundStyle(DemoMode.isEnabled ? .orange : .secondary)
+                Button("Show onboarding again") {
+                    SettingsStore.hasSeenOnboarding = false
+                    SettingsStore.hasSeenMenuBarHint = false
+                    DemoMode.relaunch()
+                }
+                Text("Relaunches Signal into the first-launch onboarding, followed by the menu bar hint.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             #endif
         }
@@ -69,9 +98,37 @@ struct PreferencesView: View {
         .frame(width: 440)
     }
 
+    /// One sound cue: the sound picker with its preview button, and the output
+    /// device that cue plays through underneath it.
+    @ViewBuilder
+    private func soundRows(
+        _ label: String,
+        sound: Binding<String>,
+        device: Binding<String>,
+        includesCelebration: Bool = false
+    ) -> some View {
+        soundPicker(
+            label, selection: sound, device: device, includesCelebration: includesCelebration
+        )
+        Picker("Play through", selection: device) {
+            Text("System Default").tag(AudioOutputDevice.systemDefaultID)
+            Divider()
+            ForEach(
+                AudioOutputDevices.pickerOptions(
+                    available: outputDevices.devices, selected: device.wrappedValue
+                )
+            ) { outputDevice in
+                Text(outputDevice.name).tag(outputDevice.uid)
+            }
+        }
+        .padding(.leading, 16)
+        .disabled(sound.wrappedValue == SoundPlayer.noneID)
+    }
+
     private func soundPicker(
         _ label: String,
         selection: Binding<String>,
+        device: Binding<String>,
         includesCelebration: Bool = false
     ) -> some View {
         var customNames = SoundPlayer.bundledSoundNames
@@ -93,7 +150,7 @@ struct PreferencesView: View {
                 }
             }
             Button {
-                SoundPlayer.play(selection.wrappedValue)
+                SoundPlayer.play(selection.wrappedValue, on: device.wrappedValue)
             } label: {
                 Image(systemName: "play.circle")
             }

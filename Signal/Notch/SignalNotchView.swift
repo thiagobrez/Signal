@@ -35,6 +35,25 @@ struct SignalNotchView: View {
     /// the drag started. In points rather than slots: rows wrap, so no two
     /// slots are necessarily the same height.
     @State private var dragShift: CGFloat = 0
+    /// The last translation the drag gesture reported. Kept so the list can
+    /// re-run the swap logic when it scrolls under a held-still cursor — no new
+    /// mouse event arrives in that case, but the row has moved relative to its
+    /// neighbours all the same.
+    @State private var dragCursorTranslation: CGFloat = 0
+    /// How far the list has scrolled beneath the dragged row since the drag
+    /// began (positive once content has moved up). Added to the translation so
+    /// the row stays under the cursor while auto-scroll carries the list past
+    /// it. Measured from the clip view rather than assumed, so a wheel scroll
+    /// mid-drag — or a `scrollTo` that hit the end of the range — is accounted
+    /// for exactly.
+    @State private var dragScroll: CGFloat = 0
+    /// Ticks the list along one neighbour at a time while the dragged row is
+    /// held at an edge.
+    @State private var autoScrollTimer: Timer?
+    /// Which way a keyboard reorder just moved the row, set immediately before
+    /// `focused` is written and consumed by the focus handler so it can reveal
+    /// the neighbour the *next* press would swap with.
+    @State private var reorderLookAhead = 0
     /// Each row's measured height, keyed by task. Rows grow with their text
     /// (see `TaskTextEditor`), so the list's arithmetic — its height, what's
     /// on screen, how far a drag has to travel — is driven by what the rows
@@ -94,6 +113,13 @@ struct SignalNotchView: View {
     /// How many rows the card shows before the list starts scrolling.
     private static let maxVisibleRows = 10
     private static let rowSpacing: CGFloat = 10
+
+    /// How close to an edge a dragged row has to be held before the list starts
+    /// scrolling under it — one single-line row's worth.
+    private static let autoScrollEdgeZone: CGFloat = TodoRow.rowHeight
+    /// One neighbour per tick, at the same cadence as a swap's animation, so
+    /// the rows shuffling past stay readable rather than blurring by.
+    private static let autoScrollInterval: TimeInterval = 0.2
 
     /// Pinned so the list's natural height can be computed exactly rather than
     /// measured — the list is one container at all sizes, and its height is
@@ -199,7 +225,7 @@ struct SignalNotchView: View {
             ScrollViewReader { proxy in
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: Self.rowSpacing) {
-                        rows(0 ..< sectionStart)
+                        rows(0 ..< sectionStart, proxy: proxy)
 
                         // The add button lives in the flow, after the last
                         // regular row — adding a task always continues the
@@ -218,7 +244,7 @@ struct SignalNotchView: View {
                         // heading at the bottom of the panel.
                         if hasScheduled {
                             sectionHeader
-                            rows(sectionStart ..< store.items.count)
+                            rows(sectionStart ..< store.items.count, proxy: proxy)
                         }
                     }
                     .background(ScrollOverflowReporter { bottomOverflow = $0 })
@@ -241,9 +267,28 @@ struct SignalNotchView: View {
                 // point, which shows up as the list twitching on every
                 // keypress and knocks the text off the pixel grid.
                 .onChange(of: focused) { _, newValue in
+                    // Spent on the first focus change after a reorder, whatever
+                    // the outcome, so an ordinary Tab or click never inherits it.
+                    let direction = reorderLookAhead
+                    reorderLookAhead = 0
                     guard listOverflows,
                           let newValue, store.items.indices.contains(newValue) else { return }
-                    if !hasScheduled, newValue == store.items.count - 1 {
+                    let ahead = newValue + direction
+                    if direction != 0, store.canMove(from: newValue, to: ahead) {
+                        // Just reordered with the keyboard: keep the neighbour
+                        // the row would swap with next on screen too, anchored
+                        // so the moved row lands one slot inside the edge and
+                        // the user can see where the next press takes it.
+                        // Exactly one scrollTo per focus change — a redundant
+                        // one on an already-visible row is what made the list
+                        // twitch on every keypress.
+                        if !rowIsVisible(ahead) || !rowIsVisible(newValue) {
+                            let target = store.items[ahead].persistentModelID
+                            withAnimation(.snappy(duration: 0.2)) {
+                                proxy.scrollTo(target, anchor: direction > 0 ? .bottom : .top)
+                            }
+                        }
+                    } else if !hasScheduled, newValue == store.items.count - 1 {
                         // On the last row, go all the way down so the add
                         // button below it stays in reach. Re-fire after the
                         // layout settles: on open the panel's slide-in is
@@ -280,6 +325,21 @@ struct SignalNotchView: View {
                         }
                     }
                 }
+                // The dragged row follows the list under it. The tracker posts
+                // on every clip-view bounds change — once per animation frame —
+                // so this drives the swaps during auto-scroll, and covers a
+                // wheel scroll mid-drag for free.
+                .onChange(of: bottomOverflow) { oldValue, newValue in
+                    guard let draggingID,
+                          let item = store.items.first(where: { $0.persistentModelID == draggingID })
+                    else { return }
+                    // Overflow shrinks as the list scrolls down, which means the
+                    // row's slot moved up on screen by that much: push the row
+                    // back down by the same amount to keep it under the cursor,
+                    // then re-run the swaps it earned by passing a neighbour.
+                    dragScroll += oldValue - newValue
+                    drag(item, by: dragCursorTranslation, proxy: proxy)
+                }
             }
         }
         .padding(16)
@@ -311,6 +371,12 @@ struct SignalNotchView: View {
             placeholders = SignalNotchView.randomPlaceholders()
             endDrag()
         }
+        // Hiding the panel mid-drag (the hotkey, a click outside) doesn't end
+        // the gesture, so tear the drag down here too — otherwise the
+        // auto-scroll timer would keep ticking against an invisible list.
+        .onChange(of: controller.isVisible) { _, visible in
+            if !visible { endDrag() }
+        }
         .onChange(of: controller.focusRequest) { _, _ in focusInitial() }
         .onAppear { focusInitial() }
     }
@@ -319,7 +385,7 @@ struct SignalNotchView: View {
     /// index into `store.items`, so every index-based mechanism — focus, row
     /// heights, drag geometry — is unaffected by the list being drawn in two
     /// pieces.
-    private func rows(_ range: Range<Int>) -> some View {
+    private func rows(_ range: Range<Int>, proxy: ScrollViewProxy) -> some View {
         ForEach(Array(store.items.enumerated())[range], id: \.element.persistentModelID) { pair in
             let isDragging = draggingID == pair.element.persistentModelID
             TodoRow(
@@ -356,7 +422,7 @@ struct SignalNotchView: View {
                 onEmptyBackspace: idle { backspaceDelete(pair.element, at: pair.offset) },
                 onReorderUp: idle { moveTaskUp(at: pair.offset) },
                 onReorderDown: idle { moveTaskDown(at: pair.offset) },
-                onDragChanged: { translation in drag(pair.element, by: translation) },
+                onDragChanged: { translation in drag(pair.element, by: translation, proxy: proxy) },
                 onDragEnded: endDrag
             )
             // Rows grow with their text, so the list learns each one's height
@@ -390,16 +456,34 @@ struct SignalNotchView: View {
     /// it's passing, the two swap — so the list reorders live under the
     /// cursor. Each swap is measured against that neighbour's own height: a
     /// wrapped row takes further to pass than a single-line one.
-    private func drag(_ item: TodoItem, by translation: CGFloat) {
+    ///
+    /// On a list that overflows the row is also held inside the viewport, and
+    /// held at an edge it starts the list scrolling under it — so the swaps
+    /// happen where they can be seen rather than below the fold.
+    private func drag(_ item: TodoItem, by translation: CGFloat, proxy: ScrollViewProxy) {
         if draggingID != item.persistentModelID {
             draggingID = item.persistentModelID
             dragShift = 0
+            dragScroll = 0
             // Indices are about to shift, so the focused index no longer maps
             // cleanly — same reasoning as delete.
             focused = nil
         }
+        dragCursorTranslation = translation
 
-        var offset = translation - dragShift
+        // The list scrolling beneath the row is travel the cursor never made,
+        // but the row has to account for it or it would slide back up the
+        // screen as the content moves past.
+        var offset = translation + dragScroll - dragShift
+        if listOverflows,
+           let from = store.items.firstIndex(where: { $0.persistentModelID == item.persistentModelID }) {
+            // Clamp before the swaps, not after: each swap moves the slot by
+            // `+distance` and the offset by `-distance`, so the row's position
+            // on screen — and therefore this clamp — is unchanged by them.
+            offset = rowLayout.clampedToViewport(
+                offset, of: from, scrollOrigin: scrollOrigin, viewportHeight: listHeight
+            )
+        }
         while let from = store.items.firstIndex(where: { $0.persistentModelID == item.persistentModelID }) {
             guard let step = rowLayout.swapStep(from: from, offset: offset),
                   store.canMove(from: from, to: step.to) else {
@@ -423,16 +507,82 @@ struct SignalNotchView: View {
             offset -= travelled
         }
         dragTranslation = offset
+        updateAutoScroll(proxy: proxy)
     }
 
     /// Drops the row into the slot it's hovering: the moves already happened
     /// live, so this only has to settle the row back onto the grid.
     private func endDrag() {
+        stopAutoScroll()
         withAnimation(.snappy(duration: 0.2)) {
             dragTranslation = 0
         }
         draggingID = nil
         dragShift = 0
+        dragScroll = 0
+        dragCursorTranslation = 0
+    }
+
+    /// Where in the list the row being dragged currently sits — it moves as the
+    /// swaps land, so it's looked up rather than remembered.
+    private var draggedIndex: Int? {
+        guard let draggingID else { return nil }
+        return store.items.firstIndex { $0.persistentModelID == draggingID }
+    }
+
+    /// -1 / +1 while the dragged row is held against an edge with somewhere
+    /// left to go, 0 otherwise. Both the list's ends and the `SCHEDULED` seam
+    /// stop it, so the scroll never runs on past a row that can't follow it.
+    private func autoScrollDirection() -> Int {
+        guard listOverflows, let from = draggedIndex else { return 0 }
+        let edge = rowLayout.dragEdge(
+            of: from,
+            offset: dragTranslation,
+            scrollOrigin: scrollOrigin,
+            viewportHeight: listHeight,
+            edgeZone: Self.autoScrollEdgeZone
+        )
+        guard edge != 0, store.canMove(from: from, to: from + edge) else { return 0 }
+        // Nothing left to reveal that way.
+        if edge < 0, scrollOrigin <= 0.5 { return 0 }
+        if edge > 0, scrollOrigin >= listContentHeight - listHeight - 0.5 { return 0 }
+        return edge
+    }
+
+    /// Starts (or stops) the auto-scroll to match where the row is being held.
+    /// The first tick fires immediately so the list responds the moment the row
+    /// reaches the edge rather than a beat later.
+    private func updateAutoScroll(proxy: ScrollViewProxy) {
+        guard autoScrollDirection() != 0 else { stopAutoScroll(); return }
+        guard autoScrollTimer == nil else { return }
+        autoScrollStep(proxy: proxy)
+        let timer = Timer(timeInterval: Self.autoScrollInterval, repeats: true) { _ in
+            autoScrollStep(proxy: proxy)
+        }
+        // `.common`, so it keeps firing while the mouse is held down on the
+        // grip — a drag runs the run loop in event-tracking mode.
+        RunLoop.main.add(timer, forMode: .common)
+        autoScrollTimer = timer
+    }
+
+    /// One tick: bring the neighbour the row is about to pass into view. The
+    /// row itself is clamped to the edge, so it's the list arriving underneath
+    /// that earns the swap — see the `bottomOverflow` handler on the list.
+    private func autoScrollStep(proxy: ScrollViewProxy) {
+        let direction = autoScrollDirection()
+        guard direction != 0, controller.isVisible, let from = draggedIndex else {
+            stopAutoScroll()
+            return
+        }
+        let target = store.items[from + direction].persistentModelID
+        withAnimation(.snappy(duration: Self.autoScrollInterval)) {
+            proxy.scrollTo(target, anchor: direction > 0 ? .bottom : .top)
+        }
+    }
+
+    private func stopAutoScroll() {
+        autoScrollTimer?.invalidate()
+        autoScrollTimer = nil
     }
 
     private var header: some View {
@@ -633,7 +783,10 @@ struct SignalNotchView: View {
     private func moveTaskUp(at index: Int) {
         guard draggingID == nil else { return }
         withAnimation(.snappy(duration: 0.2)) {
-            if let newIndex = store.moveTaskUp(at: index) { focused = newIndex }
+            if let newIndex = store.moveTaskUp(at: index) {
+                reorderLookAhead = -1
+                focused = newIndex
+            }
         }
     }
 
@@ -641,7 +794,10 @@ struct SignalNotchView: View {
     private func moveTaskDown(at index: Int) {
         guard draggingID == nil else { return }
         withAnimation(.snappy(duration: 0.2)) {
-            if let newIndex = store.moveTaskDown(at: index) { focused = newIndex }
+            if let newIndex = store.moveTaskDown(at: index) {
+                reorderLookAhead = 1
+                focused = newIndex
+            }
         }
     }
 

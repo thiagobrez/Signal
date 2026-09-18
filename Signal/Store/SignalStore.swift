@@ -113,9 +113,13 @@ final class SignalStore {
             if isDayComplete {
                 celebrationTrigger &+= 1
                 Analytics.dayCompleted()
-                SoundPlayer.play(SettingsStore.celebrationSound)
+                SoundPlayer.play(
+                    SettingsStore.celebrationSound, on: SettingsStore.celebrationSoundDevice
+                )
             } else {
-                SoundPlayer.play(SettingsStore.completionSound)
+                SoundPlayer.play(
+                    SettingsStore.completionSound, on: SettingsStore.completionSoundDevice
+                )
             }
         }
         save()
