@@ -7,6 +7,11 @@
 # Two archives are required: only the direct-download target links Sparkle
 # (the App Store rejects apps that embed it), so the binaries differ.
 #
+# The direct-download pipeline runs to completion before anything App Store
+# related starts, so an App Store signing/upload failure can never leave a
+# tagged release without its DMG and appcast — existing installs would never
+# see the new version.
+#
 # Normally invoked by release-pr.yml (workflow_call) right after the tag is
 # created. workflow_dispatch exists for re-runs and for dry-running the
 # pipeline against an existing tag (toggle the attach/upload inputs off).
@@ -97,8 +102,17 @@ jobs:
           grep -q "MARKETING_VERSION: \"$VERSION\"" project.yml \
             || { echo "project.yml MARKETING_VERSION does not match tag $TAG" >&2; exit 1; }
           BUILD="${OVERRIDE:-$(git rev-list --count HEAD)}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          # Only the newest tag may move the pointers every install follows
+          # (appcast, Homebrew cask, unversioned Signal.dmg). Re-dispatching an
+          # older tag would otherwise roll them back and strand newer installs.
+          NEWEST=$(git tag --list 'v*' --sort=-v:refname | head -1)
+          LATEST=$([ "$TAG" = "$NEWEST" ] && echo true || echo false)
+          [ "$LATEST" = true ] || echo "::warning::$TAG is not the newest tag ($NEWEST); skipping appcast, Homebrew and Signal.dmg updates"
+          {
+            echo "version=$VERSION"
+            echo "build=$BUILD"
+            echo "latest=$LATEST"
+          } >> "$GITHUB_OUTPUT"
 
       # Developer ID certs are not cloud-managed, so the p12 import is
       # mandatory for the DMG path. App Store signing needs no p12: the Apple
@@ -154,26 +168,6 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             archive
 
-      # Ad-hoc signed ("Sign to Run Locally"), for the same certificate-cap
-      # reason as the direct archive: automatic signing would mint a fresh
-      # *Mac Development* cert on every runner (its private key dies with the
-      # VM, so none is ever reused). The archive's signature is throwaway —
-      # the "Upload to App Store Connect" export re-signs the app with the
-      # cloud-managed Apple Distribution cert and an App Store profile, keeping
-      # the entitlements embedded here by CODE_SIGN_ENTITLEMENTS.
-      - name: Archive (App Store)
-        if: inputs.upload-appstore
-        run: |
-          xcodebuild -project Signal.xcodeproj -scheme SignalAppStore -configuration Release \
-            -destination "generic/platform=macOS" \
-            -archivePath "$ARCHIVE_PATH_MAS" \
-            CURRENT_PROJECT_VERSION="${{ steps.ver.outputs.build }}" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="-" \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            archive
-
       # Manual signing here too, to match the archive: with automatic signing
       # the export re-provisions and puts the certificate cap back in the path
       # of every release. See the archive step above.
@@ -216,9 +210,10 @@ jobs:
           xcrun stapler staple "Signal-${{ steps.ver.outputs.version }}.dmg"
           spctl -a -t open --context context:primary-signature -v "Signal-${{ steps.ver.outputs.version }}.dmg"
 
-      # DMG goes up before the ASC upload so a flaky ASC step never blocks the
-      # public release. --clobber keeps dispatch re-runs idempotent. The
-      # unversioned copy gives the website an evergreen URL:
+      # DMG, appcast and cask all go out before the App Store archive/upload so
+      # a flaky ASC step never blocks the public release. --clobber keeps
+      # dispatch re-runs idempotent. The unversioned copy gives the website an
+      # evergreen URL:
       # https://github.com/thiagobrez/Signal/releases/latest/download/Signal.dmg
       - name: Attach DMG to GitHub Release
         if: inputs.attach-dmg
@@ -236,8 +231,11 @@ jobs:
             gh release create "$TAG" --verify-tag \
               --title "Signal $VERSION" --notes-file /tmp/notes.md
           fi
-          cp "Signal-$VERSION.dmg" Signal.dmg
-          gh release upload "$TAG" "Signal-$VERSION.dmg" Signal.dmg --clobber
+          gh release upload "$TAG" "Signal-$VERSION.dmg" --clobber
+          if [ "${{ steps.ver.outputs.latest }}" = true ]; then
+            cp "Signal-$VERSION.dmg" Signal.dmg
+            gh release upload "$TAG" Signal.dmg --clobber
+          fi
 
       # The appcast is what Sparkle-equipped installs poll for updates. It is
       # regenerated from scratch each release (single item — Sparkle only
@@ -246,7 +244,7 @@ jobs:
       # Runs after notarization so the EdDSA signature covers the stapled
       # bytes users actually download.
       - name: Publish Sparkle appcast
-        if: inputs.attach-dmg
+        if: inputs.attach-dmg && steps.ver.outputs.latest == 'true'
         env:
           VERSION: ${{ steps.ver.outputs.version }}
           SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
@@ -293,7 +291,7 @@ jobs:
       # as soon as the release is out. The cask template lives in
       # scripts/update-homebrew-cask.sh.
       - name: Update Homebrew tap
-        if: inputs.attach-dmg
+        if: inputs.attach-dmg && steps.ver.outputs.latest == 'true'
         env:
           VERSION: ${{ steps.ver.outputs.version }}
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
@@ -320,6 +318,26 @@ jobs:
         with:
           name: Signal-dmg
           path: Signal-*.dmg
+
+      # Ad-hoc signed ("Sign to Run Locally"), for the same certificate-cap
+      # reason as the direct archive: automatic signing would mint a fresh
+      # *Mac Development* cert on every runner (its private key dies with the
+      # VM, so none is ever reused). The archive's signature is throwaway —
+      # the "Upload to App Store Connect" export re-signs the app with the
+      # cloud-managed Apple Distribution cert and an App Store profile, keeping
+      # the entitlements embedded here by CODE_SIGN_ENTITLEMENTS.
+      - name: Archive (App Store)
+        if: inputs.upload-appstore
+        run: |
+          xcodebuild -project Signal.xcodeproj -scheme SignalAppStore -configuration Release \
+            -destination "generic/platform=macOS" \
+            -archivePath "$ARCHIVE_PATH_MAS" \
+            CURRENT_PROJECT_VERSION="${{ steps.ver.outputs.build }}" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="-" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            archive
 
       - name: Upload to App Store Connect
         if: inputs.upload-appstore

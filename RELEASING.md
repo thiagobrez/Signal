@@ -37,6 +37,19 @@ apps that embed their own updater; MAS users update through the App Store).
 
 Commits without changesets never trigger a release.
 
+### If a release build fails
+
+The tag and GitHub Release exist before the build runs, so a failed build
+leaves a release with no DMG and no appcast entry — existing installs won't
+see it. Fix the cause on `master`, then re-run **Build & Publish** from the
+Actions tab (`workflow_dispatch`) with the release's tag. Turn off
+`upload-appstore` to ship the direct-download build while App Store Connect is
+still broken.
+
+Only the newest tag updates the appcast, the Homebrew cask and the
+unversioned `Signal.dmg`, so re-dispatching an older tag can't roll existing
+installs back.
+
 ## Version / build number rules
 
 - `package.json` is the **source of truth** for the marketing version. Never
