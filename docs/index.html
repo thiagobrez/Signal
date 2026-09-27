@@ -394,7 +394,7 @@
       }
       /* Reserve the cutout's full height below the text plus a small gap. */
       .hero-spacer {
-        height: calc(var(--hero-photo-w) * 2006 / 4096 + 24px);
+        height: calc(var(--hero-photo-w) * 2006 / 4096 + 40px);
       }
       /* Sky gradient, then the chair-on-a-hill cutout (transparent WebP)
          pinned to the bottom edge, then a fade into the page colour so the
@@ -419,11 +419,12 @@
         inset: 0;
       }
       .hero-bg::before {
-        /* Stops short of the bottom edge (already fully faded there) so only
-           layers that end in var(--bg) touch the fractional edge. */
-        bottom: 5%;
         background: var(--hero-photo) center bottom / var(--hero-photo-w) auto
           no-repeat;
+        /* Fade the cutout out before the bottom edge so only layers that end
+           in var(--bg) touch the fractional edge (avoids a 1px seam). */
+        -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent);
+        mask-image: linear-gradient(180deg, #000 88%, transparent);
       }
       .hero-bg::after {
         background: linear-gradient(180deg, transparent 58%, var(--bg) 93%);
@@ -621,7 +622,8 @@
         height: 230px;
         border-radius: 18px;
         overflow: hidden;
-        background: linear-gradient(135deg, rgb(43, 33, 77), rgb(84, 54, 112));
+        /* Sky gradient sampled from the Figma frame (top-left → bottom-right). */
+        background: linear-gradient(135deg, #3a7598 0%, #6e9dbc 50%, #a3c7e3 100%);
         box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
       }
 
