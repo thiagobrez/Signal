@@ -2,8 +2,18 @@ import Foundation
 import SwiftData
 
 /// State for the schedule overview: which period is visible, in which mode,
-/// and the pending schedules that fall inside it. All occurrence math is
-/// delegated to `ScheduleGrid` so the rules stay unit-tested in one place.
+/// the pending schedules that fall inside it, and — since the overview became
+/// a place to *manage* tasks rather than only look at them — where the keyboard
+/// is and what adding, editing and removing do on each day. All occurrence math
+/// is delegated to `ScheduleGrid` so the rules stay unit-tested in one place.
+///
+/// Days divide three ways (`ScheduleGrid.DayKind`):
+/// - **past**: history, read-only.
+/// - **today**: the live list, owned by `SignalStore` — the very same rows the
+///   panel shows, edited through the very same store.
+/// - **future**: `ScheduledTask`s. Adding a task to a future day *is* creating
+///   a schedule for that day, which is why no `DayLog` is ever written ahead of
+///   time.
 @MainActor
 @Observable
 final class ScheduleOverviewModel {
@@ -14,34 +24,57 @@ final class ScheduleOverviewModel {
     }
 
     private let repository: ScheduleRepository
+    let store: SignalStore
     private let calendar = Calendar.current
 
-    var mode: ViewMode = .week
+    var mode: ViewMode = .week {
+        didSet { if mode != oldValue { endEditing() } }
+    }
     /// Any day inside the visible week / month / year.
     private(set) var anchor: Date
     /// Day emphasized after a month → week drill-down; cleared on navigation.
     private(set) var highlightedDay: Date?
     private(set) var tasks: [ScheduledTask] = []
-    /// Each day's actual to-dos (today's live list + past history), keyed by
-    /// start-of-day, shown alongside the upcoming schedules.
+    /// Each day's actual to-dos, keyed by start-of-day, for the days whose rows
+    /// are history. Today's row is not read from here — it comes live off the
+    /// store — but the month and year dot counts still are.
     private(set) var dayTasks: [Date: [TodoItem]] = [:]
 
-    init(repository: ScheduleRepository) {
+    /// Which row holds the keyboard, by model ID rather than by position: rows
+    /// are added, deleted and re-dated under the caret, and every one of those
+    /// shifts an index-based focus onto the wrong task.
+    var focusedID: PersistentIdentifier?
+
+    /// Whether a row is being typed into, which suspends the plain-key
+    /// navigation shortcuts so "t" and the arrows reach the text.
+    var isEditing: Bool { focusedID != nil }
+
+    init(repository: ScheduleRepository, store: SignalStore) {
         self.repository = repository
+        self.store = store
         anchor = Calendar.current.startOfDay(for: Date())
     }
 
-    /// Fresh state for a new presentation: this week, Week mode, current data.
+    /// Fresh state for a new presentation: this week, Week mode, current data,
+    /// no caret, and none of the previous session's abandoned drafts.
     func reset() {
         mode = .week
         anchor = calendar.startOfDay(for: Date())
         highlightedDay = nil
+        focusedID = nil
+        repository.purgeEmpty()
         refresh()
     }
 
     func refresh() {
         tasks = repository.pending()
         dayTasks = repository.dayTasksByDay(calendar: calendar)
+    }
+
+    var today: Date { calendar.startOfDay(for: Date()) }
+
+    func kind(of day: Date) -> ScheduleGrid.DayKind {
+        ScheduleGrid.kind(of: day, today: today, calendar: calendar)
     }
 
     // MARK: - Navigation
@@ -56,17 +89,20 @@ final class ScheduleOverviewModel {
         case .month: component = .month
         case .year: component = .year
         }
+        endEditing()
         anchor = calendar.date(byAdding: component, value: direction, to: anchor) ?? anchor
         highlightedDay = nil
     }
 
     func goToToday() {
+        endEditing()
         anchor = calendar.startOfDay(for: Date())
         highlightedDay = nil
     }
 
     /// Month cell tap: zoom into the week containing that day.
     func drillDown(to day: Date) {
+        endEditing()
         anchor = day
         highlightedDay = day
         mode = .week
@@ -74,6 +110,7 @@ final class ScheduleOverviewModel {
 
     /// Year cell tap: zoom into that month.
     func drillDown(toMonth month: Date) {
+        endEditing()
         anchor = month
         highlightedDay = nil
         mode = .month
@@ -111,15 +148,30 @@ final class ScheduleOverviewModel {
         tasks.filter { $0.recurrence != .daily && occurs($0, on: day) }
     }
 
-    /// Everything shown on `day`'s row: its upcoming schedules first, then the
-    /// day's real to-dos.
+    /// Everything shown on `day`'s row, in display order.
+    ///
+    /// Today is the live list straight off the store — the same rows as the
+    /// panel, blank slots included, so a slot can be typed into here too. Every
+    /// other day is its schedules, and a past day also carries the to-dos it
+    /// actually held.
     func entries(on day: Date) -> [OverviewEntry] {
-        tasks(on: day).map(OverviewEntry.scheduled)
-            + (dayTasks[day] ?? []).map(OverviewEntry.todo)
+        switch kind(of: day) {
+        case .today:
+            return store.items.map(OverviewEntry.todo)
+        case .future:
+            return tasks(on: day).map(OverviewEntry.scheduled)
+        case .past:
+            return tasks(on: day).map(OverviewEntry.scheduled)
+                + (dayTasks[day] ?? []).map(OverviewEntry.todo)
+        }
     }
 
+    /// True only when there is nothing to show *and* nothing can be added:
+    /// a week containing today or a future day always has its add buttons, so
+    /// it is never replaced by the empty state.
     var weekIsEmpty: Bool {
-        dailyTasks.isEmpty && weekDays.allSatisfy { entries(on: $0).isEmpty }
+        guard dailyTasks.isEmpty, weekDays.allSatisfy({ entries(on: $0).isEmpty }) else { return false }
+        return weekDays.allSatisfy { kind(of: $0) == .past }
     }
 
     // MARK: - Month mode
@@ -201,15 +253,122 @@ final class ScheduleOverviewModel {
         return formatter.string(from: date)
     }
 
+    // MARK: - Focus
+
+    /// Every editable row in the week, in the order the keyboard walks them:
+    /// the EVERY DAY section, then each day from today onward. Past days are
+    /// read-only, so they are not in the order at all.
+    var focusRows: [OverviewFocusRow] {
+        var rows = dailyTasks.map {
+            OverviewFocusRow(entry: .scheduled($0), day: nil, group: .daily)
+        }
+        for day in weekDays {
+            switch kind(of: day) {
+            case .past:
+                continue
+            case .today:
+                rows += store.items.map {
+                    OverviewFocusRow(
+                        entry: .todo($0),
+                        day: day,
+                        group: $0.isScheduled ? .todayScheduled : .todayRegular
+                    )
+                }
+            case .future:
+                rows += tasks(on: day).map {
+                    OverviewFocusRow(entry: .scheduled($0), day: day, group: .future(day))
+                }
+            }
+        }
+        return rows
+    }
+
+    var focusOrder: [PersistentIdentifier] { focusRows.map(\.id) }
+
+    func focusIndex(of id: PersistentIdentifier?) -> Int? {
+        guard let id else { return nil }
+        return focusOrder.firstIndex(of: id)
+    }
+
+    func id(atFocusIndex index: Int?) -> PersistentIdentifier? {
+        guard let index, focusOrder.indices.contains(index) else { return nil }
+        return focusOrder[index]
+    }
+
+    /// Focus leaves the overview: commit what was typed, drop the caret, and
+    /// clear away any draft row that was never given a name.
+    func endEditing() {
+        focusedID = nil
+        store.save()
+        repository.purgeEmpty()
+        refresh()
+    }
+
+    /// Deletes a blank future draft the caret has just left. Only blanks, and
+    /// never the row that now holds the keyboard.
+    func pruneEmptyDraft(_ id: PersistentIdentifier?) {
+        guard let id, id != focusedID,
+              let task = tasks.first(where: { $0.persistentModelID == id }),
+              task.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { return }
+        repository.delete(task)
+        refresh()
+    }
+
     // MARK: - Mutations
+
+    /// Adds a row to `day` and returns it so the caller can focus it.
+    ///
+    /// Today goes through the store — it's the same list the panel adds to.
+    /// A future day gets a blank schedule, reusing one that's already there so
+    /// hammering the button can't litter the day with empty rows. Past days
+    /// refuse.
+    @discardableResult
+    func addTask(on day: Date) -> PersistentIdentifier? {
+        switch kind(of: day) {
+        case .past:
+            return nil
+        case .today:
+            guard let index = store.addTask() else { return nil }
+            return store.items[index].persistentModelID
+        case .future:
+            if let blank = tasks(on: day).first(where: {
+                $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }) {
+                return blank.persistentModelID
+            }
+            guard let task = repository.add(on: day) else { return nil }
+            refresh()
+            return task.persistentModelID
+        }
+    }
 
     func delete(_ task: ScheduledTask) {
         repository.delete(task)
         refresh()
     }
 
-    func apply(_ edit: ScheduleEdit, to task: ScheduledTask) {
-        repository.update(task, to: edit)
+    /// Removes one of today's rows, honouring the store's floor of one.
+    func delete(_ item: TodoItem) {
+        guard store.canDelete(item) else { return }
+        store.deleteTask(item)
+    }
+
+    func toggle(_ item: TodoItem) {
+        store.toggleComplete(item)
+    }
+
+    /// Enter on one of today's rows that ends in a date phrase: the task leaves
+    /// today for the day it names, exactly as it would in the panel.
+    func schedule(_ item: TodoItem, parse: ScheduleParse) {
+        store.schedule(item, parse: parse)
+        refresh()
+    }
+
+    /// Enter on a future row that ends in a date phrase: the schedule itself
+    /// moves, which is how a row becomes a routine without any popover.
+    func reschedule(_ task: ScheduledTask, parse: ScheduleParse) {
+        repository.reschedule(task, parse: parse)
         refresh()
     }
 

@@ -28,6 +28,13 @@ final class ScheduledTask {
         self.createdAt = createdAt
         self.deliveredAt = nil
         self.recurrenceInterval = 1
+        setRecurrence(recurrence)
+    }
+
+    /// Writes the discrete recurrence columns from a typed value — the one
+    /// place that mapping lives, shared by the init and by re-scheduling an
+    /// existing task from a freshly typed keyword.
+    func setRecurrence(_ recurrence: Recurrence?) {
         switch recurrence {
         case .daily:
             recurrenceUnit = "day"

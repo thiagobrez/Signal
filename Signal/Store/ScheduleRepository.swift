@@ -42,6 +42,48 @@ final class ScheduleRepository {
         return map
     }
 
+    /// Creates a schedule on `day`, which is how the overview adds a task to a
+    /// future day: a day in the future *is* a schedule. Refused for a day
+    /// already past — history is read-only. Inserted *and saved* before
+    /// returning, because a SwiftData `persistentModelID` is only permanent
+    /// once saved and the overview keys both its `ForEach` and its focus on it.
+    @discardableResult
+    func add(
+        text: String = "",
+        on day: Date,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> ScheduledTask? {
+        let due = calendar.startOfDay(for: day)
+        guard due >= calendar.startOfDay(for: now) else { return nil }
+        let task = ScheduledTask(text: text, dueDate: due, recurrence: nil)
+        context.insert(task)
+        save()
+        return task
+    }
+
+    /// Applies a freshly typed date phrase to an existing schedule: the text
+    /// loses the phrase and the task moves to the day (or the routine) it names.
+    func reschedule(_ task: ScheduledTask, parse: ScheduleParse) {
+        task.text = parse.cleanText
+        task.dueDate = parse.dueDate
+        task.setRecurrence(parse.recurrence)
+        save()
+    }
+
+    /// Drops undelivered schedules with no text — the blank rows the overview
+    /// leaves behind when a draft is abandoned. `except` spares the one row the
+    /// user is still typing into.
+    func purgeEmpty(except kept: PersistentIdentifier? = nil) {
+        let blanks = pending().filter {
+            $0.persistentModelID != kept
+                && $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        guard !blanks.isEmpty else { return }
+        blanks.forEach { context.delete($0) }
+        save()
+    }
+
     func delete(_ task: ScheduledTask) {
         context.delete(task)
         save()
@@ -51,35 +93,6 @@ final class ScheduleRepository {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, trimmed != task.text else { return }
         task.text = trimmed
-        save()
-    }
-
-    /// Rewrites the recurrence columns and recomputes `dueDate` per
-    /// `ScheduleEdit.dueDate(now:)`. An edit matching the task's current shape
-    /// is a no-op, so opening the popover and hitting Save never silently
-    /// pushes a recurring task's next occurrence a week out.
-    func update(_ task: ScheduledTask, to edit: ScheduleEdit, now: Date = Date(), calendar: Calendar = .current) {
-        let sameShape: Bool
-        switch edit {
-        case .oneTime(let date):
-            sameShape = task.recurrence == nil && task.dueDate == calendar.startOfDay(for: date)
-        case .daily, .weekly:
-            sameShape = task.recurrence == edit.recurrence
-        }
-        guard !sameShape else { return }
-
-        switch edit.recurrence {
-        case .daily:
-            task.recurrenceUnit = "day"
-            task.recurrenceWeekday = nil
-        case .weekly(let weekday):
-            task.recurrenceUnit = "week"
-            task.recurrenceWeekday = weekday
-        case nil:
-            task.recurrenceUnit = nil
-            task.recurrenceWeekday = nil
-        }
-        task.dueDate = edit.dueDate(now: now, calendar: calendar)
         save()
     }
 

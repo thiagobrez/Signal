@@ -23,6 +23,16 @@ enum Recurrence: Equatable {
             return calendar.startOfDay(for: next)
         }
     }
+
+    /// Start of day of the first occurrence on or after `day` — the rule a
+    /// routine typed *onto* a future day follows, where "every monday" written
+    /// on a Monday means that very Monday rather than the one after it.
+    func firstOccurrence(onOrAfter day: Date, calendar: Calendar = .current) -> Date {
+        let start = calendar.startOfDay(for: day)
+        // One day back, then "strictly after": `day` itself becomes eligible.
+        let eve = calendar.date(byAdding: .day, value: -1, to: start) ?? start
+        return nextOccurrence(after: eve, calendar: calendar)
+    }
 }
 
 /// The result of finding a trailing date phrase in task text:
@@ -48,15 +58,43 @@ struct ScheduleParse: Equatable {
 /// and trailing punctuation defeats the parse on purpose — "Plan tomorrow."
 /// stays a literal task.
 enum NaturalDateParser {
-    static func parse(_ text: String, now: Date = Date(), calendar: Calendar = .current) -> ScheduleParse? {
+    /// `anchor` is the day the phrase is being typed *onto*, which is how the
+    /// schedule overview parses a row on a future day: "tomorrow" there means
+    /// the day after that row's day, and "every monday" starts on that day when
+    /// it already is a Monday. Nil — the panel, where the day is today —
+    /// resolves everything against `now` with the strictly-future rules the
+    /// panel has always used.
+    static func parse(
+        _ text: String,
+        now: Date = Date(),
+        anchor: Date? = nil,
+        calendar: Calendar = .current
+    ) -> ScheduleParse? {
         let ns = text as NSString
         guard ns.length > 0 else { return nil }
         let full = NSRange(location: 0, length: ns.length)
+        // Rules resolve against the anchored day when there is one, so "friday"
+        // means the first Friday after *that* day.
+        let reference = anchor.map { calendar.startOfDay(for: $0) } ?? now
 
         for rule in rules {
             guard let match = rule.regex.firstMatch(in: text, range: full),
-                  let (dueDate, recurrence, label) = rule.resolve(match, ns, now, calendar)
+                  let resolved = rule.resolve(match, ns, reference, calendar)
             else { continue }
+            var (dueDate, label) = (resolved.0, resolved.2)
+            let recurrence = resolved.1
+
+            // A routine typed onto a day starts on that day when it can: the
+            // user picked the day by navigating to it.
+            if let anchor, let recurrence {
+                dueDate = recurrence.firstOccurrence(onOrAfter: anchor, calendar: calendar)
+            }
+            // One-time labels are always relative to the real "now", so a row
+            // on a future day says the date rather than claiming "tomorrow".
+            // With no anchor this reproduces what the rules already resolved.
+            if recurrence == nil {
+                label = oneTimeLabel(for: dueDate, now: now, calendar: calendar)
+            }
 
             let phraseRange = match.range(at: 1)
             let cleanText = ns.substring(to: phraseRange.location)
@@ -141,7 +179,7 @@ enum NaturalDateParser {
             // "tomorrow"
             rule("tomorrow") { _, _, now, calendar in
                 guard let due = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) else { return nil }
-                return (due, nil, "Scheduled for tomorrow")
+                return (due, nil, oneTimeLabel(for: due, now: now, calendar: calendar))
             },
             // "friday" — the next strictly future one, so today's own weekday
             // means next week.

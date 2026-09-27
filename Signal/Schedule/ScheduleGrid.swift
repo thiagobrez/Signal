@@ -4,6 +4,23 @@ import Foundation
 /// Monday-first regardless of locale (Calendar's own `firstWeekday` is
 /// deliberately ignored — note its weekday numbering keeps 1 = Sunday).
 enum ScheduleGrid {
+    /// Where a day sits relative to today, which is what decides whether the
+    /// overview lets it be edited: history is read-only, today is the live
+    /// list, and every day after it is the schedule.
+    enum DayKind {
+        case past, today, future
+
+        /// Whether tasks can be added to, edited on, or removed from the day.
+        var isEditable: Bool { self != .past }
+    }
+
+    static func kind(of day: Date, today: Date, calendar: Calendar = .current) -> DayKind {
+        let start = calendar.startOfDay(for: day)
+        let reference = calendar.startOfDay(for: today)
+        if start == reference { return .today }
+        return start < reference ? .past : .future
+    }
+
     /// Monday 00:00 of the week containing `date`.
     static func weekStart(containing date: Date, calendar: Calendar = .current) -> Date {
         let day = calendar.startOfDay(for: date)

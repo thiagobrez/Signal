@@ -40,6 +40,23 @@ final class ScheduleGridTests: XCTestCase {
         XCTAssertEqual(days.last, date(2026, 1, 18))
     }
 
+    // MARK: - kind
+
+    func testKindSplitsPastTodayAndFuture() {
+        let today = date(2026, 1, 14, hour: 9)
+        XCTAssertEqual(ScheduleGrid.kind(of: date(2026, 1, 13), today: today, calendar: calendar), .past)
+        XCTAssertEqual(ScheduleGrid.kind(of: date(2026, 1, 14), today: today, calendar: calendar), .today)
+        XCTAssertEqual(ScheduleGrid.kind(of: date(2026, 1, 15), today: today, calendar: calendar), .future)
+        // Any time of day on the day itself is still "today".
+        XCTAssertEqual(ScheduleGrid.kind(of: date(2026, 1, 14, hour: 23), today: today, calendar: calendar), .today)
+    }
+
+    func testOnlyPastIsReadOnly() {
+        XCTAssertFalse(ScheduleGrid.DayKind.past.isEditable)
+        XCTAssertTrue(ScheduleGrid.DayKind.today.isEditable)
+        XCTAssertTrue(ScheduleGrid.DayKind.future.isEditable)
+    }
+
     // MARK: - occurs
 
     func testOneTimeOccursOnlyOnItsDay() {

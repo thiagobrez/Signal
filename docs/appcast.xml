@@ -4,7 +4,7 @@
         <title>Signal</title>
         <item>
             <title>1.4.0</title>
-            <pubDate>Sat, 25 Jul 2026 08:02:52 +0000</pubDate>
+            <pubDate>Sun, 27 Sep 2026 03:31:41 +0000</pubDate>
             <link>https://thiagobrez.github.io/Signal/</link>
             <sparkle:version>79</sparkle:version>
             <sparkle:shortVersionString>1.4.0</sparkle:shortVersionString>
@@ -21,7 +21,7 @@
 </ul>
 
 ]]></description>
-            <enclosure url="https://github.com/thiagobrez/Signal/releases/download/v1.4.0/Signal-1.4.0.dmg" length="4555708" type="application/octet-stream" sparkle:edSignature="xDVjzHuE0CHa7qWzGEmrqhg1xDDwNAtLcQswbalyDG34DPQkxTPnRSFFYv9xELAu79GlUQNqZmFC5T4Wh+tKAw=="/>
+            <enclosure url="https://github.com/thiagobrez/Signal/releases/download/v1.4.0/Signal-1.4.0.dmg" length="4567614" type="application/octet-stream" sparkle:edSignature="BlCRbhbCDQctjlL9Q0YElgSweHMrbQLTOkrT2W7TwpudYPREjzzjTL59Dv5cPFZshJMGCJi6DQyyL4WQ71TiDw=="/>
         </item>
     </channel>
 </rss>
