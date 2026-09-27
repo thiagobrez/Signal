@@ -22,7 +22,7 @@
 
 <div align="center">
 
-[**Mac App Store**](https://apps.apple.com/pt/app/signal-three-things-a-day/id6784999549) &nbsp;·&nbsp; [**Download for macOS**](https://github.com/thiagobrez/Signal/releases/latest/download/Signal.dmg)
+[**Mac App Store**](https://apps.apple.com/pt/app/signal-three-things-a-day/id6784999549) &nbsp;·&nbsp; [**Download for macOS**](https://thiagobrez.gumroad.com/l/signal)
 
 </div>
 
