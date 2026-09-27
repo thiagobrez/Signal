@@ -435,7 +435,9 @@
          Each drifts on its own slow curve: X, Y and tilt run as separate
          properties (transform / translate / rotate) with unrelated
          durations, so the path never quite repeats. The laptop is nested in
-         the chair so it rides along and only ever lifts off the seat. */
+         the chair so it rides along and only ever lifts off the seat. A
+         static layer of the grass in front of the legs sits on top, so the
+         legs slide in and out of the hill. */
       .hero-scene {
         position: absolute;
         bottom: 0;
@@ -449,28 +451,35 @@
         left: calc(1600 / 4096 * 100%);
         top: 0;
         width: calc(920 / 4096 * 100%);
-        transform-origin: 50% 85%;
+        transform-origin: 50% 78%;
         animation:
-          float-lift-chair 14s ease-in-out infinite alternate,
-          float-sway-chair 23s ease-in-out -11.5s infinite alternate,
-          float-tilt-chair 19s ease-in-out -9.5s infinite alternate;
+          float-lift-chair 9s ease-in-out infinite alternate,
+          float-sway-chair 15s ease-in-out -7.5s infinite alternate,
+          float-tilt-chair 12s ease-in-out -6s infinite alternate;
         will-change: transform, translate, rotate;
       }
-      .hero-chair img {
+      .hero-chair img,
+      .hero-grass-front {
         display: block;
         width: 100%;
         height: auto;
       }
+      .hero-grass-front {
+        position: absolute;
+        left: calc(1580 / 4096 * 100%);
+        top: calc(520 / 2006 * 100%);
+        width: calc(960 / 4096 * 100%);
+      }
       .hero-chair .hero-laptop {
         position: absolute;
         left: calc(130 / 920 * 100%);
-        top: calc(10 / 880 * 100%);
+        top: calc(10 / 960 * 100%);
         width: calc(420 / 920 * 100%);
         transform-origin: 50% 100%;
         animation:
-          float-lift-laptop 11s ease-in-out 2s infinite alternate,
-          float-sway-laptop 17s ease-in-out -8.5s infinite alternate,
-          float-tilt-laptop 13s ease-in-out -6.5s infinite alternate;
+          float-lift-laptop 7s ease-in-out 1s infinite alternate,
+          float-sway-laptop 11s ease-in-out -5.5s infinite alternate,
+          float-tilt-laptop 8.5s ease-in-out -4.25s infinite alternate;
         will-change: transform, translate, rotate;
       }
       @keyframes float-lift-chair {
@@ -478,23 +487,23 @@
           translate: 0 0;
         }
         to {
-          translate: 0 -2.8%;
+          translate: 0 -7.5%;
         }
       }
       @keyframes float-sway-chair {
         from {
-          transform: translateX(-1.1%);
+          transform: translateX(-2.8%);
         }
         to {
-          transform: translateX(1.1%);
+          transform: translateX(2.8%);
         }
       }
       @keyframes float-tilt-chair {
         from {
-          rotate: -0.45deg;
+          rotate: -1.2deg;
         }
         to {
-          rotate: 0.45deg;
+          rotate: 1.2deg;
         }
       }
       @keyframes float-lift-laptop {
@@ -502,23 +511,23 @@
           translate: 0 0;
         }
         to {
-          translate: 0 -6%;
+          translate: 0 -14%;
         }
       }
       @keyframes float-sway-laptop {
         from {
-          transform: translateX(-1.6%);
+          transform: translateX(-4%);
         }
         to {
-          transform: translateX(1.6%);
+          transform: translateX(4%);
         }
       }
       @keyframes float-tilt-laptop {
         from {
-          rotate: -0.9deg;
+          rotate: -2.2deg;
         }
         to {
-          rotate: 0.9deg;
+          rotate: 2.2deg;
         }
       }
       .hero-inner {
@@ -1923,7 +1932,7 @@
               <img
                 src="assets/hero-chair.webp"
                 width="920"
-                height="880"
+                height="960"
                 alt=""
                 decoding="async"
               />
@@ -1936,6 +1945,14 @@
                 decoding="async"
               />
             </div>
+            <img
+              class="hero-grass-front"
+              src="assets/hero-grass-front.webp"
+              width="960"
+              height="560"
+              alt=""
+              decoding="async"
+            />
           </div>
         </div>
         <div class="hero-inner">
