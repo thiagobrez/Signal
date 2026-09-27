@@ -25,6 +25,12 @@
       sizes="180x180"
       href="assets/apple-touch-icon.png"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@1&display=swap"
+    />
     <meta property="og:title" content="Signal — Three things a day" />
     <meta
       property="og:description"
@@ -73,8 +79,8 @@
         --footer-border: rgba(0, 0, 0, 0.08);
         --shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
         --stats-bar: #007aff;
-        --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-          "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+        --font-display: "Inter", -apple-system, BlinkMacSystemFont,
+          "SF Pro Display", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
         --font-serif: "Instrument Serif", "Baskerville", "Bodoni 72 Oldstyle",
           "Hoefler Text", "Iowan Old Style", Georgia, "Times New Roman", serif;
         --nav-bg: #111113;
@@ -82,9 +88,11 @@
         --sky-mid: #5f8eb0;
         --sky-low: #9cc0d8;
         --sky-horizon: #c3d5e2;
-        /* Photo hooks: set to url(assets/…) once the Figma photos are exported. */
-        --hero-photo: none;
-        --footer-photo: none;
+        --hero-photo: url(assets/bg-chair.webp);
+        /* Rendered width of the chair cutout (4096×2006): never narrower than
+           900px so the chair stays readable on phones. */
+        --hero-photo-w: clamp(900px, 100vw, 1920px);
+        --footer-photo: url(assets/footer-grass.webp);
         --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
       }
       @media (prefers-color-scheme: dark) {
@@ -380,25 +388,27 @@
         position: relative;
         max-width: none;
         overflow: hidden;
-        padding: 124px 28px 260px;
+        padding: 124px 28px 0;
         color: #fff;
         font-family: var(--font-display);
       }
-      /* CSS stand-in for the hero photo: sky, then a soft hill (::before),
-         then the photo when provided and the fade into the page (::after).
-         Every layer that reaches the bottom edge ends in var(--bg), so the
-         fractional bottom edge never shows a seam. */
+      /* Reserve the cutout's full height below the text plus a small gap. */
+      .hero-spacer {
+        height: calc(var(--hero-photo-w) * 2006 / 4096 + 24px);
+      }
+      /* Sky gradient, then the chair-on-a-hill cutout (transparent WebP)
+         pinned to the bottom edge, then a fade into the page colour so the
+         hero blends into the first section. */
       .hero-bg {
         position: absolute;
-        inset: 0;
+        inset: 0 0 -1px;
         z-index: 0;
         background: linear-gradient(
           180deg,
           var(--sky-top) 0%,
-          var(--sky-mid) 28%,
-          var(--sky-low) 55%,
-          var(--sky-horizon) 75%,
-          #9aa9a8 92%,
+          var(--sky-mid) 30%,
+          var(--sky-low) 60%,
+          var(--sky-horizon) 82%,
           var(--bg) 100%
         );
       }
@@ -409,18 +419,14 @@
         inset: 0;
       }
       .hero-bg::before {
-        bottom: 6%;
-        background: radial-gradient(
-          ellipse var(--hill-w, 80%) var(--hill-h, 260px) at 50% 100%,
-          #2a2e18 0%,
-          #3d4322 30%,
-          rgba(104, 108, 54, 0.85) 52%,
-          rgba(150, 152, 90, 0) 72%
-        );
+        /* Stops short of the bottom edge (already fully faded there) so only
+           layers that end in var(--bg) touch the fractional edge. */
+        bottom: 5%;
+        background: var(--hero-photo) center bottom / var(--hero-photo-w) auto
+          no-repeat;
       }
       .hero-bg::after {
-        background: linear-gradient(180deg, transparent 66%, var(--bg) 94%),
-          var(--hero-photo) center top / cover no-repeat;
+        background: linear-gradient(180deg, transparent 58%, var(--bg) 93%);
       }
       .hero-inner {
         position: relative;
@@ -430,9 +436,9 @@
       }
 
       .hero-title {
-        font-size: clamp(27px, 1.25vw + 16px, 40px);
+        font-size: clamp(27px, 2vw + 12px, 38px); /* 38px from ~1300px up */
         font-weight: 700;
-        line-height: 1.16;
+        line-height: 1.2;
         letter-spacing: -0.025em;
       }
       .hero-line {
@@ -443,8 +449,10 @@
         font-family: var(--font-serif);
         font-style: italic;
         font-weight: 400;
-        font-size: 1.14em;
-        letter-spacing: -0.015em;
+        font-size: calc(41em / 38); /* 41px when the sans is 38px */
+        line-height: 1;
+        letter-spacing: 0;
+        vertical-align: baseline;
       }
       .hero-inline-icon {
         display: inline-block;
@@ -457,9 +465,18 @@
       }
 
       .hero-attribution {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         margin-top: 20px;
         font-size: 16px;
         color: rgba(255, 255, 255, 0.92);
+      }
+      .hero-avatar {
+        display: block;
+        width: 18px;
+        height: 24px;
       }
       .hero-lede {
         margin-top: 38px;
@@ -571,9 +588,7 @@
 
       @media (max-width: 720px) {
         .hero {
-          padding: 104px 20px 200px;
-          --hill-w: 130%;
-          --hill-h: 190px;
+          padding: 104px 20px 0;
         }
         .cta-row .btn {
           width: 100%;
@@ -1407,7 +1422,7 @@
       .site-footer {
         position: relative;
         overflow: hidden;
-        padding: 100px 28px clamp(230px, 22vw, 370px);
+        padding: 100px 28px calc(100vw * 370 / 2737 + clamp(120px, 10vw, 190px));
         color: #fff;
         font-family: var(--font-display);
         text-align: left;
@@ -1416,22 +1431,21 @@
         position: absolute;
         inset: 0;
         z-index: 0;
-        background: var(--footer-photo) center bottom / cover no-repeat,
-          linear-gradient(
-            180deg,
-            var(--sky-top) 0%,
-            #6c8faa 26%,
-            #95afc3 52%,
-            #b2c5d5 70%,
-            #c3d3df 100%
-          );
+        background: linear-gradient(
+          180deg,
+          var(--sky-top) 0%,
+          #6c8faa 26%,
+          #95afc3 52%,
+          #b2c5d5 70%,
+          #c3d3df 100%
+        );
       }
       /* Giant watermark sits between the sky and the grass. */
       .footer-watermark {
         position: absolute;
         left: 0;
         right: 0;
-        bottom: clamp(70px, 10vw, 190px);
+        bottom: calc(100vw * 370 / 2737 * 0.55);
         z-index: 0;
         text-align: center;
         font-size: clamp(88px, 14vw, 270px);
@@ -1452,27 +1466,8 @@
         right: 0;
         bottom: 0;
         z-index: 0;
-        height: clamp(120px, 15vw, 250px);
-        background: radial-gradient(
-            120% 60% at 20% 0%,
-            rgba(196, 190, 110, 0.55),
-            transparent 70%
-          ),
-          radial-gradient(
-            90% 55% at 78% 8%,
-            rgba(180, 176, 96, 0.5),
-            transparent 70%
-          ),
-          linear-gradient(
-            180deg,
-            rgba(172, 170, 96, 0) 0%,
-            #a39f5c 18%,
-            #7b7a3e 42%,
-            #555428 70%,
-            #323318 100%
-          );
-        -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%);
-        mask-image: linear-gradient(180deg, transparent 0, #000 22%);
+        height: calc(100vw * 370 / 2737);
+        background: var(--footer-photo) center bottom / 100% auto no-repeat;
         pointer-events: none;
       }
       .footer-inner {
@@ -1586,20 +1581,20 @@
         gap: 8px;
       }
       .sponsor-row {
-        margin-top: 26px;
+        margin-top: 44px;
       }
       .sponsor-row iframe {
         display: block;
       }
       .copyright {
-        margin-top: 30px;
+        margin-top: 22px;
         font-size: 12px;
         color: rgba(255, 255, 255, 0.6);
       }
 
       @media (max-width: 720px) {
         .site-footer {
-          padding: 72px 20px 210px;
+          padding: 72px 20px calc(100vw * 370 / 2737 + 110px);
         }
         .footer-inner {
           grid-template-columns: 1fr;
@@ -1791,7 +1786,7 @@
       <nav class="nav-bar" aria-label="Primary">
         <a class="nav-brand" href="#" aria-label="Signal home">
           <img
-            src="assets/app-icon-dark.png"
+            src="assets/app-icon-dark-128.png"
             alt=""
             width="30"
             height="30"
@@ -1837,7 +1832,7 @@
               >That's called the <em>Signal</em
               ><img
                 class="hero-inline-icon"
-                src="assets/app-icon-dark.png"
+                src="assets/app-icon-dark-128.png"
                 alt=""
                 width="44"
                 height="44"
@@ -1850,6 +1845,13 @@
           </h1>
           <p class="hero-attribution hero-anim" style="--d: 340ms">
             — Steve Jobs
+            <img
+              class="hero-avatar"
+              src="assets/steve-jobs.svg"
+              alt=""
+              width="18"
+              height="24"
+            />
           </p>
           <p class="hero-lede hero-anim" style="--d: 420ms">
             Signal is a macOS app for focusing on three things a day.
@@ -1895,6 +1897,7 @@
             </button>
           </p>
         </div>
+        <div class="hero-spacer" aria-hidden="true"></div>
       </section>
 
       <!-- Notch (onboarding page 1) -->
@@ -2406,7 +2409,7 @@
         <div class="footer-main">
           <a class="footer-brand reveal-text" href="#">
             <img
-              src="assets/app-icon-dark.png"
+              src="assets/app-icon-dark-128.png"
               alt=""
               width="30"
               height="30"
@@ -2450,6 +2453,7 @@
             />
             <strong>Thiago Brezinski</strong>
           </p>
+          <p class="copyright reveal-text">© <span id="year"></span> Signal</p>
         </div>
         <div class="footer-aside">
           <nav class="footer-links reveal-text" aria-label="Footer">
@@ -2505,9 +2509,6 @@
               style="border: 0; border-radius: 6px"
             ></iframe>
           </div>
-          <p class="copyright reveal-text">
-            © <span id="year"></span> Thiago Brezinski
-          </p>
         </div>
       </div>
     </footer>
