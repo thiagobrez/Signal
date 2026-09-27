@@ -3,25 +3,31 @@
     <channel>
         <title>Signal</title>
         <item>
-            <title>1.4.0</title>
-            <pubDate>Sun, 27 Sep 2026 03:31:41 +0000</pubDate>
+            <title>1.5.0</title>
+            <pubDate>Sun, 27 Sep 2026 21:11:27 +0000</pubDate>
             <link>https://thiagobrez.github.io/Signal/</link>
-            <sparkle:version>79</sparkle:version>
-            <sparkle:shortVersionString>1.4.0</sparkle:shortVersionString>
+            <sparkle:version>103</sparkle:version>
+            <sparkle:shortVersionString>1.5.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <description><![CDATA[<h3>Minor Changes</h3>
 <ul>
-<li>930b209: Improvements to the task writing experience: arrow navigation, backspace to delete, enter to toggle</li>
-<li>9e747a3: Remove max limit of tasks, style the first three differently, and add ability to reorder</li>
+<li>0836bdf: Add a Preferences option to hide Signal&#39;s menu bar icon. While it&#39;s hidden, opening Signal again from Spotlight or Finder brings up Preferences so you can turn it back on</li>
+<li>91f478a: Reorder tasks with the keyboard: Option+Up / Option+Down move the focused task</li>
+<li>960f0e7: Point out where Signal lives in the menu bar with a one-time &quot;Signal lives here!&quot; hint after onboarding</li>
+<li>609e1d7: Choose which output device plays each of Signal&#39;s sound cues (on open, on completion, on all done) in Preferences, so the auto-open chime can go to the built-in speakers even while headphones are the system default</li>
+<li>c27eb25: Show tasks that arrive from your schedule in their own SCHEDULED section at the bottom of the panel, so recurring and planned-ahead tasks never take one of the three Signal slots</li>
+<li>999d96f: Manage tasks straight from the Scheduled view: add, edit and remove them on today and on any day ahead, with the same rows, keyboard and delete button as the main Signal panel. Typing a keyword like &quot;every monday&quot; on a day schedules it there, so the frequency popover is gone; days already past stay read-only history</li>
 </ul>
 <h3>Patch Changes</h3>
 <ul>
-<li>aaf95cf: Fix open sound not triggering on automatic opens</li>
-<li>9790982: Allow to close Signal UI if mouse is hovering</li>
+<li>dcbfaa4: Wrap long tasks onto up to three lines instead of scrolling them sideways, so the text stays aligned with the other rows. Past three lines the row scrolls its own text, and the arrow keys walk those lines before moving to the next task</li>
+<li>65dd2fb: Update the keyboard shortcut hints in the menu bar menu immediately after changing a hotkey in Preferences, instead of only after relaunching Signal</li>
+<li>9a5e21d: Skip the daily prompt and quick glances when Signal is already open or when every task for the day is already done</li>
+<li>444062a: Scroll the task list while a task is dragged or moved with Option+Up / Option+Down to the edge of the panel, so long lists can be reordered without losing sight of the row</li>
 </ul>
 
 ]]></description>
-            <enclosure url="https://github.com/thiagobrez/Signal/releases/download/v1.4.0/Signal-1.4.0.dmg" length="4567614" type="application/octet-stream" sparkle:edSignature="BlCRbhbCDQctjlL9Q0YElgSweHMrbQLTOkrT2W7TwpudYPREjzzjTL59Dv5cPFZshJMGCJi6DQyyL4WQ71TiDw=="/>
+            <enclosure url="https://github.com/thiagobrez/Signal/releases/download/v1.5.0/Signal-1.5.0.dmg" length="4762613" type="application/octet-stream" sparkle:edSignature="5Nfm8TSpsPCC1nqmKguLANQUZ+rDbVEOHi0691ugoJxAIiIK/jWNfxQ5ARsQVHo9KAcVq9ieXWoO3K9EVNzWAg=="/>
         </item>
     </channel>
 </rss>
