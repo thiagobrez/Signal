@@ -88,8 +88,10 @@
         --sky-mid: #5f8eb0;
         --sky-low: #9cc0d8;
         --sky-horizon: #c3d5e2;
-        --hero-photo: url(assets/bg-chair.webp);
-        /* Rendered width of the chair cutout (4096×2006): never narrower than
+        /* The hill; the chair and laptop float above it as separate layers
+           (.hero-scene), cut from the same 4096×2006 frame. */
+        --hero-photo: url(assets/bg-hill.webp);
+        /* Rendered width of the hill cutout (4096×2006): never narrower than
            900px so the chair stays readable on phones. */
         --hero-photo-w: clamp(900px, 100vw, 1920px);
         --footer-photo: url(assets/footer-grass.webp);
@@ -428,6 +430,96 @@
       }
       .hero-bg::after {
         background: linear-gradient(180deg, transparent 58%, var(--bg) 93%);
+      }
+      /* Chair and laptop, laid over the hill in the same 4096×2006 frame.
+         Each drifts on its own slow curve: X, Y and tilt run as separate
+         properties (transform / translate / rotate) with unrelated
+         durations, so the path never quite repeats. The laptop is nested in
+         the chair so it rides along and only ever lifts off the seat. */
+      .hero-scene {
+        position: absolute;
+        bottom: 0;
+        left: calc(50% - var(--hero-photo-w) / 2);
+        width: var(--hero-photo-w);
+        aspect-ratio: 4096 / 2006;
+        pointer-events: none;
+      }
+      .hero-chair {
+        position: absolute;
+        left: calc(1600 / 4096 * 100%);
+        top: 0;
+        width: calc(920 / 4096 * 100%);
+        transform-origin: 50% 85%;
+        animation:
+          float-lift-chair 14s ease-in-out infinite alternate,
+          float-sway-chair 23s ease-in-out -11.5s infinite alternate,
+          float-tilt-chair 19s ease-in-out -9.5s infinite alternate;
+        will-change: transform, translate, rotate;
+      }
+      .hero-chair img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .hero-chair .hero-laptop {
+        position: absolute;
+        left: calc(130 / 920 * 100%);
+        top: calc(10 / 880 * 100%);
+        width: calc(420 / 920 * 100%);
+        transform-origin: 50% 100%;
+        animation:
+          float-lift-laptop 11s ease-in-out 2s infinite alternate,
+          float-sway-laptop 17s ease-in-out -8.5s infinite alternate,
+          float-tilt-laptop 13s ease-in-out -6.5s infinite alternate;
+        will-change: transform, translate, rotate;
+      }
+      @keyframes float-lift-chair {
+        from {
+          translate: 0 0;
+        }
+        to {
+          translate: 0 -2.8%;
+        }
+      }
+      @keyframes float-sway-chair {
+        from {
+          transform: translateX(-1.1%);
+        }
+        to {
+          transform: translateX(1.1%);
+        }
+      }
+      @keyframes float-tilt-chair {
+        from {
+          rotate: -0.45deg;
+        }
+        to {
+          rotate: 0.45deg;
+        }
+      }
+      @keyframes float-lift-laptop {
+        from {
+          translate: 0 0;
+        }
+        to {
+          translate: 0 -6%;
+        }
+      }
+      @keyframes float-sway-laptop {
+        from {
+          transform: translateX(-1.6%);
+        }
+        to {
+          transform: translateX(1.6%);
+        }
+      }
+      @keyframes float-tilt-laptop {
+        from {
+          rotate: -0.9deg;
+        }
+        to {
+          rotate: 0.9deg;
+        }
       }
       .hero-inner {
         position: relative;
@@ -1760,7 +1852,9 @@
         .stats-bars .bar {
           transition: none;
         }
-        .plan-caret {
+        .plan-caret,
+        .hero-chair,
+        .hero-chair .hero-laptop {
           animation: none;
         }
         .nav-bar,
@@ -1823,7 +1917,27 @@
     <main>
       <!-- Hero (onboarding: Welcome) -->
       <section class="hero">
-        <div class="hero-bg" aria-hidden="true"></div>
+        <div class="hero-bg" aria-hidden="true">
+          <div class="hero-scene">
+            <div class="hero-chair">
+              <img
+                src="assets/hero-chair.webp"
+                width="920"
+                height="880"
+                alt=""
+                decoding="async"
+              />
+              <img
+                class="hero-laptop"
+                src="assets/hero-laptop.webp"
+                width="420"
+                height="375"
+                alt=""
+                decoding="async"
+              />
+            </div>
+          </div>
+        </div>
         <div class="hero-inner">
           <h1 class="hero-title">
             <span class="hero-line hero-anim" style="--d: 0ms"
