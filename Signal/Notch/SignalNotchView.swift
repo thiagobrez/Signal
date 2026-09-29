@@ -65,9 +65,12 @@ struct SignalNotchView: View {
     /// single-line row the two are the same character — the end of the text —
     /// so short rows keep landing exactly where they always did.
     @State private var rowEntry: RowEntry = .fromBelow
-    /// How much scroll content hangs below the viewport — drives the chevron
-    /// hinting at tasks hidden past the fold.
+    /// How much scroll content hangs below the viewport — drives the bottom
+    /// chevron hinting at tasks hidden past the fold.
     @State private var bottomOverflow: CGFloat = 0
+    /// How much scroll content hangs above the viewport — drives the chevron
+    /// hinting at tasks scrolled off the top.
+    @State private var topOverflow: CGFloat = 0
 
     #if APPSTORE
     @Environment(\.requestReview) private var requestReview
@@ -247,7 +250,10 @@ struct SignalNotchView: View {
                             rows(sectionStart ..< store.items.count, proxy: proxy)
                         }
                     }
-                    .background(ScrollOverflowReporter { bottomOverflow = $0 })
+                    .background(ScrollOverflowReporter { top, bottom in
+                        topOverflow = top
+                        bottomOverflow = bottom
+                    })
                 }
                 .frame(height: listHeight)
                 // The viewport has to cover the grip gutter too, otherwise
@@ -257,7 +263,8 @@ struct SignalNotchView: View {
                 // pins the clip view at offset 0 so hosted fields stay on the
                 // pixel grid.
                 .scrollDisabled(!listOverflows)
-                .overlay(alignment: .bottom) { overflowChevron }
+                .overlay(alignment: .top) { overflowChevron(.top) }
+                .overlay(alignment: .bottom) { overflowChevron(.bottom) }
                 // Keep the focused row visible — covers both adding a row
                 // beyond the fold (focus lands on the new row) and
                 // reopening with the caret on a row that's scrolled away.
@@ -632,19 +639,22 @@ struct SignalNotchView: View {
         .buttonStyle(.plain)
     }
 
-    /// Subtle hint that more tasks are hidden below; fades out at the bottom.
-    private var overflowChevron: some View {
-        Image(systemName: "chevron.down")
+    /// Subtle hint that more tasks are hidden past the given edge — an up
+    /// chevron at the top once the list has scrolled down, a down chevron at
+    /// the bottom while more hangs below.
+    private func overflowChevron(_ edge: VerticalEdge) -> some View {
+        let overflow = edge == .top ? topOverflow : bottomOverflow
+        return Image(systemName: edge == .top ? "chevron.up" : "chevron.down")
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(.white.opacity(0.3))
             // Re-center within the visible card: the viewport is widened
             // leftwards by the grip gutter, which would skew the midpoint.
             .padding(.leading, TodoRow.handleGutterWidth / 2)
-            .padding(.bottom, 2)
+            .padding(edge == .top ? .top : .bottom, 2)
             // Small dead-zone so the hint doesn't flicker while resting
-            // within a hair of the bottom.
-            .opacity(bottomOverflow > 4 ? 1 : 0)
-            .animation(.easeInOut(duration: 0.15), value: bottomOverflow > 4)
+            // within a hair of the edge (or during elastic overscroll).
+            .opacity(overflow > 4 ? 1 : 0)
+            .animation(.easeInOut(duration: 0.15), value: overflow > 4)
             .allowsHitTesting(false)
     }
 
@@ -998,9 +1008,9 @@ private struct GrassBlade {
     }
 }
 
-/// Reports how much of the enclosing ScrollView's content hangs below its
-/// viewport. Sits invisibly in the scroll content and watches the backing
-/// `NSClipView` directly — the notch panel's hosting setup makes SwiftUI
+/// Reports how much of the enclosing ScrollView's content hangs above and
+/// below its viewport. Sits invisibly in the scroll content and watches the
+/// backing `NSClipView` directly — the notch panel's hosting setup makes SwiftUI
 /// coordinate-space queries (`.global`, `.named`) report zero frames, so
 /// GeometryReader-based offset tracking doesn't work here.
 ///
@@ -1009,7 +1019,7 @@ private struct GrassBlade {
 /// and the clip view additionally quantizes origins to device pixels, so an
 /// AppKit-set offset either gets reverted or starts a set/realign loop.
 private struct ScrollOverflowReporter: NSViewRepresentable {
-    let onChange: (CGFloat) -> Void
+    let onChange: (_ top: CGFloat, _ bottom: CGFloat) -> Void
 
     func makeNSView(context: Context) -> TrackerView {
         let view = TrackerView()
@@ -1026,7 +1036,7 @@ private struct ScrollOverflowReporter: NSViewRepresentable {
     }
 
     final class TrackerView: NSView {
-        var onChange: ((CGFloat) -> Void)?
+        var onChange: ((CGFloat, CGFloat) -> Void)?
         private var observers: [NSObjectProtocol] = []
         private weak var clipView: NSClipView?
 
@@ -1057,10 +1067,9 @@ private struct ScrollOverflowReporter: NSViewRepresentable {
 
         func report() {
             guard let clip = clipView, let doc = clip.documentView else { return }
-            let overflow = doc.isFlipped
-                ? doc.frame.height - clip.bounds.maxY
-                : clip.bounds.minY
-            onChange?(overflow)
+            let top = doc.isFlipped ? clip.bounds.minY : doc.frame.height - clip.bounds.maxY
+            let bottom = doc.isFlipped ? doc.frame.height - clip.bounds.maxY : clip.bounds.minY
+            onChange?(top, bottom)
         }
 
         deinit {
