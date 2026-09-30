@@ -16,8 +16,8 @@ struct NotchRowLayout {
     let spacing: CGFloat
     /// Extra vertical space wedged in *above* a row, keyed by its index. The
     /// list uses it for the block that separates the two sections — the "Add a
-    /// task" footer and the `SCHEDULED` header — which sits between the last
-    /// regular row and the first scheduled one without being a row itself.
+    /// task" footer and the `ROUTINES` header — which sits between the last
+    /// regular row and the first routine without being a row itself.
     let extras: [Int: CGFloat]
 
     init(heights: [CGFloat], spacing: CGFloat, extras: [Int: CGFloat] = [:]) {

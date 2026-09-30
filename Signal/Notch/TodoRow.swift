@@ -85,11 +85,12 @@ struct TodoRow: View {
     /// from. `index` stays the row's place in the focus order.
     private var slot: Int { podiumIndex ?? index }
 
-    /// The top three slots are the "signal" — they wear a podium medal. Rows
-    /// the schedule delivered sit in their own section below and never do:
-    /// the medals belong to what the user chose for today.
+    /// The top three slots are the "signal" — they wear a podium medal.
+    /// Routines sit in their own section below and never do: the medals belong
+    /// to what the user chose for today. A one-time delivery is one of those
+    /// choices, planned ahead, so it's a regular row and can wear one.
     private var isSignalSlot: Bool {
-        !item.isScheduled && slot < SignalStore.defaultTaskCount
+        !item.isRoutine && slot < SignalStore.defaultTaskCount
     }
 
     /// Completing a row reveals what it earned, exactly as the plain rows

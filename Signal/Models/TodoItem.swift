@@ -9,10 +9,16 @@ final class TodoItem {
     var isCompleted: Bool
     var order: Int
     var completedAt: Date?
-    /// Whether the task arrived from the schedule rather than being typed into
-    /// today. Scheduled tasks live in their own section at the bottom of the
-    /// panel, after every regular row, so a recurring task never claims one of
-    /// the three Signal slots. The flag survives carry-over into the next day.
+    /// Whether the task was delivered by a recurring schedule ("every day",
+    /// "every monday"). Routines live in their own `ROUTINES` section at the
+    /// bottom of the panel, after every regular row, so they never claim one
+    /// of the three Signal slots. The flag survives carry-over into the next
+    /// day. A task delivered by a one-time schedule is an ordinary row.
+    var isRoutine: Bool = false
+    /// Legacy: builds before the Routines section set this on *anything* the
+    /// schedule delivered. Nothing writes `true` any more — it now only marks a
+    /// row that hasn't been reclassified yet, see
+    /// `SignalStore.upgradeLegacyScheduledItems`.
     var isScheduled: Bool = false
     var day: DayLog?
 
@@ -21,12 +27,12 @@ final class TodoItem {
         isCompleted: Bool = false,
         order: Int,
         completedAt: Date? = nil,
-        isScheduled: Bool = false
+        isRoutine: Bool = false
     ) {
         self.text = text
         self.isCompleted = isCompleted
         self.order = order
         self.completedAt = completedAt
-        self.isScheduled = isScheduled
+        self.isRoutine = isRoutine
     }
 }

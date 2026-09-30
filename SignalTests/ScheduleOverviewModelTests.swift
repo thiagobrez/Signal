@@ -123,7 +123,7 @@ final class ScheduleOverviewModelTests: XCTestCase {
     }
 
     func testFocusRowsGroupTodaysOwnTasksApartFromItsSchedule() throws {
-        let delivered = ScheduledTask(text: "stand-up", dueDate: today, recurrence: nil)
+        let delivered = ScheduledTask(text: "stand-up", dueDate: today, recurrence: .daily)
         container.mainContext.insert(delivered)
         try container.mainContext.save()
 
@@ -131,11 +131,26 @@ final class ScheduleOverviewModelTests: XCTestCase {
         let groups = model.focusRows.compactMap { row -> OverviewFocusRow.Group? in
             row.day == model.today ? row.group : nil
         }
-        XCTAssertEqual(groups.filter { $0 == .todayScheduled }.count, 1)
-        XCTAssertEqual(groups.last, .todayScheduled)
-        // Only today's own tasks have an add point; the delivered row does not.
-        let scheduledRow = try XCTUnwrap(model.focusRows.last)
-        XCTAssertNil(scheduledRow.addDay)
+        XCTAssertEqual(groups.filter { $0 == .todayRoutines }.count, 1)
+        XCTAssertEqual(groups.last, .todayRoutines)
+        // Only today's own tasks have an add point; the routine does not.
+        let routineRow = try XCTUnwrap(model.focusRows.first { $0.group == .todayRoutines })
+        XCTAssertNil(routineRow.addDay)
+    }
+
+    func testOneTimeDeliveryJoinsTodaysRegularGroup() throws {
+        let delivered = ScheduledTask(text: "call dentist", dueDate: today, recurrence: nil)
+        container.mainContext.insert(delivered)
+        try container.mainContext.save()
+
+        let model = makeModel()
+        XCTAssertFalse(model.focusRows.contains { $0.group == .todayRoutines })
+        let row = try XCTUnwrap(model.focusRows.first {
+            if case .todo(let item) = $0.entry { return item.text == "call dentist" }
+            return false
+        })
+        XCTAssertEqual(row.group, .todayRegular)
+        XCTAssertNotNil(row.addDay)
     }
 
     // MARK: - pruning

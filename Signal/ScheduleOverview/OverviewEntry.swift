@@ -34,9 +34,9 @@ struct OverviewFocusRow: Identifiable {
     enum Group: Equatable {
         /// The EVERY DAY section, which belongs to no single day.
         case daily
-        /// Today's own tasks, and below them the ones its schedule delivered.
+        /// Today's own tasks, and below them the routines its schedule delivered.
         case todayRegular
-        case todayScheduled
+        case todayRoutines
         case future(Date)
     }
 
@@ -51,7 +51,7 @@ struct OverviewFocusRow: Identifiable {
     /// that have no add button of their own.
     var addDay: Date? {
         switch group {
-        case .daily, .todayScheduled: return nil
+        case .daily, .todayRoutines: return nil
         case .todayRegular: return day
         case .future(let day): return day
         }
