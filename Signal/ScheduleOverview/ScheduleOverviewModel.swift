@@ -271,7 +271,7 @@ final class ScheduleOverviewModel {
                     OverviewFocusRow(
                         entry: .todo($0),
                         day: day,
-                        group: $0.isScheduled ? .todayScheduled : .todayRegular
+                        group: $0.isRoutine ? .todayRoutines : .todayRegular
                     )
                 }
             case .future:

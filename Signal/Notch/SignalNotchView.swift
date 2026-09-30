@@ -9,8 +9,8 @@ import StoreKit
 /// at three but grows as the user adds tasks.
 ///
 /// The list is drawn in two pieces from one flat array: the regular rows, the
-/// "Add a task" button, then — when the schedule has delivered something — a
-/// `SCHEDULED` header and the rows beneath it. Indices stay flat throughout, so
+/// "Add a task" button, then — when a recurring schedule has delivered
+/// something — a `ROUTINES` header and the rows beneath it. Indices stay flat throughout, so
 /// focus, measured row heights and the drag geometry are unchanged by the
 /// split; the section block between the two pieces is carried as extra space in
 /// `NotchRowLayout`, and reorders are clamped at it exactly as at the list ends.
@@ -128,20 +128,20 @@ struct SignalNotchView: View {
     /// measured — the list is one container at all sizes, and its height is
     /// what grows, so the arithmetic has to match the layout to the point.
     private static let footerHeight: CGFloat = TodoRow.rowHeight
-    /// The `SCHEDULED` label that opens the bottom section.
+    /// The `ROUTINES` label that opens the bottom section.
     private static let sectionHeaderHeight: CGFloat = 18
 
-    /// Index of the first scheduled row — where the section header goes, and
-    /// the end of the regular rows.
-    private var sectionStart: Int { store.scheduledSectionStart }
+    /// Index of the first routine — where the section header goes, and the
+    /// end of the regular rows.
+    private var sectionStart: Int { store.routinesSectionStart }
 
-    /// Whether the schedule delivered anything into today.
-    private var hasScheduled: Bool { sectionStart < store.items.count }
+    /// Whether a recurring schedule delivered anything into today.
+    private var hasRoutines: Bool { sectionStart < store.items.count }
 
     /// The block that separates the two sections: the add button (interactive
-    /// mode only) and the `SCHEDULED` header, each with the gap above it. It
+    /// mode only) and the `ROUTINES` header, each with the gap above it. It
     /// isn't a row, so the list geometry carries it as extra space above the
-    /// first scheduled row.
+    /// first routine.
     private var sectionGap: CGFloat {
         let footer = controller.mode == .interactive ? Self.footerHeight + Self.rowSpacing : 0
         return footer + Self.sectionHeaderHeight + Self.rowSpacing
@@ -155,18 +155,18 @@ struct SignalNotchView: View {
         NotchRowLayout(
             heights: store.items.map { rowHeights[$0.persistentModelID] ?? TodoRow.rowHeight },
             spacing: Self.rowSpacing,
-            extras: hasScheduled ? [sectionStart: sectionGap] : [:]
+            extras: hasRoutines ? [sectionStart: sectionGap] : [:]
         )
     }
 
-    /// The list's natural height: every row, the section block when the
-    /// schedule delivered something, plus the add button. The button is only
-    /// counted here when it's still the last thing in the list — once there's
-    /// a scheduled section it has moved up into `sectionGap`.
+    /// The list's natural height: every row, the section block when there are
+    /// routines today, plus the add button. The button is only counted here
+    /// when it's still the last thing in the list — once there's a routines
+    /// section it has moved up into `sectionGap`.
     private var listContentHeight: CGFloat {
         guard !store.items.isEmpty else { return 0 }
         var height = rowLayout.contentHeight
-        if controller.mode == .interactive, !hasScheduled {
+        if controller.mode == .interactive, !hasRoutines {
             height += Self.rowSpacing + Self.footerHeight
         }
         return height
@@ -232,7 +232,7 @@ struct SignalNotchView: View {
 
                         // The add button lives in the flow, after the last
                         // regular row — adding a task always continues the
-                        // user's own list, never the schedule's.
+                        // user's own list, never the routines'.
                         if controller.mode == .interactive {
                             footer
                                 // The scroll content is shifted left to cover
@@ -243,9 +243,9 @@ struct SignalNotchView: View {
                                 .id(Self.footerID)
                         }
 
-                        // Whatever the schedule delivered, under its own
-                        // heading at the bottom of the panel.
-                        if hasScheduled {
+                        // Whatever a recurring schedule delivered, under its
+                        // own heading at the bottom of the panel.
+                        if hasRoutines {
                             sectionHeader
                             rows(sectionStart ..< store.items.count, proxy: proxy)
                         }
@@ -295,7 +295,7 @@ struct SignalNotchView: View {
                                 proxy.scrollTo(target, anchor: direction > 0 ? .bottom : .top)
                             }
                         }
-                    } else if !hasScheduled, newValue == store.items.count - 1 {
+                    } else if !hasRoutines, newValue == store.items.count - 1 {
                         // On the last row, go all the way down so the add
                         // button below it stays in reach. Re-fire after the
                         // layout settles: on open the panel's slide-in is
@@ -321,7 +321,7 @@ struct SignalNotchView: View {
                         // the new row hasn't grown the content yet when this
                         // first runs. scrollTo is idempotent, so the repeats
                         // are no-ops once an earlier one has landed.
-                        if hasScheduled, newValue == sectionStart - 1 {
+                        if hasRoutines, newValue == sectionStart - 1 {
                             for delay: TimeInterval in [0.15, 0.45, 0.8] {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                                     withAnimation(.snappy(duration: 0.2)) {
@@ -538,7 +538,7 @@ struct SignalNotchView: View {
     }
 
     /// -1 / +1 while the dragged row is held against an edge with somewhere
-    /// left to go, 0 otherwise. Both the list's ends and the `SCHEDULED` seam
+    /// left to go, 0 otherwise. Both the list's ends and the `ROUTINES` seam
     /// stop it, so the scroll never runs on past a row that can't follow it.
     private func autoScrollDirection() -> Int {
         guard listOverflows, let from = draggedIndex else { return 0 }
@@ -606,13 +606,13 @@ struct SignalNotchView: View {
         .foregroundStyle(.white.opacity(0.4))
     }
 
-    /// Opens the bottom section: everything below it came from the schedule
-    /// rather than from today's typing.
+    /// Opens the bottom section: everything below it came from a recurring
+    /// schedule rather than from today's typing.
     private var sectionHeader: some View {
         HStack(spacing: 6) {
-            Image(systemName: "calendar.badge.clock")
+            Image(systemName: "repeat")
                 .font(.system(size: 10, weight: .semibold))
-            Text("SCHEDULED")
+            Text("ROUTINES")
                 .font(.system(size: 10, weight: .bold))
                 .tracking(2.5)
         }
@@ -666,8 +666,8 @@ struct SignalNotchView: View {
 
     /// Opening drops the caret on the last *regular* slot — that's where
     /// capturing the next thing continues, and it brings the add button into
-    /// view with it. The scheduled rows below are somewhere the caret is sent,
-    /// never somewhere it starts.
+    /// view with it. The routines below are somewhere the caret is sent, never
+    /// somewhere it starts.
     private func focusInitial() {
         guard controller.mode == .interactive else {
             focused = nil
@@ -676,7 +676,7 @@ struct SignalNotchView: View {
         // Defer so focus lands after the panel becomes key.
         DispatchQueue.main.async {
             guard !store.items.isEmpty else { return }
-            let lastRegular = hasScheduled ? sectionStart - 1 : store.items.count - 1
+            let lastRegular = hasRoutines ? sectionStart - 1 : store.items.count - 1
             focused = max(lastRegular, 0)
         }
     }
@@ -765,7 +765,7 @@ struct SignalNotchView: View {
     /// Tab moves to the next slot. On the last *regular* slot, if it's filled,
     /// spill into a fresh task and focus it so the user can keep capturing
     /// without a pause; if it's empty there's nothing to spill, so step into
-    /// the scheduled section instead of stranding the caret. Tab on the very
+    /// the routines section instead of stranding the caret. Tab on the very
     /// last row does nothing, as it always has.
     private func advanceOrAdd(from index: Int) {
         let isLastRegular = index == sectionStart - 1

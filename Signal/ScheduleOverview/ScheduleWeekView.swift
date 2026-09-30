@@ -155,11 +155,12 @@ struct ScheduleWeekView: View {
     }
 
     /// Today's row mirrors the panel: the regular tasks, the add button, then —
-    /// when the schedule delivered something — a SCHEDULED caption and its rows.
+    /// when a recurring schedule delivered something — a ROUTINES caption and
+    /// its rows.
     @ViewBuilder
     private func todayRows(_ day: Date, _ indexByID: [PersistentIdentifier: Int]) -> some View {
         let items = Array(model.store.items.enumerated())
-        let sectionStart = model.store.scheduledSectionStart
+        let sectionStart = model.store.routinesSectionStart
 
         ForEach(items.prefix(sectionStart), id: \.element.persistentModelID) { pair in
             todoRow(pair.element, slot: pair.offset, on: day, indexByID)
@@ -169,9 +170,9 @@ struct ScheduleWeekView: View {
 
         if sectionStart < items.count {
             HStack(spacing: 6) {
-                Image(systemName: "calendar.badge.clock")
+                Image(systemName: "repeat")
                     .font(.system(size: 9, weight: .semibold))
-                Text("SCHEDULED")
+                Text("ROUTINES")
                     .font(.system(size: 9, weight: .bold))
                     .tracking(1)
             }
