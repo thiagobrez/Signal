@@ -1,5 +1,11 @@
 # signal
 
+## 1.5.1
+
+### Patch Changes
+
+- 5b0d5ae: Show an up arrow at the top of the task list once it has been scrolled down, matching the down arrow that already hints at tasks hidden below
+
 ## 1.5.0
 
 ### Minor Changes
