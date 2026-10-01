@@ -157,7 +157,7 @@ final class ScheduleOverviewModel {
     func entries(on day: Date) -> [OverviewEntry] {
         switch kind(of: day) {
         case .today:
-            return store.items.map(OverviewEntry.todo)
+            return store.items.filter { !$0.isSeparator }.map(OverviewEntry.todo)
         case .future:
             return tasks(on: day).map(OverviewEntry.scheduled)
         case .past:
@@ -267,7 +267,7 @@ final class ScheduleOverviewModel {
             case .past:
                 continue
             case .today:
-                rows += store.items.map {
+                rows += store.items.filter { !$0.isSeparator }.map {
                     OverviewFocusRow(
                         entry: .todo($0),
                         day: day,

@@ -153,7 +153,9 @@ struct SignalNotchView: View {
     /// when there is one.
     private var rowLayout: NotchRowLayout {
         NotchRowLayout(
-            heights: store.items.map { rowHeights[$0.persistentModelID] ?? TodoRow.rowHeight },
+            heights: store.items.map {
+                rowHeights[$0.persistentModelID] ?? ($0.isSeparator ? SeparatorRow.height : TodoRow.rowHeight)
+            },
             spacing: Self.rowSpacing,
             extras: hasScheduled ? [sectionStart: sectionGap] : [:]
         )
@@ -395,6 +397,50 @@ struct SignalNotchView: View {
     private func rows(_ range: Range<Int>, proxy: ScrollViewProxy) -> some View {
         ForEach(Array(store.items.enumerated())[range], id: \.element.persistentModelID) { pair in
             let isDragging = draggingID == pair.element.persistentModelID
+            row(pair.element, at: pair.offset, isDragging: isDragging, proxy: proxy)
+            // Rows grow with their text, so the list learns each one's height
+            // from the row itself. Measured before the drag offset is applied,
+            // so a row in flight still reports the height of its slot.
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+                rowHeights[pair.element.persistentModelID] = height
+            }
+            // The gap above the row doubles as the place a separator is added.
+            // An overlay, so it takes no layout of its own: the list geometry
+            // is exactly what it was.
+            .overlay(alignment: .top) {
+                if showsInsertionGap(above: pair.offset) {
+                    SeparatorInsertionGap(height: Self.rowSpacing) {
+                        insertSeparator(at: pair.offset)
+                    }
+                    .accessibilityIdentifier("add-separator-\(pair.offset)")
+                    .offset(y: -Self.rowSpacing)
+                }
+            }
+            // The dragged row follows the cursor and rides above its
+            // neighbours as they shuffle out of the way.
+            .offset(y: isDragging ? dragTranslation : 0)
+            .zIndex(isDragging ? 1 : 0)
+        }
+    }
+
+    /// One row of the list: a task, or the line between two of them.
+    @ViewBuilder
+    private func row(
+        _ item: TodoItem,
+        at index: Int,
+        isDragging: Bool,
+        proxy: ScrollViewProxy
+    ) -> some View {
+        let pair = (offset: index, element: item)
+        if item.isSeparator {
+            SeparatorRow(
+                isDragging: isDragging,
+                onDelete: idle { deleteSeparator(item) },
+                onDragChanged: { translation in drag(item, by: translation, proxy: proxy) },
+                onDragEnded: endDrag
+            )
+            .accessibilityIdentifier("separator-\(index)")
+        } else {
             TodoRow(
                 item: pair.element,
                 index: pair.offset,
@@ -430,19 +476,18 @@ struct SignalNotchView: View {
                 onReorderUp: idle { moveTaskUp(at: pair.offset) },
                 onReorderDown: idle { moveTaskDown(at: pair.offset) },
                 onDragChanged: { translation in drag(pair.element, by: translation, proxy: proxy) },
-                onDragEnded: endDrag
+                onDragEnded: endDrag,
+                // Medals count tasks, so a separator above never costs one.
+                podiumIndex: store.taskOrdinal(at: pair.offset)
             )
-            // Rows grow with their text, so the list learns each one's height
-            // from the row itself. Measured before the drag offset is applied,
-            // so a row in flight still reports the height of its slot.
-            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
-                rowHeights[pair.element.persistentModelID] = height
-            }
-            // The dragged row follows the cursor and rides above its
-            // neighbours as they shuffle out of the way.
-            .offset(y: isDragging ? dragTranslation : 0)
-            .zIndex(isDragging ? 1 : 0)
         }
+    }
+
+    /// Whether the gap above a row offers to take a separator: only where the
+    /// panel is being worked in, nothing is mid-drag, and the store allows one.
+    private func showsInsertionGap(above index: Int) -> Bool {
+        controller.mode == .interactive && draggingID == nil && !celebrating
+            && store.canInsertSeparator(at: index)
     }
 
     /// Wraps a row interaction so it does nothing while the celebration is on
@@ -493,9 +538,9 @@ struct SignalNotchView: View {
         }
         while let from = store.items.firstIndex(where: { $0.persistentModelID == item.persistentModelID }) {
             guard let step = rowLayout.swapStep(from: from, offset: offset),
-                  store.canMove(from: from, to: step.to) else {
+                  store.canDrag(from: from, to: step.to) else {
                 let neighbour = offset > 0 ? from + 1 : from - 1
-                if !store.canMove(from: from, to: neighbour) {
+                if !store.canDrag(from: from, to: neighbour) {
                     // Already at an end — or at the section header, which a row
                     // may no more cross than it may leave the list: hold the
                     // row at the boundary rather than letting it drift past.
@@ -523,6 +568,9 @@ struct SignalNotchView: View {
         stopAutoScroll()
         withAnimation(.snappy(duration: 0.2)) {
             dragTranslation = 0
+            // The live moves can leave a separator with nothing on one side of
+            // it, or two side by side; the drop is where that's tidied away.
+            if draggingID != nil { store.pruneSeparators() }
         }
         draggingID = nil
         dragShift = 0
@@ -549,7 +597,7 @@ struct SignalNotchView: View {
             viewportHeight: listHeight,
             edgeZone: Self.autoScrollEdgeZone
         )
-        guard edge != 0, store.canMove(from: from, to: from + edge) else { return 0 }
+        guard edge != 0, store.canDrag(from: from, to: from + edge) else { return 0 }
         // Nothing left to reveal that way.
         if edge < 0, scrollOrigin <= 0.5 { return 0 }
         if edge > 0, scrollOrigin >= listContentHeight - listHeight - 0.5 { return 0 }
@@ -598,7 +646,7 @@ struct SignalNotchView: View {
                 .font(.system(size: 10, weight: .bold))
                 .tracking(2.5)
             Spacer()
-            Text("\(store.completedCount)/\(store.items.count)")
+            Text("\(store.completedCount)/\(store.taskCount)")
                 .font(.system(size: 10, weight: .semibold))
                 .tracking(2.5)
                 .monospacedDigit()
@@ -720,6 +768,35 @@ struct SignalNotchView: View {
         store.deleteTask(item)
     }
 
+    /// A click in the gap between two tasks: leave a separator there. Mouse
+    /// only — no key adds one. Ignored mid-drag and mid-celebration.
+    private func insertSeparator(at index: Int) {
+        guard draggingID == nil, !celebrating else { return }
+        keepingFocus { store.insertSeparator(at: index) }
+    }
+
+    /// A separator's ×. Unlike deleting a task this keeps the caret where it
+    /// is: the row holding it hasn't gone anywhere, only shifted up one.
+    private func deleteSeparator(_ item: TodoItem) {
+        keepingFocus { store.deleteTask(item) }
+    }
+
+    /// Runs a change that shifts rows without removing the focused one, and
+    /// re-points `focused` at wherever that row ended up — in the same
+    /// transaction, so no other row ever sees its own index match `focused`
+    /// and steals first responder (the same trick the keyboard reorder uses).
+    private func keepingFocus(_ change: () -> Void) {
+        let focusedID = focused.flatMap {
+            store.items.indices.contains($0) ? store.items[$0].persistentModelID : nil
+        }
+        withAnimation(.snappy(duration: 0.2)) {
+            change()
+            if let focusedID {
+                focused = store.items.firstIndex { $0.persistentModelID == focusedID }
+            }
+        }
+    }
+
     /// Backspace in an empty field: remove the row and put the caret at the
     /// end of the row above (or the new first row when it was on top). Deferred
     /// a tick because this fires from inside the field's own key handling —
@@ -728,10 +805,15 @@ struct SignalNotchView: View {
     /// index-based focus binding fires.
     private func backspaceDelete(_ item: TodoItem, at index: Int) {
         guard store.canDelete(item) else { return }
+        // The task above, by identity: the delete can prune a separator along
+        // with the row, so the index it will end up at isn't known yet.
+        let above = store.previousTaskIndex(before: index).map { store.items[$0].persistentModelID }
         focused = nil
         DispatchQueue.main.async {
             store.deleteTask(item)
-            DispatchQueue.main.async { focused = max(index - 1, 0) }
+            DispatchQueue.main.async {
+                focused = store.items.firstIndex { $0.persistentModelID == above } ?? 0
+            }
         }
     }
 
@@ -758,7 +840,7 @@ struct SignalNotchView: View {
             let last = store.items.count - 1
             guard last >= 0 else { return }
             // Defer so focus lands after the rows re-render.
-            DispatchQueue.main.async { focused = min(index, last) }
+            DispatchQueue.main.async { focused = store.taskIndex(nearest: min(index, last)) }
         }
     }
 
@@ -773,14 +855,14 @@ struct SignalNotchView: View {
 
         if isLastRegular, filled {
             addTask()
-        } else if index < store.items.count - 1 {
-            focused = index + 1
+        } else if let next = store.nextTaskIndex(after: index) {
+            focused = next
         }
     }
 
     /// Shift-Tab steps back to the previous slot (no-op on the first).
     private func focusPrevious(from index: Int) {
-        if index > 0 { focused = index - 1 }
+        if let previous = store.previousTaskIndex(before: index) { focused = previous }
     }
 
     /// ⌥↑: the keyboard twin of dragging the grip up one slot. Focus follows
@@ -794,7 +876,10 @@ struct SignalNotchView: View {
         guard draggingID == nil else { return }
         withAnimation(.snappy(duration: 0.2)) {
             if let newIndex = store.moveTaskUp(at: index) {
-                reorderLookAhead = -1
+                // Only armed when focus will actually change — that change is
+                // what spends it. A move that prunes a separator above can
+                // leave the row at the index it started on.
+                if newIndex != index { reorderLookAhead = -1 }
                 focused = newIndex
             }
         }
@@ -805,7 +890,7 @@ struct SignalNotchView: View {
         guard draggingID == nil else { return }
         withAnimation(.snappy(duration: 0.2)) {
             if let newIndex = store.moveTaskDown(at: index) {
-                reorderLookAhead = 1
+                if newIndex != index { reorderLookAhead = 1 }
                 focused = newIndex
             }
         }
@@ -825,8 +910,8 @@ struct SignalNotchView: View {
         // Defer so focus lands after the row swaps between field and `Text` and
         // the old one has resigned first responder.
         DispatchQueue.main.async {
-            if item.isCompleted, index < store.items.count - 1 {
-                focused = index + 1
+            if item.isCompleted, let next = store.nextTaskIndex(after: index) {
+                focused = next
             } else {
                 focused = index
             }

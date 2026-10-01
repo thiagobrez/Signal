@@ -186,7 +186,26 @@ struct ScheduleWeekView: View {
 
     // MARK: - Rows
 
+    /// One of today's rows. A separator is drawn as the line it is, but only
+    /// to look at: it's added, moved and removed in the panel.
+    @ViewBuilder
     private func todoRow(
+        _ item: TodoItem,
+        slot: Int,
+        on day: Date,
+        _ indexByID: [PersistentIdentifier: Int]
+    ) -> some View {
+        if item.isSeparator {
+            Rectangle()
+                .fill(.white.opacity(0.18))
+                .frame(height: 1)
+                .padding(.vertical, 4)
+        } else {
+            taskRow(item, slot: slot, on: day, indexByID)
+        }
+    }
+
+    private func taskRow(
         _ item: TodoItem,
         slot: Int,
         on day: Date,
@@ -222,7 +241,8 @@ struct ScheduleWeekView: View {
             onReorderUp: { reorderToday(at: slot, by: -1) },
             onReorderDown: { reorderToday(at: slot, by: 1) },
             showsDragHandle: false,
-            podiumIndex: slot,
+            // Medals count tasks, so a separator above never costs one.
+            podiumIndex: model.store.taskOrdinal(at: slot),
             // Today's rows keep the panel's strictly-future keyword semantics.
             parseAnchor: nil,
             metrics: .compact
