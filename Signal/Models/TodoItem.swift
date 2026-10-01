@@ -15,6 +15,11 @@ final class TodoItem {
     /// the three Signal slots. The flag survives carry-over into the next day.
     var isScheduled: Bool = false
     var day: DayLog?
+    /// A divider line rather than a task. A separator is a row like any other
+    /// — it has an `order` and is dragged like one — but it has no text, can't
+    /// be completed and never holds the keyboard. Only ever set on a regular
+    /// row, between two tasks: see `SignalStore.pruneSeparators`.
+    var isSeparator: Bool = false
 
     init(
         text: String = "",

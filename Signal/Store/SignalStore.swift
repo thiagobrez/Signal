@@ -41,11 +41,13 @@ final class SignalStore {
     func refreshForToday() {
         let startOfToday = Calendar.current.startOfDay(for: Date())
 
+        var isNewDay = false
         if let existing = fetchDayLog(for: startOfToday) {
             today = existing
             ensureMinimumSlots(existing)
         } else {
             today = createDayLog(for: startOfToday)
+            isNewDay = true
         }
 
         if let today {
@@ -53,6 +55,9 @@ final class SignalStore {
         }
 
         items = today.map { normalizeOrder($0) } ?? []
+
+        if isNewDay { carryOverSeparators(before: startOfToday) }
+        pruneSeparators()
     }
 
     // MARK: - Sections
@@ -81,7 +86,7 @@ final class SignalStore {
     /// Whether the day is fully done: every task complete. An empty slot can't be
     /// completed, so this also requires every slot to be filled.
     var isDayComplete: Bool {
-        !items.isEmpty && completedCount == items.count
+        taskCount > 0 && completedCount == taskCount
     }
 
     /// A regular task can be removed as long as it wouldn't drop the day below
@@ -154,6 +159,7 @@ final class SignalStore {
         repack(remaining)
         save()
         items = remaining
+        pruneSeparators()
     }
 
     /// Moves a task to a new slot and re-packs `order` so it stays a
@@ -175,8 +181,7 @@ final class SignalStore {
     @discardableResult
     func moveTaskUp(at index: Int) -> Int? {
         guard canMove(from: index, to: index - 1) else { return nil }
-        moveTask(from: index, to: index - 1)
-        return index - 1
+        return moveByKeyboard(from: index, to: index - 1)
     }
 
     /// Swaps a task with the one below it. Returns the row's new index, or nil
@@ -184,8 +189,170 @@ final class SignalStore {
     @discardableResult
     func moveTaskDown(at index: Int) -> Int? {
         guard canMove(from: index, to: index + 1) else { return nil }
-        moveTask(from: index, to: index + 1)
-        return index + 1
+        return moveByKeyboard(from: index, to: index + 1)
+    }
+
+    // MARK: - Separators
+
+    /// How many of today's rows are tasks — everything but the separators.
+    var taskCount: Int {
+        items.filter { !$0.isSeparator }.count
+    }
+
+    /// How many rows sit above the section header, tasks and separators alike.
+    /// Separators are always regular rows, so they only ever live in here.
+    private var regularRowCount: Int { regularItems.count }
+
+    /// The row's place among the tasks alone: how many tasks sit above it. This
+    /// is what the podium counts, so a separator never costs a task its medal.
+    func taskOrdinal(at index: Int) -> Int {
+        items.prefix(max(index, 0)).filter { !$0.isSeparator }.count
+    }
+
+    /// The nearest task below `index`, skipping separators — where the keyboard
+    /// goes next. Nil when nothing but separators (or nothing at all) follows.
+    func nextTaskIndex(after index: Int) -> Int? {
+        items.indices.first { $0 > index && !items[$0].isSeparator }
+    }
+
+    /// The nearest task above `index`, skipping separators.
+    func previousTaskIndex(before index: Int) -> Int? {
+        items.indices.last { $0 < index && !items[$0].isSeparator }
+    }
+
+    /// The task now standing at `index`, or failing that the closest one: the
+    /// first below it, else the last above. Where focus lands once the row that
+    /// was at `index` has left the list.
+    func taskIndex(nearest index: Int) -> Int? {
+        nextTaskIndex(after: index - 1) ?? previousTaskIndex(before: index)
+    }
+
+    /// Whether a separator may be added above the row at `index`: only between
+    /// two tasks of the regular section, so never at either end of it, never
+    /// next to another separator and never among the scheduled rows.
+    func canInsertSeparator(at index: Int) -> Bool {
+        guard today != nil, index > 0, index < regularRowCount else { return false }
+        return !items[index - 1].isSeparator && !items[index].isSeparator
+    }
+
+    /// Adds a separator above the row at `index`. Returns whether it was added
+    /// — see `canInsertSeparator(at:)`.
+    @discardableResult
+    func insertSeparator(at index: Int) -> Bool {
+        guard canInsertSeparator(at: index), let today else { return false }
+        var reordered = items
+        reordered.insert(makeSeparator(in: today, order: index), at: index)
+        repack(reordered)
+        save()
+        items = reordered
+        return true
+    }
+
+    /// The drag's version of `canMove`: a separator may additionally not be
+    /// dragged onto either end of its section, where it would separate nothing.
+    func canDrag(from source: Int, to destination: Int) -> Bool {
+        guard canMove(from: source, to: destination) else { return false }
+        guard items[source].isSeparator else { return true }
+        return destination > 0 && destination < regularRowCount - 1
+    }
+
+    /// Removes every separator that no longer separates anything: one at the
+    /// top or bottom of the regular section, or directly under another. Run
+    /// after anything that can strand one — a delete, a keyboard move, the end
+    /// of a drag, a new day — so a separator always has a task on both sides.
+    /// That is also what keeps `canDelete` honest without it knowing about
+    /// separators: a day down to its last task has no separator left to count.
+    ///
+    /// A separator holding text is turned back into a task first. Nothing can
+    /// type into one, so it was mistaken for a blank slot by something that
+    /// fills those — and the text is the part worth keeping.
+    ///
+    /// Returns whether anything changed.
+    @discardableResult
+    func pruneSeparators() -> Bool {
+        var changed = false
+        for item in items where item.isSeparator
+            && !item.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            item.isSeparator = false
+            changed = true
+        }
+
+        let regularCount = regularRowCount
+        var kept: [TodoItem] = []
+        var stranded: [TodoItem] = []
+        for item in items.prefix(regularCount) {
+            if item.isSeparator, kept.last?.isSeparator ?? true {
+                stranded.append(item)
+            } else {
+                kept.append(item)
+            }
+        }
+        if let last = kept.last, last.isSeparator {
+            stranded.append(kept.removeLast())
+        }
+
+        if !stranded.isEmpty {
+            let remaining = kept + items.dropFirst(regularCount)
+            stranded.forEach { context.delete($0) }
+            repack(remaining)
+            items = remaining
+            changed = true
+        }
+        if changed { save() }
+        return changed
+    }
+
+    /// The keyboard's move, shared by `moveTaskUp` and `moveTaskDown`. A task
+    /// steps over a separator exactly as it steps over a task; a separator
+    /// itself never moves this way. Returns where the row ended up, which is
+    /// not always `destination`: stepping out of a group can strand the
+    /// separator that bounded it, and pruning that shifts the rows below.
+    private func moveByKeyboard(from source: Int, to destination: Int) -> Int? {
+        let item = items[source]
+        guard !item.isSeparator else { return nil }
+        moveTask(from: source, to: destination)
+        pruneSeparators()
+        return items.firstIndex { $0 === item }
+    }
+
+    /// Brings yesterday's separators along with the tasks they sat between. A
+    /// separator comes across only if unfinished tasks were carried over on
+    /// both sides of it; `createDayLog` has already laid those out in order at
+    /// the top of the day, so a separator's slot is simply the number of
+    /// carried tasks that were above it.
+    private func carryOverSeparators(before date: Date) {
+        guard SettingsStore.carryOverIncomplete, let today,
+              let prior = mostRecentPriorLog(before: date) else { return }
+
+        var carriedAbove = 0
+        var slots: [Int] = []
+        for item in prior.orderedItems {
+            if item.isSeparator {
+                if carriedAbove > 0, slots.last != carriedAbove { slots.append(carriedAbove) }
+            } else if !item.isCompleted, !item.text.trimmingCharacters(in: .whitespaces).isEmpty {
+                carriedAbove += 1
+            }
+        }
+
+        let regularCount = regularRowCount
+        var reordered = items
+        // Back to front, so an insertion never shifts a slot still to come.
+        for slot in slots.reversed() where slot < regularCount
+            && !items[slot].text.trimmingCharacters(in: .whitespaces).isEmpty {
+            reordered.insert(makeSeparator(in: today, order: slot), at: slot)
+        }
+        guard reordered.count != items.count else { return }
+        repack(reordered)
+        save()
+        items = reordered
+    }
+
+    private func makeSeparator(in log: DayLog, order: Int) -> TodoItem {
+        let separator = TodoItem(order: order)
+        separator.isSeparator = true
+        separator.day = log
+        context.insert(separator)
+        return separator
     }
 
     func save() {
