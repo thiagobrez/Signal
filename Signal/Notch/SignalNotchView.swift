@@ -263,6 +263,8 @@ struct SignalNotchView: View {
                 // pins the clip view at offset 0 so hosted fields stay on the
                 // pixel grid.
                 .scrollDisabled(!listOverflows)
+                // Scroll hints, nudged just outside the viewport so they never
+                // land on a row's text (#44).
                 .overlay(alignment: .top) { overflowChevron(.top) }
                 .overlay(alignment: .bottom) { overflowChevron(.bottom) }
                 // Keep the focused row visible — covers both adding a row
@@ -640,9 +642,11 @@ struct SignalNotchView: View {
     }
 
     /// Subtle hint that more tasks are hidden past the given edge — an up
-    /// chevron at the top once the list has scrolled down, a down chevron at
-    /// the bottom while more hangs below.
-    private func overflowChevron(_ edge: VerticalEdge) -> some View {
+    /// chevron above the list once it has scrolled down, a down chevron below
+    /// it while more hangs beneath. Both sit *outside* the viewport (in the gap
+    /// under the header, and in the card padding under the list), never over a
+    /// row's text — see `OverflowHint`.
+    private func overflowChevron(_ edge: OverflowHint.Edge) -> some View {
         let overflow = edge == .top ? topOverflow : bottomOverflow
         return Image(systemName: edge == .top ? "chevron.up" : "chevron.down")
             .font(.system(size: 11, weight: .semibold))
@@ -650,11 +654,11 @@ struct SignalNotchView: View {
             // Re-center within the visible card: the viewport is widened
             // leftwards by the grip gutter, which would skew the midpoint.
             .padding(.leading, TodoRow.handleGutterWidth / 2)
-            .padding(edge == .top ? .top : .bottom, 2)
-            // Small dead-zone so the hint doesn't flicker while resting
-            // within a hair of the edge (or during elastic overscroll).
-            .opacity(overflow > 4 ? 1 : 0)
-            .animation(.easeInOut(duration: 0.15), value: overflow > 4)
+            // The glyph is 8pt tall at this size, so a full row gap leaves it
+            // 2pt clear of the viewport edge — on the outside.
+            .offset(y: OverflowHint.offset(for: edge, gap: Self.rowSpacing))
+            .opacity(OverflowHint.isShown(overflow: overflow) ? 1 : 0)
+            .animation(.easeInOut(duration: 0.15), value: OverflowHint.isShown(overflow: overflow))
             .allowsHitTesting(false)
     }
 

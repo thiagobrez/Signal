@@ -121,6 +121,7 @@
 		ABD664FA0C04E048EB4E6841 /* DayDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FE0C8BAC5E5E983F0113E37 /* DayDetailView.swift */; };
 		ACF41FB542CDC1078D028B57 /* WhatsNewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 263D9753D0E4121ED9CE392D /* WhatsNewView.swift */; };
 		AFEB4E3D7C241EDC5E664230 /* OverviewEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8157D0118CFB85BA365B15D1 /* OverviewEntry.swift */; };
+		B2CCD3360DA3D1EA812FC1B5 /* OverflowHintTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83A1BBA2FA37BE5292214755 /* OverflowHintTests.swift */; };
 		B3786E3FFB48966213463C23 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = FD11BDA6ACBACC9C1A61E2C4 /* CHANGELOG.md */; };
 		B50C859C7169176E1CE79AB2 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6358254F1F4002673C3D2D1A /* StatsView.swift */; };
 		B792BEDC9F2F0E213A960CE0 /* StatsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3A748EE9D12BCE0EECB0EC /* StatsWindowController.swift */; };
@@ -212,6 +213,7 @@
 		7D3A2BED6ACE7FE9C1BED51E /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
 		7F94AC8EFF44F9B8BABD02E2 /* SignalStoreSectionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalStoreSectionsTests.swift; sourceTree = "<group>"; };
 		8157D0118CFB85BA365B15D1 /* OverviewEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewEntry.swift; sourceTree = "<group>"; };
+		83A1BBA2FA37BE5292214755 /* OverflowHintTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverflowHintTests.swift; sourceTree = "<group>"; };
 		83C6365B23C7F63967F9F938 /* ScheduleYearView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleYearView.swift; sourceTree = "<group>"; };
 		85754D73DEB6E570698C3CD6 /* meadow.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meadow.wav; sourceTree = "<group>"; };
 		88B94E448EA5FDD667DF3D0F /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
@@ -354,6 +356,7 @@
 				ED8F17007E1C184819579389 /* MenuBarHintPolicyTests.swift */,
 				9FB3897E7BD71986FC13843D /* NaturalDateParserTests.swift */,
 				E86AEA7A48082457D72A211D /* NotchRowLayoutTests.swift */,
+				83A1BBA2FA37BE5292214755 /* OverflowHintTests.swift */,
 				94BDB779114317E30DA71331 /* RecurrenceTests.swift */,
 				0E6DEDAE2FA9D163BC2FAEF8 /* ReopenPolicyTests.swift */,
 				2CA025EC0BD713A80AC99FFF /* RowTextLayoutTests.swift */,
@@ -757,6 +760,7 @@
 				95DBB45D1C22347694D02563 /* NaturalDateParserTests.swift in Sources */,
 				DEE3E1C49F4C7DC871405CB2 /* NotchRowLayout.swift in Sources */,
 				BE5B6DB2D2B11A6528643835 /* NotchRowLayoutTests.swift in Sources */,
+				B2CCD3360DA3D1EA812FC1B5 /* OverflowHintTests.swift in Sources */,
 				429E11001D51C5EA58FFABD7 /* OverviewEntry.swift in Sources */,
 				FB5E8DF5E4F4AC63BC95419C /* RecurrenceTests.swift in Sources */,
 				DE19466D07677BF7D325888C /* ReopenPolicy.swift in Sources */,
