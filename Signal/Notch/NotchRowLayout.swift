@@ -129,3 +129,26 @@ struct NotchRowLayout {
         return max(minOffset, min(maxOffset, offset))
     }
 }
+
+/// The chevrons hinting at rows hidden past either end of the list viewport.
+/// They live *outside* the viewport — in the gap above the list and in the
+/// card padding below it — so they can never be composited onto a row's text
+/// (#44: drawn inside the viewport, the top chevron sat on the first visible
+/// line's capitals and read as a stray line that moved with the scroll).
+enum OverflowHint {
+    enum Edge { case top, bottom }
+
+    /// Overflow within this many points doesn't count, so the hint doesn't
+    /// flicker while resting within a hair of an edge or during elastic
+    /// overscroll.
+    static let deadZone: CGFloat = 4
+
+    static func isShown(overflow: CGFloat) -> Bool { overflow > deadZone }
+
+    /// Vertical offset that pushes a hint aligned to `edge` fully out of the
+    /// viewport: negative (upwards) at the top, positive at the bottom, by
+    /// `gap` — the space the list leaves between itself and its neighbour.
+    static func offset(for edge: Edge, gap: CGFloat) -> CGFloat {
+        edge == .top ? -gap : gap
+    }
+}
